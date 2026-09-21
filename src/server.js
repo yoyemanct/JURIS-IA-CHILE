@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { readConfig } from './config.js';
 import { sources } from './data/sources.js';
-import { areas, searchSources } from './domain/search.js';
+import { areas, sourceKinds, searchSources } from './domain/search.js';
 import { answerQuestion } from './domain/answer.js';
 import { createAnthropicProvider } from './providers/anthropic.js';
 
@@ -34,8 +34,9 @@ export function createApp({ provider, clock = Date.now, rateLimit = 20 } = {}) {
       if (req.method === 'GET' && url.pathname === '/api/health') return send(res, 200, { status: 'ok', mode: provider ? 'anthropic' : 'demo', sourceCount: sources.length });
       if (req.method === 'GET' && url.pathname === '/api/sources') {
         const q = url.searchParams.get('q') || ''; const area = url.searchParams.get('area') || 'todas';
-        if (q.length > 2000 || !areas.includes(area)) throw fail(400, 'Filtro inválido.');
-        return send(res, 200, { sources: searchSources(q, area) });
+        const kind = url.searchParams.get('kind') || 'todas';
+        if (q.length > 2000 || !areas.includes(area) || !sourceKinds.includes(kind)) throw fail(400, 'Filtro inválido.');
+        return send(res, 200, { sources: searchSources(q, area, kind) });
       }
       if (req.method === 'POST' && url.pathname === '/api/ask') {
         if (req.headers['sec-fetch-site'] === 'cross-site') throw fail(403, 'Solicitud externa rechazada.');

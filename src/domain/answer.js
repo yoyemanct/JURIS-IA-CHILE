@@ -1,6 +1,6 @@
 import { retrieveEvidence } from './search.js';
 
-export const notice = 'Orientación informativa, no asesoría jurídica. Confirma el texto vigente y su aplicación con un profesional. Las fuentes son un catálogo editorial limitado, sin actualización automática.';
+export const notice = 'Orientación informativa, no asesoría jurídica. Confirma el texto vigente y su aplicación con un profesional. Catálogo editorial limitado, sin actualización automática. Las decisiones judiciales dependen de su contexto; una reseña oficial no reemplaza la lectura del fallo íntegro.';
 
 export function validateClaims(value, evidence) {
   const allowed = new Set(evidence.map(s => s.id));
@@ -15,7 +15,7 @@ export function validateClaims(value, evidence) {
 
 export async function answerQuestion({ question, area = 'todas', provider }) {
   const evidence = retrieveEvidence(question, area);
-  const base = { notice, mode: provider ? 'anthropic' : 'demo', claims: [], sources: [], status: 'insufficient', message: 'No hay evidencia suficiente en el catálogo para responder. Prueba con escrituración de contratos, garantía de productos defectuosos o feriado anual.' };
+  const base = { notice, mode: provider ? 'anthropic' : 'demo', claims: [], sources: [], status: 'insufficient', message: 'No hay evidencia suficiente en el catálogo para responder. Explora los ejemplos o busca fuentes por tema y área. Seleccionar un área no implica cobertura de todas sus materias.' };
   if (!evidence.length) return base;
   // La demo presenta resúmenes, sin simular una interpretación personalizada.
   const claims = provider ? validateClaims(await provider({ question, evidence }), evidence) : evidence.map(s => ({ text: s.summary, sourceIds: [s.id] }));

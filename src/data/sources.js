@@ -1,5 +1,7 @@
 // Resúmenes editoriales, no transcripciones ni una base exhaustiva de legislación.
 // reviewedAt documenta la revisión de la página; no certifica vigencia normativa.
+import { legalSources } from './legal-sources.js';
+
 export const sources = [
   {
     id: 'DT-CONTRATO-9', area: 'laboral', topic: 'contrato',
@@ -41,4 +43,4 @@ export const sources = [
     summary: 'La regla general para trabajadores con más de un año de servicio es un feriado anual de 15 días hábiles con remuneración íntegra; el sábado se considera inhábil para este cómputo. Hay una regla de 20 días hábiles para Aysén, Magallanes y la provincia de Palena, cuya aplicación debe revisarse según el lugar de prestación de servicios y las condiciones correspondientes.',
     keywords: ['vacaciones', 'feriado', 'anual', 'habiles', 'sabado', 'aysen', 'magallanes', 'palena'],
   },
-];
+].map(source => ({ ...source, kind: 'orientacion' })).concat(legalSources);

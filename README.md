@@ -50,7 +50,7 @@ Los errores de API, timeout, JSON inválido o citas desconocidas se muestran com
 
 - Consultas en español, ejemplos, filtros, carga, errores y copia con referencias.
 - Biblioteca con búsqueda sin distinción de acentos y resúmenes desplegables.
-- Cuatro fuentes oficiales iniciales: contratos, garantía de productos y feriado anual.
+- Diez fuentes oficiales en cinco áreas: laboral, consumo, civil, penal y constitucional. Filtros por legislación, jurisprudencia y orientación; búsqueda por tribunal y rol.
 - Recuperación léxica por tema y generación opcional con Claude.
 - Citas mediante IDs permitidos y enlaces controlados por el servidor.
 - Interfaz adaptable con navegación por teclado, etiquetas y avisos accesibles.
@@ -66,11 +66,23 @@ Los errores de API, timeout, JSON inválido o citas desconocidas se muestran com
 | Garantía de productos | [SERNAC](https://www.sernac.gob.cl/portal/617/w3-article-57424.html) | Ley 19.496, arts. 20–21; Ley 21.398 |
 | Feriado anual | [Dirección del Trabajo](https://dt.gob.cl/portal/1628/w3-article-60177.html) | Código del Trabajo, arts. 67 y 69 |
 
-Revisión editorial inicial: **21 de septiembre de 2026**. Son paráfrasis de orientación institucional, no legislación consolidada ni jurisprudencia. La fecha registra la revisión de la fuente; **no certifica vigencia normativa**. No hay búsqueda web ni actualización automática al consultar.
+Revisión editorial inicial: **21 de septiembre de 2026**. El catálogo reúne cuatro orientaciones institucionales, tres resúmenes legislativos y tres fichas de jurisprudencia. Las normas enlazan a BCN/LeyChile; no se incorpora su texto completo. Dos fichas judiciales provienen de reseñas oficiales del Poder Judicial y una del PDF íntegro del Tribunal Constitucional. La fecha registra la revisión de la fuente; **no certifica vigencia normativa**. No hay búsqueda web ni actualización automática al consultar.
 
 «Cita verificable» significa que el usuario puede abrir el enlace y contrastar el respaldo. La validación automática comprueba que el ID existe y pertenece a la evidencia recuperada; **no demuestra que una afirmación generada esté jurídicamente respaldada**, completa o vigente. La IA puede equivocarse aun citando una fuente real. La demo muestra información relacionada, no respuestas personalizadas. LexChile es informativo y no reemplaza asesoría profesional.
 
 Para ampliar la cobertura, sigue [la guía editorial](docs/SOURCES.md).
+
+### Nuevas áreas y jurisprudencia
+
+| Área | Cobertura inicial | Jurisprudencia |
+| --- | --- | --- |
+| Civil | Contratos, buena fe y prueba del daño emergente | Corte Suprema, rol 15.355-2025: reseña oficial |
+| Penal | Presunción de inocencia y debido proceso | Corte Suprema, rol 55.308-2025: reseña oficial |
+| Constitucional | Control preventivo e inaplicabilidad; ejemplo electoral | TC, rol 17.010-25 CPR, 16-10-2025: sentencia íntegra |
+
+Cada ficha muestra tribunal, rol, tipo de documento, localización del fundamento y límites. En las dos reseñas se muestra la fecha de publicación (27-07-2026), **no una fecha de sentencia inferida**; esta última figura como no comprobada. Los enlaces del Poder Judicial pueden exigir verificación humana. Los resúmenes se contrastaron con sus reseñas oficiales indexadas, sin acceso al fallo íntegro. La decisión del TC corresponde a un proyecto de ley y no sustituye la revisión de las reglas electorales vigentes.
+
+La cobertura no incluye todo el derecho civil, penal o constitucional: por ejemplo, herencias, delitos específicos y recursos particulares todavía pueden quedar sin evidencia. No se atribuye a las decisiones particulares alcance general ni valor de precedente obligatorio.
 
 ## Arquitectura
 
@@ -81,7 +93,8 @@ src/config.js             Configuración y validación al iniciar
 src/domain/search.js      Búsqueda y recuperación por tema
 src/domain/answer.js      Caso de uso, abstención y validación de citas
 src/providers/anthropic.js Adaptador Messages API (fetch inyectable)
-src/data/sources.js        Catálogo editorial con origen y revisión
+src/data/sources.js        Catálogo y orientación institucional
+src/data/legal-sources.js  Legislación y fichas jurisprudenciales
 test/                     Pruebas de dominio, proveedor y HTTP
 ```
 
@@ -92,7 +105,7 @@ Flujo: navegador → validación → recuperación → resúmenes o Claude → v
 | Método | Ruta | Uso |
 | --- | --- | --- |
 | GET | `/api/health` | Estado, modo y número de fuentes |
-| GET | `/api/sources?q=garantia&area=consumo` | Buscar; áreas: `todas`, `laboral`, `consumo` |
+| GET | `/api/sources?q=15355-2025&area=civil&kind=jurisprudencia` | Áreas: `todas`, `laboral`, `consumo`, `civil`, `penal`, `constitucional`; tipos: `todas`, `legislacion`, `jurisprudencia`, `orientacion` |
 | POST | `/api/ask` | JSON: `{"question":"¿Qué garantía tiene un producto defectuoso?","area":"consumo"}` |
 
 Respuesta: `status` (`answered` o `insufficient`), `mode`, `claims` con `sourceIds`, `sources`, `message` y `notice`. Errores: 400 validación, 403 cross-site, 413 tamaño, 415 formato, 429 límite, 502 fallo de IA/citas, 503 capacidad. Consulta: 8–2000 caracteres; cuerpo: 8 KiB; 20 solicitudes por IP/minuto; hasta 4 consultas concurrentes por proceso.

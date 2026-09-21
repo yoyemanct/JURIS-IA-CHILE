@@ -8,22 +8,32 @@ async function api(path, options) {
   return data;
 }
 function officialLink(source) {
-  const link = node('a', 'Abrir fuente oficial ↗');
+  const label = source.kind === 'jurisprudencia' ? (source.decisionDate ? 'Leer sentencia oficial (PDF) ↗' : 'Leer reseña oficial ↗') : 'Abrir fuente oficial ↗';
+  const link = node('a', label);
   link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
   link.setAttribute('aria-label', `Abrir fuente oficial: ${source.title} (nueva pestaña)`);
   return link;
+}
+function caseMetadata(source) {
+  const box = node('div', '', 'case-metadata');
+  if (source.kind !== 'jurisprudencia') return box;
+  box.append(node('strong', `${source.court} · Rol ${source.docket}`));
+  box.append(node('p', source.decisionDate ? `Sentencia: ${source.decisionDate}` : `Fecha de sentencia: no comprobada · Publicación de reseña: ${source.publishedAt}`));
+  box.append(node('p', `${source.documentType} · ${source.locator}`));
+  box.append(node('p', source.scope, 'case-scope'));
+  return box;
 }
 function sourceCard(source) {
   const card = node('article', '', 'source-card');
   card.append(node('span', `${source.area} / ${source.publisher}`, 'tag'), node('h3', source.title), node('p', source.reference), node('p', `${source.type} · Revisión: ${source.reviewedAt}`));
   const details = node('details'); details.append(node('summary', 'Leer resumen editorial'), node('p', source.summary));
-  card.append(details, officialLink(source)); return card;
+  card.append(caseMetadata(source), details, officialLink(source)); return card;
 }
 async function loadSources() {
   const request = ++searchRequest;
   $('library-status').textContent = 'Buscando fuentes…';
   try {
-    const params = new URLSearchParams({ q: $('source-query').value, area: $('source-area').value });
+    const params = new URLSearchParams({ q: $('source-query').value, area: $('source-area').value, kind: $('source-kind').value });
     const data = await api(`/api/sources?${params}`);
     if (request !== searchRequest) return;
     $('source-grid').replaceChildren(...data.sources.map(sourceCard));
@@ -45,13 +55,13 @@ function renderAnswer(data) {
     const item = node('article', '', 'citation-card'); item.id = `cite-${source.id}`;
     item.append(node('strong', `[${indexes.get(source.id)}] ${source.title}`), node('p', `${source.publisher} · ${source.reference} · Revisión: ${source.reviewedAt}`));
     const details = node('details'); details.append(node('summary', 'Comparar con el resumen editorial'), node('p', source.summary));
-    item.append(details, officialLink(source)); return item;
+    item.append(caseMetadata(source), details, officialLink(source)); return item;
   }));
   $('copy').hidden = data.status !== 'answered';
 }
 $('question').addEventListener('input', () => { $('counter').textContent = `${$('question').value.length} / 2000`; });
 document.querySelectorAll('[data-question]').forEach(button => button.addEventListener('click', () => {
-  $('question').value = button.dataset.question; $('question').dispatchEvent(new Event('input')); $('area').value = 'todas'; $('question').focus();
+  $('question').value = button.dataset.question; $('question').dispatchEvent(new Event('input')); $('area').value = button.dataset.area || 'todas'; $('question').focus();
 }));
 $('ask-form').addEventListener('submit', async event => {
   event.preventDefault();
@@ -67,9 +77,10 @@ $('ask-form').addEventListener('submit', async event => {
 $('question').addEventListener('input', () => $('question').setCustomValidity(''));
 $('search-form').addEventListener('submit', event => { event.preventDefault(); loadSources(); });
 $('source-area').addEventListener('change', loadSources);
+$('source-kind').addEventListener('change', loadSources);
 $('copy').addEventListener('click', async () => {
   if (!lastAnswer) return;
-  const text = ['LexChile', lastAnswer.message, ...lastAnswer.claims.map(c => `${c.text} [${c.sourceIds.join(', ')}]`), ...lastAnswer.sources.map(s => `[${s.id}] ${s.title}\n${s.url}\nRevisión editorial: ${s.reviewedAt}`), lastAnswer.notice].join('\n\n');
+  const text = ['LexChile', lastAnswer.message, ...lastAnswer.claims.map(c => `${c.text} [${c.sourceIds.join(', ')}]`), ...lastAnswer.sources.map(s => `[${s.id}] ${s.title}\n${s.reference}\n${s.type}${s.docket ? `\n${s.court} · Rol ${s.docket}\n${s.decisionDate ? `Sentencia: ${s.decisionDate}` : `Fecha de sentencia no comprobada; reseña publicada: ${s.publishedAt}`}\n${s.locator}\n${s.scope}` : ''}\n${s.url}\nRevisión editorial: ${s.reviewedAt}`), lastAnswer.notice].join('\n\n');
   try { await navigator.clipboard.writeText(text); $('copy').textContent = 'Copiado'; }
   catch { $('copy').textContent = 'Selecciona el texto para copiar'; }
   setTimeout(() => { $('copy').textContent = 'Copiar con fuentes'; }, 2500);

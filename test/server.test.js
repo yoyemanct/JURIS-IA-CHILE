@@ -19,11 +19,23 @@ test('HTTP: salud, catálogo, consulta y abstención', async t => {
 });
 test('HTTP: validación, tamaño y tipo de contenido', async t => {
   const request = await start(t);
-  for (const body of [null, {}, { question: 123 }, { question: 'corto' }, { question: ' '.repeat(20) }, { question: 'x'.repeat(2001) }, { question: 'Contrato laboral', area: 'penal' }]) assert.equal((await request('/api/ask', post(body))).status, 400);
+  for (const body of [null, {}, { question: 123 }, { question: 'corto' }, { question: ' '.repeat(20) }, { question: 'x'.repeat(2001) }, { question: 'Contrato laboral', area: 'invalida' }]) assert.equal((await request('/api/ask', post(body))).status, 400);
   assert.equal((await request('/api/ask', { method: 'POST', body: 'hola' })).status, 415);
   assert.equal((await request('/api/ask', { ...post({}), body: '{' })).status, 400);
-  assert.equal((await request('/api/sources?area=penal')).status, 400);
+  assert.equal((await request('/api/sources?area=invalida')).status, 400);
+  assert.equal((await request('/api/sources?kind=invalido')).status, 400);
   assert.equal((await request('/api/ask', post({ question: 'x'.repeat(9000) }))).status, 413);
+});
+test('HTTP: áreas nuevas y filtro de jurisprudencia', async t => {
+  const request = await start(t);
+  for (const area of ['civil', 'penal', 'constitucional']) {
+    const response = await request(`/api/sources?area=${area}&kind=jurisprudencia`);
+    assert.equal(response.status, 200);
+    const data = await response.json();
+    assert.equal(data.sources.length, 1); assert.ok(data.sources[0].docket);
+    const answer = await request('/api/ask', post({ question: 'Mostrar jurisprudencia de esta área', area }));
+    assert.equal(answer.status, 200); assert.equal((await answer.json()).status, 'answered');
+  }
 });
 test('HTTP: límite y recuperación de la ventana', async t => {
   let now = 1000; const request = await start(t, { rateLimit: 1, clock: () => now });

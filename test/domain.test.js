@@ -9,10 +9,45 @@ test('catálogo: IDs únicos, enlaces oficiales y fecha editorial', () => {
   assert.equal(new Set(sources.map(s => s.id)).size, sources.length);
   for (const s of sources) {
     assert.equal(new URL(s.url).protocol, 'https:');
-    assert.ok(['www.dt.gob.cl', 'dt.gob.cl', 'www.sernac.gob.cl'].includes(new URL(s.url).hostname));
+    assert.ok(['www.dt.gob.cl', 'dt.gob.cl', 'www.sernac.gob.cl', 'www.bcn.cl', 'www.pjud.cl', 'www2.tribunalconstitucional.cl'].includes(new URL(s.url).hostname));
     assert.match(s.reviewedAt, /^\d{4}-\d{2}-\d{2}$/);
     assert.ok(s.summary && s.reference);
   }
+});
+test('jurisprudencia distingue fallo, reseña y fechas sin inventar datos', () => {
+  for (const s of sources.filter(s => s.kind === 'jurisprudencia')) {
+    assert.ok(s.court && s.docket && s.documentType && s.locator && s.scope);
+    if (s.documentType === 'Reseña oficial de fallo') {
+      assert.equal(s.decisionDate, null);
+      assert.match(s.publishedAt, /^\d{4}-\d{2}-\d{2}$/);
+    } else assert.match(s.decisionDate, /^\d{4}-\d{2}-\d{2}$/);
+  }
+});
+test('filtros combinados y búsqueda por rol con o sin puntos', () => {
+  for (const area of ['civil', 'penal', 'constitucional']) {
+    assert.equal(searchSources('', area, 'jurisprudencia').length, 1);
+    assert.equal(searchSources('', area, 'legislacion').length, 1);
+    assert.equal(searchSources('', area, 'orientacion').length, 0);
+  }
+  assert.equal(searchSources('15355-2025')[0].id, 'CS-CIVIL-15355-2025');
+  assert.equal(searchSources('17.010-25 CPR')[0].id, 'TC-17010-25-CPR');
+});
+test('nuevas áreas recuperan jurisprudencia pertinente y evitan mezclar contrato laboral', async () => {
+  for (const [area, question, id] of [
+    ['civil', 'Jurisprudencia sobre incumplimiento contractual', 'CS-CIVIL-15355-2025'],
+    ['penal', 'Jurisprudencia sobre nulidad penal y debido proceso', 'CS-PENAL-55308-2025'],
+    ['constitucional', 'Jurisprudencia sobre control preventivo y sufragio', 'TC-17010-25-CPR'],
+  ]) {
+    const result = await answerQuestion({ question, area });
+    assert.equal(result.status, 'answered');
+    assert.deepEqual(result.sources.map(s => s.id), [id]);
+  }
+  assert.ok(retrieveEvidence('Incumplimiento de contrato civil', 'todas').every(s => s.area === 'civil'));
+  assert.deepEqual(retrieveEvidence('Sentencia rol 55.308-2025', 'todas').map(s => s.id), ['CS-PENAL-55308-2025']);
+  assert.equal((await answerQuestion({ question: '¿Cómo tramito una herencia?', area: 'civil' })).status, 'insufficient');
+  assert.equal((await answerQuestion({ question: '¿Cuántos años de cárcel corresponden por hurto?', area: 'penal' })).status, 'insufficient');
+  assert.equal((await answerQuestion({ question: 'Jurisprudencia sobre homicidio', area: 'penal' })).status, 'insufficient');
+  assert.equal((await answerQuestion({ question: 'Jurisprudencia sobre herencias', area: 'civil' })).status, 'insufficient');
 });
 test('búsqueda ignora acentos, respeta filtros y admite resultados vacíos', () => {
   assert.equal(searchSources('GARANTÍA')[0].id, 'SERNAC-GARANTIA');
