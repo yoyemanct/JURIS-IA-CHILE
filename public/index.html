@@ -81,6 +81,19 @@
     line-height: 1.5;
   }
   .respuesta h2 { margin-top: 0; font-size: 1rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.03em; }
+  .informe { white-space: normal; }
+  .informe h3 {
+    font-size: 1.02rem;
+    color: var(--azul);
+    margin: 22px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--borde);
+  }
+  .informe h3:first-child { margin-top: 0; }
+  .informe p { margin: 0 0 10px; }
+  .informe ul { margin: 0 0 12px; padding-left: 22px; }
+  .informe li { margin-bottom: 6px; }
+  .informe strong { color: var(--azul); }
 
   .doc-card {
     background: var(--blanco);
@@ -199,6 +212,36 @@
       return div.innerHTML;
     }
 
+    // Convierte el markdown basico del informe (titulos ##, listas, negritas)
+    // a HTML. Se aplica SOBRE el texto ya escapado, asi que no puede inyectar
+    // HTML que venga del modelo.
+    function renderInforme(texto) {
+      const lineas = escapeHtml(texto).split("\n");
+      let html = "";
+      let enLista = false;
+      const linea = (t) => t
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+
+      for (const cruda of lineas) {
+        const l = cruda.trim();
+        const esItem = /^[-*•]\s+/.test(l);
+        if (enLista && !esItem) { html += "</ul>"; enLista = false; }
+
+        if (!l) continue;
+        if (/^#{1,4}\s+/.test(l)) {
+          html += `<h3>${linea(l.replace(/^#{1,4}\s+/, ""))}</h3>`;
+        } else if (esItem) {
+          if (!enLista) { html += "<ul>"; enLista = true; }
+          html += `<li>${linea(l.replace(/^[-*•]\s+/, ""))}</li>`;
+        } else {
+          html += `<p>${linea(l)}</p>`;
+        }
+      }
+      if (enLista) html += "</ul>";
+      return html;
+    }
+
     function renderDocs(docs) {
       if (!docs || docs.length === 0) return "";
       return docs
@@ -261,9 +304,9 @@
 
         const nombreProveedor = NOMBRES_PROVEEDOR[data.proveedor_usado] || data.proveedor_usado || "la IA";
         resultado.innerHTML = `
-          <div class="respuesta">
-            <h2>Respuesta de ${escapeHtml(nombreProveedor)}</h2>
-            ${escapeHtml(data.respuesta)}
+          <div class="respuesta informe">
+            <h2>Informe de ${escapeHtml(nombreProveedor)}</h2>
+            ${renderInforme(data.respuesta)}
           </div>
           <div>
             <h2 style="color:#6b7280; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.03em;">Documentos usados como base</h2>

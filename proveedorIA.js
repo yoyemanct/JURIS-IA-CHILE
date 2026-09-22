@@ -22,7 +22,10 @@ const OLLAMA_TEMPERATURA = Number(process.env.OLLAMA_TEMPERATURA || 0.15);
 // Ventana de contexto. Ollama usa 4096 por defecto, que puede ser insuficiente
 // para el system prompt + 6 articulos legales: si se pasa, Ollama CORTA el
 // texto en silencio y el modelo responde sin haber leido los documentos.
-const OLLAMA_NUM_CTX = Number(process.env.OLLAMA_NUM_CTX || 8192);
+const OLLAMA_NUM_CTX = Number(process.env.OLLAMA_NUM_CTX || 12288);
+// Largo maximo de la respuesta. Un informe juridico estructurado no cabe en
+// las 700 palabras que permitian los 1024 tokens originales.
+const MAX_TOKENS_RESPUESTA = Number(process.env.MAX_TOKENS_RESPUESTA || 4000);
 const USAR_QWEN = process.env.USAR_QWEN !== "false";
 
 let anthropic = null;
@@ -63,7 +66,7 @@ async function responderConClaude({ systemPrompt, userMessage }) {
   }
   const respuesta = await anthropic.messages.create({
     model: CLAUDE_MODEL,
-    max_tokens: 1024,
+    max_tokens: MAX_TOKENS_RESPUESTA,
     system: systemPrompt,
     messages: [{ role: "user", content: userMessage }],
   });
@@ -103,6 +106,7 @@ async function responderConQwen({ systemPrompt, userMessage }) {
         options: {
           temperature: OLLAMA_TEMPERATURA,
           num_ctx: OLLAMA_NUM_CTX,
+          num_predict: MAX_TOKENS_RESPUESTA,
           top_p: 0.9,
         },
         messages: [

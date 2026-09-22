@@ -14,10 +14,13 @@ const corpusLocal = JSON.parse(
   fs.readFileSync(path.join(__dirname, "data", "corpus.json"), "utf-8")
 );
 
-const MAX_NORMAS = 3;
-const MAX_ARTICULOS_POR_NORMA = 2;
-const MAX_DOCUMENTOS_REMOTOS = 6;
-const TIMEOUT_TOTAL_MS = 12000;
+// Cuanto material legal se recupera antes de redactar. Mas alto = respuestas
+// mas completas (mas cuerpos legales revisados, mas articulos por cuerpo),
+// a costa de consultas mas lentas y de un contexto mas grande para el modelo.
+const MAX_NORMAS = Number(process.env.MAX_NORMAS || 5);
+const MAX_ARTICULOS_POR_NORMA = Number(process.env.MAX_ARTICULOS_POR_NORMA || 4);
+const MAX_DOCUMENTOS_REMOTOS = Number(process.env.MAX_DOCUMENTOS_REMOTOS || 14);
+const TIMEOUT_TOTAL_MS = Number(process.env.TIMEOUT_BUSQUEDA_MS || 20000);
 
 function conTimeout(promesa, ms) {
   return Promise.race([
