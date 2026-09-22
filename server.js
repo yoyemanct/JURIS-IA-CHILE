@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const path = require("path");
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 const Anthropic = require("@anthropic-ai/sdk");
 const { buscarContexto } = require("./busquedaHibrida");
 
@@ -9,9 +10,38 @@ const PORT = process.env.PORT || 3000;
 const MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5";
 const USAR_CORPUS_REMOTO = process.env.USAR_CORPUS_REMOTO !== "false";
 
+// Límites pensados para una app pública: evitan que alguien dispare miles de
+// consultas y te deje una boleta gigante en Anthropic (cada consulta a Claude
+// se cobra). Ajustables por variables de entorno.
+const MAX_LARGO_PREGUNTA = Number(process.env.MAX_LARGO_PREGUNTA || 600);
+const LIMITE_CONSULTAS_IA = Number(process.env.LIMITE_CONSULTAS_IA || 15);
+const LIMITE_BUSQUEDAS = Number(process.env.LIMITE_BUSQUEDAS || 60);
+const VENTANA_MINUTOS = Number(process.env.VENTANA_MINUTOS || 15);
+
 const app = express();
-app.use(express.json());
+// Necesario en Render/Railway/Fly para que el rate limit vea la IP real del
+// visitante y no la del proxy del hosting.
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "32kb" }));
 app.use(express.static(path.join(__dirname, "public")));
+
+const limitadorIA = rateLimit({
+  windowMs: VENTANA_MINUTOS * 60 * 1000,
+  limit: LIMITE_CONSULTAS_IA,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: `Has alcanzado el límite de ${LIMITE_CONSULTAS_IA} preguntas cada ${VENTANA_MINUTOS} minutos. Espera un rato y vuelve a intentar.`,
+  },
+});
+
+const limitadorBusqueda = rateLimit({
+  windowMs: VENTANA_MINUTOS * 60 * 1000,
+  limit: LIMITE_BUSQUEDAS,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiadas búsquedas seguidas. Espera un momento." },
+});
 
 let anthropic = null;
 if (process.env.ANTHROPIC_API_KEY) {
@@ -19,8 +49,8 @@ if (process.env.ANTHROPIC_API_KEY) {
 }
 
 // --- Endpoint 1: solo buscador (sin IA) ---------------------------------
-app.get("/api/buscar", async (req, res) => {
-  const consulta = (req.query.q || "").toString().trim();
+app.get("/api/buscar", limitadorBusqueda, async (req, res) => {
+  const consulta = (req.query.q || "").toString().trim().slice(0, MAX_LARGO_PREGUNTA);
   if (!consulta) {
     return res.status(400).json({ error: "Falta el parámetro 'q'." });
   }
@@ -40,10 +70,15 @@ app.get("/api/buscar", async (req, res) => {
 });
 
 // --- Endpoint 2: pregunta en lenguaje natural + respuesta de Claude ----
-app.post("/api/consultar", async (req, res) => {
+app.post("/api/consultar", limitadorIA, async (req, res) => {
   const pregunta = (req.body?.pregunta || "").toString().trim();
   if (!pregunta) {
     return res.status(400).json({ error: "Falta 'pregunta' en el cuerpo de la solicitud." });
+  }
+  if (pregunta.length > MAX_LARGO_PREGUNTA) {
+    return res.status(400).json({
+      error: `La pregunta es demasiado larga (máximo ${MAX_LARGO_PREGUNTA} caracteres). Resúmela y vuelve a intentar.`,
+    });
   }
   if (!anthropic) {
     return res.status(500).json({
@@ -119,7 +154,10 @@ Reglas estrictas:
 });
 
 app.listen(PORT, () => {
-  console.log(`Lexchile prototipo escuchando en http://localhost:${PORT}`);
+  console.log(`JurisGPT escuchando en http://localhost:${PORT}`);
+  console.log(
+    `Límites activos: ${LIMITE_CONSULTAS_IA} preguntas y ${LIMITE_BUSQUEDAS} búsquedas por IP cada ${VENTANA_MINUTOS} min.`
+  );
   if (!anthropic) {
     console.warn(
       "ADVERTENCIA: no hay ANTHROPIC_API_KEY configurada. El buscador funcionará, pero el chat con Claude no."

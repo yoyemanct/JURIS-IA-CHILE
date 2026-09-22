@@ -1,7 +1,7 @@
 {
-  "name": "lexchile-app",
+  "name": "jurisgpt",
   "version": "0.1.0",
-  "description": "Prototipo de Lexchile: buscador + chat con IA (Claude) para legislación chilena, con citas a la fuente.",
+  "description": "JurisGPT: buscador + chat con IA (Claude) para legislación chilena, con citas a la fuente.",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -14,6 +14,7 @@
     "@anthropic-ai/sdk": "^0.127.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "dotenv": "^18.0.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0"
   }
 }

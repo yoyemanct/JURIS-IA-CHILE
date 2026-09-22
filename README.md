@@ -1,10 +1,10 @@
-# Lexchile
+# JurisGPT
 
 > Open-source AI toolkit for searching, structuring and citing Chilean legislation and legal sources.
 
-Prototipo funcional para el proyecto **Lexchile**: un buscador + asistente de IA (usando Claude, de
-Anthropic) que responde preguntas sobre legislación chilena citando siempre la ley y el
-artículo exacto — pensado tanto para abogados como para personas sin formación legal.
+**JurisGPT**: un buscador + asistente de IA (usando Claude, de Anthropic) que responde preguntas
+sobre legislación chilena citando siempre la ley y el artículo exacto — pensado tanto para
+abogados como para personas sin formación legal.
 
 Fuente de datos del corpus jurídico completo: [leyes.pisanvs.cl](https://leyes.pisanvs.cl)
 (proyecto [`pisanvs/ley-chile`](https://github.com/pisanvs/ley-chile), AGPLv3), que reconstruye
@@ -18,7 +18,7 @@ detalles de licencia y de qué tan confiable es esta fuente.
    - **Corpus jurídico completo** (remoto): se consulta en vivo el servidor MCP público de
      [leyes.pisanvs.cl](https://leyes.pisanvs.cl) — un proyecto open source que reconstruyó
      ~333.000 normas chilenas (con historial de versiones) desde la Biblioteca del Congreso
-     Nacional. Esta es la fuente que le da a Lexchile cobertura amplia de la legislación real,
+     Nacional. Esta es la fuente que le da a JurisGPT cobertura amplia de la legislación real,
      sin que tengamos que cargar cada ley a mano.
    - **Corpus local de ejemplo** (`data/corpus.json`): 11 artículos cargados a mano como
      respaldo, para cuando el servicio remoto no responda, y como ejemplos ya verificados.
@@ -61,15 +61,15 @@ Es importante que sepas exactamente qué estás usando:
   por ejemplo, LeyChile/BCN directamente.
 - **Es gratuito, público y de solo lectura** — no requiere autenticación, pero tampoco hay
   garantía de disponibilidad. Si en algún momento ese servicio deja de funcionar o cambia,
-  Lexchile debería seguir funcionando igual con el corpus local (aunque mucho más limitado).
-- **Licencia:** el código de ese proyecto es AGPLv3. Lexchile **no copia ni incorpora su
+  JurisGPT debería seguir funcionando igual con el corpus local (aunque mucho más limitado).
+- **Licencia:** el código de ese proyecto es AGPLv3. JurisGPT **no copia ni incorpora su
   código**, solo lo consume como una API externa (igual que llamarías a cualquier otra API
-  pública) — por eso esto no impone condiciones de licencia sobre el código de Lexchile. Si en
+  pública) — por eso esto no impone condiciones de licencia sobre el código de JurisGPT. Si en
   el futuro quieres clonar o modificar el código de ese proyecto directamente (no solo
   consumir su API), ahí sí aplicarían las condiciones de AGPLv3 (básicamente: cualquier
   versión modificada que ofrezcas por red también debe ser de código abierto).
 - Dale crédito visible en tu app y tu README a `leyes.pisanvs.cl` / `pisanvs/ley-chile` como
-  fuente de datos — es lo correcto y además le da más credibilidad a Lexchile frente a
+  fuente de datos — es lo correcto y además le da más credibilidad a JurisGPT frente a
   abogados que quieran verificar de dónde sale la información.
 
 ## Extractos vs. texto completo
@@ -131,6 +131,53 @@ Abre `http://localhost:3000` en tu navegador y prueba preguntas como:
 - "¿Cuál es el plazo de desahucio si arriendo mes a mes?"
 - Preguntas más técnicas de otras áreas del derecho (debería encontrarlas en el corpus
   completo remoto, aunque no estén en los 11 ejemplos locales).
+
+## Publicarlo para que gente externa lo use
+
+### Antes de abrirlo al público: entiende el costo
+
+Cada pregunta que alguien haga llama a la API de Claude y **te la cobran a ti** (a la API key
+que pusiste en el servidor). Si el link se comparte y mucha gente lo usa, tu cuenta de Anthropic
+va acumulando cobros. Por eso el servidor ya trae protecciones:
+
+- **Límite por visitante**: por defecto, 15 preguntas y 60 búsquedas cada 15 minutos por IP.
+  Ajustables con `LIMITE_CONSULTAS_IA`, `LIMITE_BUSQUEDAS` y `VENTANA_MINUTOS`.
+- **Límite de largo**: las preguntas se cortan a 600 caracteres (`MAX_LARGO_PREGUNTA`), para que
+  nadie mande textos gigantes que salen caros.
+
+Además, en la consola de Anthropic (**Billing → Limits / Usage**) configura un **límite de gasto
+mensual** y alertas por correo. Esa es tu red de seguridad real: si algo se dispara, corta solo.
+
+### Desplegarlo en Render (la opción más simple)
+
+1. Crea una cuenta en **https://render.com** (puedes entrar con tu cuenta de GitHub).
+2. Dale a **"New +" → "Web Service"** y autoriza a Render a ver tus repos de GitHub.
+3. Elige el repositorio **`yoyemanct/Lexchile`**.
+4. Configura así:
+   - **Runtime**: Node
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Instance Type**: el plan gratuito sirve para empezar (ojo: en el plan gratis el servidor
+     se "duerme" tras un rato sin uso y la primera visita después demora ~30 segundos en cargar).
+5. En **"Environment Variables"** agrega:
+   - `ANTHROPIC_API_KEY` = tu clave real de Anthropic
+   - (opcional) `CLAUDE_MODEL` = `claude-sonnet-5`
+   - (opcional) `LIMITE_CONSULTAS_IA` = el número de preguntas por visitante que quieras permitir
+6. Dale a **"Create Web Service"**. En unos minutos te da una URL pública tipo
+   `https://jurisgpt.onrender.com` — esa es la que compartes.
+
+Cada vez que hagas `git push` a este repo, Render redespliega solo.
+
+### Antes de compartir el link, revisa esto
+
+- **Aviso legal visible**: la interfaz ya lo trae al pie, pero si la gente va a tomar decisiones
+  reales con esto, vale la pena hacerlo más prominente.
+- **El corpus remoto es de terceros**: si leyes.pisanvs.cl se cae, tus usuarios verán solo los
+  11 ejemplos locales (con el aviso correspondiente en pantalla). Para algo serio conviene, más
+  adelante, tener tu propia copia del corpus.
+- **Datos de usuarios**: hoy la app no guarda nada de lo que la gente pregunta. Si más adelante
+  agregas historial o analítica, ahí sí entras en terreno de datos personales y necesitas una
+  política de privacidad.
 
 ## Cómo seguir creciendo esto
 
