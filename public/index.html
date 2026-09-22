@@ -131,7 +131,7 @@
 <body>
   <header>
     <h1>Juris IA Chile</h1>
-    <p>Buscador y asistente de IA (Claude) para legislación chilena, con citas a la fuente.</p>
+    <p>Buscador y asistente de IA para legislación chilena, con citas a la fuente.</p>
   </header>
 
   <main>
@@ -142,6 +142,11 @@
       de un abogado o abogada.
     </div>
     <div id="aviso-corpus" class="aviso" style="display:none; background:#fdeecb; border-color:#f0c86b; color:#8a5a00;"></div>
+
+    <div id="selector-proveedor" style="display:none; margin-bottom: 10px; font-size: 0.9rem; color: var(--gris);">
+      Responder con:
+      <select id="input-proveedor" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--borde);"></select>
+    </div>
 
     <form id="form-consulta">
       <input
@@ -164,6 +169,28 @@
     const estado = document.getElementById("estado");
     const resultado = document.getElementById("resultado");
     const avisoCorpus = document.getElementById("aviso-corpus");
+    const selectorProveedor = document.getElementById("selector-proveedor");
+    const inputProveedor = document.getElementById("input-proveedor");
+
+    const NOMBRES_PROVEEDOR = { claude: "Claude", qwen: "Qwen (local)" };
+
+    async function cargarProveedores() {
+      try {
+        const res = await fetch("/api/proveedores");
+        const data = await res.json();
+        const proveedores = data.proveedores || [];
+        if (proveedores.length <= 1) return; // nada que elegir
+        inputProveedor.innerHTML = proveedores
+          .map((p) => `<option value="${p.id}" title="${escapeHtml(p.descripcion || "")}">${escapeHtml(p.nombre)}</option>`)
+          .join("");
+        if (data.predeterminado) inputProveedor.value = data.predeterminado;
+        selectorProveedor.style.display = "block";
+      } catch (err) {
+        // Si esto falla, simplemente no se muestra el selector; el backend
+        // igual usará su proveedor predeterminado.
+      }
+    }
+    cargarProveedores();
 
     function escapeHtml(texto) {
       const div = document.createElement("div");
@@ -202,16 +229,20 @@
       const pregunta = input.value.trim();
       if (!pregunta) return;
 
+      const proveedorElegido = selectorProveedor.style.display !== "none" ? inputProveedor.value : "";
+
       boton.disabled = true;
       estado.style.display = "block";
-      estado.textContent = "Buscando en el corpus y consultando a Claude…";
+      estado.textContent = proveedorElegido === "qwen"
+        ? "Buscando en el corpus y consultando al modelo local (Qwen)… puede tardar más que Claude."
+        : "Buscando en el corpus y consultando a la IA…";
       resultado.innerHTML = "";
 
       try {
         const res = await fetch("/api/consultar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pregunta }),
+          body: JSON.stringify({ pregunta, proveedor: proveedorElegido || undefined }),
         });
         const data = await res.json();
 
@@ -227,9 +258,10 @@
           avisoCorpus.style.display = "none";
         }
 
+        const nombreProveedor = NOMBRES_PROVEEDOR[data.proveedor_usado] || data.proveedor_usado || "la IA";
         resultado.innerHTML = `
           <div class="respuesta">
-            <h2>Respuesta de Claude</h2>
+            <h2>Respuesta de ${escapeHtml(nombreProveedor)}</h2>
             ${escapeHtml(data.respuesta)}
           </div>
           <div>

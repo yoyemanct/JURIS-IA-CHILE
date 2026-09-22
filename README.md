@@ -2,9 +2,11 @@
 
 > Open-source AI toolkit for searching, structuring and citing Chilean legislation and legal sources.
 
-**Juris IA Chile**: un buscador + asistente de IA (usando Claude, de Anthropic) que responde preguntas
-sobre legislación chilena citando siempre la ley y el artículo exacto — pensado tanto para
-abogados como para personas sin formación legal.
+**Juris IA Chile**: un buscador + asistente de IA que responde preguntas sobre legislación chilena
+citando siempre la ley y el artículo exacto — pensado tanto para abogados como para personas sin
+formación legal. Puedes usar **Claude** (de Anthropic, de pago pero muy preciso) o **Qwen
+corriendo localmente vía Ollama** (gratis, en tu propio computador) como motor de IA — ver la
+sección "Elegir el proveedor de IA" más abajo.
 
 Fuente de datos del corpus jurídico completo: [leyes.pisanvs.cl](https://leyes.pisanvs.cl)
 (proyecto [`pisanvs/ley-chile`](https://github.com/pisanvs/ley-chile), AGPLv3), que reconstruye
@@ -22,10 +24,11 @@ detalles de licencia y de qué tan confiable es esta fuente.
      sin que tengamos que cargar cada ley a mano.
    - **Corpus local de ejemplo** (`data/corpus.json`): 11 artículos cargados a mano como
      respaldo, para cuando el servicio remoto no responda, y como ejemplos ya verificados.
-3. Esos artículos se le pasan a Claude como contexto, con instrucciones estrictas de responder
-   **solo** con esa información y citar siempre la ley y el artículo.
-4. La respuesta de Claude y los documentos usados se muestran en la página, indicando de cuál
-   de las dos fuentes vino cada uno.
+3. Esos artículos se le pasan a la IA (Claude o Qwen local, según lo que hayas configurado) como
+   contexto, con instrucciones estrictas de responder **solo** con esa información y citar
+   siempre la ley y el artículo.
+4. La respuesta y los documentos usados se muestran en la página, indicando de cuál de las dos
+   fuentes vino cada documento y qué proveedor de IA respondió.
 
 Esto se llama un patrón **RAG** (Retrieval-Augmented Generation): en vez de dejar que la IA
 "invente" desde su memoria general, la obligamos a responder solo con documentos reales, y a
@@ -81,15 +84,48 @@ varios están guardados como un *extracto* del párrafo más relevante — cada 
 ("Corpus completo" / "Ejemplo local", "Texto completo" / "Extracto") para que siempre sepas
 qué estás leyendo, y Claude también recibe esa distinción para advertirla cuando corresponda.
 
-## Paso 1: Consigue tu clave (API key) de Anthropic
+## Elegir el proveedor de IA: Claude, Qwen local, o ambos
+
+Juris IA Chile puede responder con dos motores de IA distintos. No son excluyentes: puedes
+configurar los dos a la vez y elegir cuál usar desde un menú en la propia página.
+
+| | **Claude** (nube) | **Qwen local** (Ollama) |
+|---|---|---|
+| Costo | De pago (centavos por consulta) | Gratis |
+| Precisión citando artículos | Alta | Menor — modelos locales chicos siguen instrucciones estrictas con menos consistencia, y hay más riesgo de que "inventen" un número de artículo |
+| Requiere internet | Sí | No (corre en tu computador) |
+| Requiere instalar algo | No, solo una clave | Sí: [Ollama](https://ollama.com) + descargar un modelo |
+
+Recomendación: si esto lo va a usar gente además de ti, o si la precisión legal importa mucho,
+prioriza Claude. Qwen local es ideal para probar sin gastar, o como respaldo gratuito.
+
+### Opción A: Configurar Claude
 
 1. Ve a **https://console.anthropic.com/** y crea una cuenta (o inicia sesión).
 2. Busca la sección **"API Keys"** y crea una nueva clave (cópiala de inmediato, solo se
    muestra una vez).
 3. Anthropic normalmente pide cargar algo de crédito (unos pocos dólares alcanzan para miles
    de consultas de prueba) en **"Billing"**.
+4. En tu archivo `.env` (ver Paso 3 más abajo), pega la clave en `ANTHROPIC_API_KEY`.
 
 Nunca compartas esa clave ni la subas a GitHub.
+
+### Opción B: Configurar Qwen local (gratis)
+
+1. Instala **Ollama** desde **https://ollama.com** (tiene instalador para Windows, Mac y Linux).
+2. Descarga un modelo Qwen. En una terminal:
+   ```bash
+   ollama pull qwen2.5
+   ```
+3. Deja Ollama corriendo (normalmente se inicia solo tras instalarlo; si no, ejecuta
+   `ollama serve` en una terminal y déjala abierta).
+4. En tu archivo `.env`, revisa que `USAR_QWEN=true` y que `OLLAMA_MODEL` coincida exactamente
+   con el nombre del modelo que descargaste (`ollama list` te muestra los nombres exactos).
+5. No necesitas ninguna clave ni cuenta para esto — corre 100% en tu computador.
+
+Si configuras ambos (Claude y Qwen), en `.env` puedes elegir cuál se usa por defecto con
+`PROVEEDOR_IA_PREDETERMINADO`, y la página mostrará un menú para cambiar de uno a otro en
+cualquier momento.
 
 ## Paso 2: Instala Node.js (si no lo tienes)
 
@@ -107,7 +143,8 @@ npm install
 cp .env.example .env
 ```
 
-Abre `.env` y reemplaza `ANTHROPIC_API_KEY=sk-ant-tu-clave-aqui` con tu clave real.
+Abre `.env` y configura el o los proveedores de IA que quieras usar (ver sección de arriba
+"Elegir el proveedor de IA").
 
 ## Paso 4: Verifica la conexión al corpus completo
 
@@ -136,9 +173,14 @@ Abre `http://localhost:3000` en tu navegador y prueba preguntas como:
 
 ### Antes de abrirlo al público: entiende el costo
 
-Cada pregunta que alguien haga llama a la API de Claude y **te la cobran a ti** (a la API key
-que pusiste en el servidor). Si el link se comparte y mucha gente lo usa, tu cuenta de Anthropic
-va acumulando cobros. Por eso el servidor ya trae protecciones:
+Si usas **Claude**, cada pregunta que alguien haga llama a la API y **te la cobran a ti** (a la
+API key que pusiste en el servidor). Si el link se comparte y mucha gente lo usa, tu cuenta de
+Anthropic va acumulando cobros. Por eso el servidor ya trae protecciones:
+
+> Nota sobre Qwen local y una app pública: **Qwen local no funciona si despliegas la app en un
+> servicio como Render**, porque Ollama tendría que correr en el mismo servidor y eso no es
+> parte de este proyecto tal como está. Para una app pública, usa Claude. Qwen local es para
+> cuando tú (u otras personas en tu misma red/computador) usan la app de forma local.
 
 - **Límite por visitante**: por defecto, 15 preguntas y 60 búsquedas cada 15 minutos por IP.
   Ajustables con `LIMITE_CONSULTAS_IA`, `LIMITE_BUSQUEDAS` y `VENTANA_MINUTOS`.
@@ -198,6 +240,7 @@ Cada vez que hagas `git push` a este repo, Render redespliega solo.
 ```
 JURIS-IA-CHILE/
 ├── server.js            # Backend Express: sirve la página y las rutas de la API
+├── proveedorIA.js        # Elige y llama al proveedor de IA (Claude o Qwen local vía Ollama)
 ├── search.js            # Motor de búsqueda simple por palabras clave (corpus local)
 ├── mcpLeyChile.js        # Cliente MCP hacia el corpus jurídico completo remoto
 ├── normalizadorMcp.js    # Interpreta las respuestas del servidor remoto de forma flexible

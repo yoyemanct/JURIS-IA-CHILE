@@ -3,11 +3,10 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const Anthropic = require("@anthropic-ai/sdk");
 const { buscarContexto } = require("./busquedaHibrida");
+const proveedorIA = require("./proveedorIA");
 
 const PORT = process.env.PORT || 3000;
-const MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5";
 const USAR_CORPUS_REMOTO = process.env.USAR_CORPUS_REMOTO !== "false";
 
 // Límites pensados para una app pública: evitan que alguien dispare miles de
@@ -43,10 +42,13 @@ const limitadorBusqueda = rateLimit({
   message: { error: "Demasiadas búsquedas seguidas. Espera un momento." },
 });
 
-let anthropic = null;
-if (process.env.ANTHROPIC_API_KEY) {
-  anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
+// --- Endpoint 0: qué proveedores de IA están disponibles (Claude / Qwen) --
+app.get("/api/proveedores", (req, res) => {
+  res.json({
+    proveedores: proveedorIA.proveedoresDisponibles(),
+    predeterminado: proveedorIA.PROVEEDOR_PREDETERMINADO,
+  });
+});
 
 // --- Endpoint 1: solo buscador (sin IA) ---------------------------------
 app.get("/api/buscar", limitadorBusqueda, async (req, res) => {
@@ -69,7 +71,7 @@ app.get("/api/buscar", limitadorBusqueda, async (req, res) => {
   }
 });
 
-// --- Endpoint 2: pregunta en lenguaje natural + respuesta de Claude ----
+// --- Endpoint 2: pregunta en lenguaje natural + respuesta de la IA -----
 app.post("/api/consultar", limitadorIA, async (req, res) => {
   const pregunta = (req.body?.pregunta || "").toString().trim();
   if (!pregunta) {
@@ -80,10 +82,18 @@ app.post("/api/consultar", limitadorIA, async (req, res) => {
       error: `La pregunta es demasiado larga (máximo ${MAX_LARGO_PREGUNTA} caracteres). Resúmela y vuelve a intentar.`,
     });
   }
-  if (!anthropic) {
+  const proveedoresDisponibles = proveedorIA.proveedoresDisponibles();
+  if (proveedoresDisponibles.length === 0) {
     return res.status(500).json({
       error:
-        "No hay una ANTHROPIC_API_KEY configurada en el servidor. Revisa el archivo .env (ver README).",
+        "No hay ningún proveedor de IA configurado en el servidor (ni ANTHROPIC_API_KEY ni Qwen local). Revisa el archivo .env (ver README).",
+    });
+  }
+  const proveedorPedido = (req.body?.proveedor || "").toString().trim();
+  if (proveedorPedido && !proveedoresDisponibles.some((p) => p.id === proveedorPedido)) {
+    return res.status(400).json({
+      error: `El proveedor "${proveedorPedido}" no está disponible en este servidor.`,
+      proveedores_disponibles: proveedoresDisponibles,
     });
   }
 
@@ -120,35 +130,33 @@ Reglas estrictas:
 5. Si solo tienes documentos de "ejemplo local curado a mano" (corpus de demostración limitado) y no del corpus completo, adviértelo: la respuesta puede no reflejar toda la legislación relevante.
 6. Ajusta el nivel de detalle: si la pregunta suena de un no-abogado (lenguaje cotidiano), prioriza claridad; si suena técnica o de un profesional del derecho, puedes ser más preciso y citar con más detalle.
 7. Aclara siempre, al final, que esto es información general y no reemplaza el consejo de un abogado o abogada.
-8. Responde en español, de forma clara.`;
+8. Responde en español, de forma clara.
+9. Nunca inventes un número de artículo, una ley o una cita que no esté literalmente en los documentos de contexto. Si no estás seguro, dilo en vez de adivinar.`;
 
   const userMessage = `Documentos disponibles como contexto:\n\n${contexto || "(no se encontraron documentos relevantes)"}${avisoCorpusCompleto}\n\nPregunta del usuario: ${pregunta}`;
 
   try {
-    const respuesta = await anthropic.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
+    const { texto: textoRespuesta, proveedor: proveedorUsado } = await proveedorIA.responder({
+      proveedor: proveedorPedido,
+      systemPrompt,
+      userMessage,
     });
-
-    const textoRespuesta = respuesta.content
-      .filter((bloque) => bloque.type === "text")
-      .map((bloque) => bloque.text)
-      .join("\n");
 
     res.json({
       pregunta,
       respuesta: textoRespuesta,
+      proveedor_usado: proveedorUsado,
       documentos_usados: relevantes,
       corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
       aviso_corpus_completo: !remotoDisponible ? remotoError : null,
     });
   } catch (err) {
-    console.error("Error llamando a la API de Claude:", err);
+    console.error("Error consultando al proveedor de IA:", err);
     res.status(502).json({
-      error: "Ocurrió un error al consultar a Claude. Revisa la consola del servidor y tu API key.",
-      detalle: err?.message,
+      error:
+        err?.message ||
+        "Ocurrió un error al generar la respuesta. Revisa la consola del servidor.",
+      codigo: err?.codigo || null,
     });
   }
 });
@@ -158,9 +166,14 @@ app.listen(PORT, () => {
   console.log(
     `Límites activos: ${LIMITE_CONSULTAS_IA} preguntas y ${LIMITE_BUSQUEDAS} búsquedas por IP cada ${VENTANA_MINUTOS} min.`
   );
-  if (!anthropic) {
+  const disponibles = proveedorIA.proveedoresDisponibles();
+  if (disponibles.length === 0) {
     console.warn(
-      "ADVERTENCIA: no hay ANTHROPIC_API_KEY configurada. El buscador funcionará, pero el chat con Claude no."
+      "ADVERTENCIA: no hay ningún proveedor de IA configurado (ni ANTHROPIC_API_KEY ni Qwen local). El buscador funcionará, pero el chat con IA no."
+    );
+  } else {
+    console.log(
+      `Proveedores de IA disponibles: ${disponibles.map((p) => p.id).join(", ")} (predeterminado: ${proveedorIA.PROVEEDOR_PREDETERMINADO}).`
     );
   }
 });
