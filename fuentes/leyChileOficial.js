@@ -39,9 +39,11 @@
 //   1. El servicio entrega el XML en ISO-8859-1 pero no siempre lo declara
 //      en la cabecera HTTP. Al leerlo como UTF-8, cada tilde se rompía; el
 //      texto legal quedaba ilegible.
-//   2. Como consecuencia, el atributo tipoParte="Artículo" llegaba con la
-//      tilde rota y no coincidía con ninguna comparación exacta, así que el
-//      recorrido no reconocía ni un solo artículo.
+//   2. La BCN escribe cada carácter no-ASCII como entidad numérica
+//      (tipoParte="Art&#237;culo", "tendr&#225;", "reposici&#243;n"), y el
+//      lector no las estaba traduciendo. El atributo nunca coincidía con
+//      "Artículo", así que el articulado entero se perdía sin error alguno.
+//      Esta resultó ser la causa principal.
 //
 // Ahora se detecta la codificación desde el prólogo del XML, y además el
 // reconocimiento de tipos es tolerante a tildes rotas, de modo que una
@@ -67,6 +69,12 @@ const parser = new XMLParser({
   trimValues: false,
   parseTagValue: false,
   parseAttributeValue: false,
+  // IMPRESCINDIBLE: la BCN escribe cada carácter no-ASCII como entidad
+  // numérica (Art&#237;culo, tendr&#225;, reposici&#243;n). Sin esto, ni el
+  // texto legal es legible ni el atributo tipoParte="Artículo" coincide con
+  // nada, y el articulado completo se pierde en silencio.
+  processEntities: true,
+  htmlEntities: true,
 });
 
 // Caché en memoria: una misma norma se consulta muchas veces seguidas

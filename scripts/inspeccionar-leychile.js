@@ -85,7 +85,10 @@ function contar(xml, etiqueta) {
 
     // Alrededor de la primera aparición de "Artículo", para ver en qué
     // elemento vive realmente el articulado.
-    const pos = xml.search(/Art[íi]culo/i);
+    // Ojo: la BCN escribe las tildes como entidades numéricas, así que
+    // "Artículo" aparece en el XML como "Art&#237;culo". Hay que buscar
+    // ambas formas o el resultado engaña.
+    const pos = xml.search(/Art(&#237;|í|i)culo/i);
     if (pos > -1) {
       console.log("\n-- Contexto de la primera aparición de \"Artículo\" --");
       console.log(xml.slice(Math.max(0, pos - 500), pos + 400));
