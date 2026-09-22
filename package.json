@@ -1,7 +1,7 @@
 {
-  "name": "jurisgpt",
+  "name": "juris-ia-chile",
   "version": "0.1.0",
-  "description": "JurisGPT: buscador + chat con IA (Claude) para legislación chilena, con citas a la fuente.",
+  "description": "Juris IA Chile: buscador + chat con IA (Claude) para legislación chilena, con citas a la fuente.",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

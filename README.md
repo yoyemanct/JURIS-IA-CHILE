@@ -1,8 +1,8 @@
-# JurisGPT
+# Juris IA Chile
 
 > Open-source AI toolkit for searching, structuring and citing Chilean legislation and legal sources.
 
-**JurisGPT**: un buscador + asistente de IA (usando Claude, de Anthropic) que responde preguntas
+**Juris IA Chile**: un buscador + asistente de IA (usando Claude, de Anthropic) que responde preguntas
 sobre legislación chilena citando siempre la ley y el artículo exacto — pensado tanto para
 abogados como para personas sin formación legal.
 
@@ -18,7 +18,7 @@ detalles de licencia y de qué tan confiable es esta fuente.
    - **Corpus jurídico completo** (remoto): se consulta en vivo el servidor MCP público de
      [leyes.pisanvs.cl](https://leyes.pisanvs.cl) — un proyecto open source que reconstruyó
      ~333.000 normas chilenas (con historial de versiones) desde la Biblioteca del Congreso
-     Nacional. Esta es la fuente que le da a JurisGPT cobertura amplia de la legislación real,
+     Nacional. Esta es la fuente que le da a Juris IA Chile cobertura amplia de la legislación real,
      sin que tengamos que cargar cada ley a mano.
    - **Corpus local de ejemplo** (`data/corpus.json`): 11 artículos cargados a mano como
      respaldo, para cuando el servicio remoto no responda, y como ejemplos ya verificados.
@@ -61,15 +61,15 @@ Es importante que sepas exactamente qué estás usando:
   por ejemplo, LeyChile/BCN directamente.
 - **Es gratuito, público y de solo lectura** — no requiere autenticación, pero tampoco hay
   garantía de disponibilidad. Si en algún momento ese servicio deja de funcionar o cambia,
-  JurisGPT debería seguir funcionando igual con el corpus local (aunque mucho más limitado).
-- **Licencia:** el código de ese proyecto es AGPLv3. JurisGPT **no copia ni incorpora su
+  Juris IA Chile debería seguir funcionando igual con el corpus local (aunque mucho más limitado).
+- **Licencia:** el código de ese proyecto es AGPLv3. Juris IA Chile **no copia ni incorpora su
   código**, solo lo consume como una API externa (igual que llamarías a cualquier otra API
-  pública) — por eso esto no impone condiciones de licencia sobre el código de JurisGPT. Si en
+  pública) — por eso esto no impone condiciones de licencia sobre el código de Juris IA Chile. Si en
   el futuro quieres clonar o modificar el código de ese proyecto directamente (no solo
   consumir su API), ahí sí aplicarían las condiciones de AGPLv3 (básicamente: cualquier
   versión modificada que ofrezcas por red también debe ser de código abierto).
 - Dale crédito visible en tu app y tu README a `leyes.pisanvs.cl` / `pisanvs/ley-chile` como
-  fuente de datos — es lo correcto y además le da más credibilidad a JurisGPT frente a
+  fuente de datos — es lo correcto y además le da más credibilidad a Juris IA Chile frente a
   abogados que quieran verificar de dónde sale la información.
 
 ## Extractos vs. texto completo
@@ -98,7 +98,8 @@ Necesitas Node.js 18 o superior (`node --version` para comprobarlo). Descárgalo
 
 ## Paso 3: Instala y configura el proyecto
 
-Clona este repositorio (o descárgalo) y entra a la carpeta:
+Clona este repositorio (o descárgalo) y entra a la carpeta. *(El repo en GitHub todavía se
+llama `Lexchile` — si ya lo renombraste desde Settings, usa la URL nueva en vez de esta):*
 
 ```bash
 git clone https://github.com/yoyemanct/Lexchile.git
@@ -164,7 +165,7 @@ mensual** y alertas por correo. Esa es tu red de seguridad real: si algo se disp
    - (opcional) `CLAUDE_MODEL` = `claude-sonnet-5`
    - (opcional) `LIMITE_CONSULTAS_IA` = el número de preguntas por visitante que quieras permitir
 6. Dale a **"Create Web Service"**. En unos minutos te da una URL pública tipo
-   `https://jurisgpt.onrender.com` — esa es la que compartes.
+   `https://juris-ia-chile.onrender.com` — esa es la que compartes.
 
 Cada vez que hagas `git push` a este repo, Render redespliega solo.
 
