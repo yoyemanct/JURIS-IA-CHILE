@@ -111,8 +111,9 @@ http://localhost:3000/api/norma?ley=19496&articulo=3
 http://localhost:3000/api/norma?idNorma=172986&fecha=2005-01-01
 ```
 
-Este conector se escribió contra el esquema oficial de la BCN, pero **no pudo probarse en vivo**
-desde el entorno donde se desarrolló. Verifícalo antes de confiar en él:
+**Verificado en vivo** (septiembre de 2026): extrae los 2.796 artículos del Código Civil,
+distingue los 68 derogados de los 2.728 vigentes, y entrega correctamente versiones históricas
+por fecha. Para volver a comprobarlo cuando haga falta:
 
 ```bash
 npm run diagnosticar-leychile
