@@ -16,6 +16,13 @@ const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5";
 const OLLAMA_URL = (process.env.OLLAMA_URL || "http://localhost:11434").replace(/\/+$/, "");
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5";
 const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS || 60000);
+// Temperatura baja = respuestas mas literales y pegadas al texto entregado.
+// Para uso legal esto importa: no queremos que el modelo "adorne" citas.
+const OLLAMA_TEMPERATURA = Number(process.env.OLLAMA_TEMPERATURA || 0.15);
+// Ventana de contexto. Ollama usa 4096 por defecto, que puede ser insuficiente
+// para el system prompt + 6 articulos legales: si se pasa, Ollama CORTA el
+// texto en silencio y el modelo responde sin haber leido los documentos.
+const OLLAMA_NUM_CTX = Number(process.env.OLLAMA_NUM_CTX || 8192);
 const USAR_QWEN = process.env.USAR_QWEN !== "false";
 
 let anthropic = null;
@@ -67,6 +74,13 @@ async function responderConClaude({ systemPrompt, userMessage }) {
   return { texto, proveedor: "claude" };
 }
 
+function limpiarRazonamiento(texto) {
+  return texto
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
+    .trim();
+}
+
 async function responderConQwen({ systemPrompt, userMessage }) {
   if (!USAR_QWEN) {
     const err = new Error("El modelo local Qwen está desactivado en este servidor (USAR_QWEN=false).");
@@ -86,6 +100,11 @@ async function responderConQwen({ systemPrompt, userMessage }) {
       body: JSON.stringify({
         model: OLLAMA_MODEL,
         stream: false,
+        options: {
+          temperature: OLLAMA_TEMPERATURA,
+          num_ctx: OLLAMA_NUM_CTX,
+          top_p: 0.9,
+        },
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
@@ -121,7 +140,10 @@ async function responderConQwen({ systemPrompt, userMessage }) {
   }
 
   const datos = await respuesta.json();
-  const texto = datos?.message?.content || "";
+  // Los modelos de razonamiento (Qwen3 y similares) pueden devolver su
+  // "pensamiento" en un campo aparte o dentro de etiquetas <think>...</think>.
+  // Eso no le sirve al usuario final, asi que se descarta.
+  const texto = limpiarRazonamiento(datos?.message?.content || "");
   if (!texto) {
     const err = new Error("Ollama respondió sin contenido de texto (respuesta vacía o formato inesperado).");
     err.codigo = "QWEN_RESPUESTA_VACIA";
