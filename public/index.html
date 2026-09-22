@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lexchile — Prototipo</title>
+<style>
+  :root {
+    --azul: #1c3d5a;
+    --azul-claro: #2f6690;
+    --fondo: #f5f6f8;
+    --texto: #1a1a1a;
+    --gris: #6b7280;
+    --borde: #d9dde3;
+    --blanco: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+  }
+  header {
+    background: var(--azul);
+    color: white;
+    padding: 20px 24px;
+  }
+  header h1 { margin: 0; font-size: 1.4rem; }
+  header p { margin: 4px 0 0; color: #cdd9e5; font-size: 0.9rem; }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+
+  .aviso {
+    background: #fff8e6;
+    border: 1px solid #f0d98c;
+    color: #6b5900;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+  }
+
+  form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  input[type="text"]:focus { outline: 2px solid var(--azul-claro); }
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: var(--azul-claro);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button:disabled { background: #9fb4c4; cursor: not-allowed; }
+  button:hover:not(:disabled) { background: var(--azul); }
+
+  .respuesta {
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+  .respuesta h2 { margin-top: 0; font-size: 1rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.03em; }
+
+  .doc-card {
+    background: var(--blanco);
+    border: 1px solid var(--borde);
+    border-left: 4px solid var(--azul-claro);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .doc-card .fuente {
+    font-weight: 600;
+    color: var(--azul);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .badge.completo { background: #e3f5e9; color: #1e6b3c; }
+  .badge.extracto { background: #fdeecb; color: #8a5a00; }
+  .badge.remoto { background: #e2ecf7; color: #1c3d5a; }
+  .badge.local { background: #ececec; color: #55585c; }
+  .doc-card .tema {
+    color: var(--gris);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+  .doc-card .texto { font-size: 0.95rem; }
+  .doc-card .nota-extracto {
+    font-size: 0.82rem;
+    color: #8a5a00;
+    margin-top: 6px;
+    font-style: italic;
+  }
+  .doc-card a { color: var(--azul-claro); font-size: 0.85rem; }
+
+  .estado { color: var(--gris); font-style: italic; margin-bottom: 16px; }
+  .vacio { color: var(--gris); text-align: center; padding: 40px 0; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Lexchile — Prototipo</h1>
+    <p>Buscador y asistente de IA (Claude) para legislación chilena, con citas a la fuente.</p>
+  </header>
+
+  <main>
+    <div class="aviso">
+      Lexchile busca primero en un corpus jurídico completo (leyes.pisanvs.cl, que reconstruye
+      prácticamente toda la legislación chilena desde la BCN) y usa un pequeño set de ejemplos
+      locales como respaldo si ese corpus no está disponible. En ningún caso reemplaza el consejo
+      de un abogado o abogada.
+    </div>
+    <div id="aviso-corpus" class="aviso" style="display:none; background:#fdeecb; border-color:#f0c86b; color:#8a5a00;"></div>
+
+    <form id="form-consulta">
+      <input
+        type="text"
+        id="input-pregunta"
+        placeholder="Ej: ¿Cuántos días de vacaciones me corresponden al año?"
+        autocomplete="off"
+      />
+      <button type="submit" id="btn-consultar">Preguntar</button>
+    </form>
+
+    <div id="estado" class="estado" style="display:none;"></div>
+    <div id="resultado"></div>
+  </main>
+
+  <script>
+    const form = document.getElementById("form-consulta");
+    const input = document.getElementById("input-pregunta");
+    const boton = document.getElementById("btn-consultar");
+    const estado = document.getElementById("estado");
+    const resultado = document.getElementById("resultado");
+    const avisoCorpus = document.getElementById("aviso-corpus");
+
+    function escapeHtml(texto) {
+      const div = document.createElement("div");
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+
+    function renderDocs(docs) {
+      if (!docs || docs.length === 0) return "";
+      return docs
+        .map((d) => {
+          const esCompleto = d.completo !== false;
+          const badgeCompletitud = esCompleto
+            ? '<span class="badge completo">Texto completo</span>'
+            : '<span class="badge extracto">Extracto</span>';
+          const badgeOrigen = d.origen === "remoto"
+            ? '<span class="badge remoto">Corpus completo</span>'
+            : '<span class="badge local">Ejemplo local</span>';
+          const nota = !esCompleto && d.nota
+            ? `<div class="nota-extracto">⚠ ${escapeHtml(d.nota)}</div>`
+            : "";
+          return `
+        <div class="doc-card">
+          <div class="fuente">${escapeHtml(d.cuerpo_legal)} — ${escapeHtml(d.articulo)} ${badgeOrigen} ${badgeCompletitud}</div>
+          <div class="tema">${escapeHtml(d.tema)}</div>
+          <div class="texto">${escapeHtml(d.texto)}</div>
+          ${nota}
+          <a href="${d.fuente_url}" target="_blank" rel="noopener">Ver fuente oficial →</a>
+        </div>`;
+        })
+        .join("");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const pregunta = input.value.trim();
+      if (!pregunta) return;
+
+      boton.disabled = true;
+      estado.style.display = "block";
+      estado.textContent = "Buscando en el corpus y consultando a Claude…";
+      resultado.innerHTML = "";
+
+      try {
+        const res = await fetch("/api/consultar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pregunta }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          resultado.innerHTML = `<div class="respuesta"><h2>Error</h2>${escapeHtml(data.error || "Error desconocido")}</div>`;
+          return;
+        }
+
+        if (!data.corpus_completo_disponible) {
+          avisoCorpus.style.display = "block";
+          avisoCorpus.textContent = "⚠ El corpus jurídico completo no estuvo disponible para esta consulta; se usaron solo los ejemplos locales limitados.";
+        } else {
+          avisoCorpus.style.display = "none";
+        }
+
+        resultado.innerHTML = `
+          <div class="respuesta">
+            <h2>Respuesta de Claude</h2>
+            ${escapeHtml(data.respuesta)}
+          </div>
+          <div>
+            <h2 style="color:#6b7280; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.03em;">Documentos usados como base</h2>
+            ${renderDocs(data.documentos_usados) || '<div class="vacio">No se encontraron artículos relacionados.</div>'}
+          </div>
+        `;
+      } catch (err) {
+        resultado.innerHTML = `<div class="respuesta"><h2>Error de conexión</h2>${escapeHtml(err.message)}</div>`;
+      } finally {
+        boton.disabled = false;
+        estado.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

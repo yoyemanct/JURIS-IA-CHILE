@@ -1,0 +1,112 @@
+[
+  {
+    "id": "ct-22",
+    "cuerpo_legal": "Código del Trabajo",
+    "articulo": "Artículo 22",
+    "tema": "Jornada ordinaria de trabajo (40 horas semanales)",
+    "texto": "La duración de la jornada ordinaria de trabajo no excederá de cuarenta horas semanales y su distribución se podrá efectuar en cada semana calendario o sobre la base de promedios semanales en lapsos de hasta cuatro semanas, con los límites y requisitos señalados en este capítulo. Quedarán excluidos de la limitación de jornada de trabajo los trabajadores que presten servicios como gerentes, administradores, apoderados con facultades de administración y todos aquellos que trabajen sin fiscalización superior inmediata en razón de la naturaleza de las labores desempeñadas.",
+    "completo": false,
+    "nota": "Extracto de los incisos 1 y 2. El artículo también excluye a trabajadores de naves pesqueras y regula la jornada de deportistas profesionales; ver fuente oficial.",
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=207436"
+  },
+  {
+    "id": "ct-67",
+    "cuerpo_legal": "Código del Trabajo",
+    "articulo": "Artículo 67",
+    "tema": "Feriado anual (vacaciones)",
+    "texto": "Los trabajadores con más de un año de servicio tendrán derecho a un feriado anual de quince días hábiles, con remuneración íntegra que se otorgará de acuerdo con las formalidades que establezca el reglamento. Los trabajadores que presten servicios en la Duodécima Región de Magallanes y de la Antártica Chilena, en la Undécima Región de Aysén del General Carlos Ibáñez del Campo, y en la Provincia de Palena, tendrán derecho a un feriado anual de veinte días hábiles. El feriado se concederá de preferencia en primavera o verano, considerándose las necesidades del servicio.",
+    "completo": false,
+    "nota": "Faltan los incisos sobre feriado diferido en contratos por obra/faena y la preferencia de feriado para quienes cuidan a niños, niñas o adolescentes con discapacidad; ver fuente oficial.",
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=207436"
+  },
+  {
+    "id": "ct-159",
+    "cuerpo_legal": "Código del Trabajo",
+    "articulo": "Artículo 159",
+    "tema": "Causales de término del contrato de trabajo",
+    "texto": "El contrato de trabajo terminará en los siguientes casos: 1.- Mutuo acuerdo de las partes. 2.- Renuncia del trabajador, dando aviso a su empleador con treinta días de anticipación, a lo menos. 3.- Muerte del trabajador. 4.- Vencimiento del plazo convenido en el contrato. 5.- Conclusión del trabajo o servicio que dio origen al contrato. 6.- Caso fortuito o fuerza mayor.",
+    "completo": false,
+    "nota": "Incluye los 6 numerales completos, pero faltan los incisos posteriores sobre duración máxima de contratos a plazo fijo y su conversión en indefinidos; ver fuente oficial.",
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=207436"
+  },
+  {
+    "id": "ct-161",
+    "cuerpo_legal": "Código del Trabajo",
+    "articulo": "Artículo 161",
+    "tema": "Despido por necesidades de la empresa",
+    "texto": "Sin perjuicio de lo señalado en los artículos precedentes, el empleador podrá poner término al contrato de trabajo invocando como causal las necesidades de la empresa, establecimiento o servicio, tales como las derivadas de la racionalización o modernización de los mismos, bajas en la productividad, cambios en las condiciones del mercado o de la economía, que hagan necesaria la separación de uno o más trabajadores.",
+    "completo": false,
+    "nota": "Extracto del inciso primero. Faltan los incisos sobre aviso previo de 30 días o pago sustitutivo, y la exclusión para trabajadores con licencia médica o fuero; ver fuente oficial.",
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=207436"
+  },
+  {
+    "id": "ct-163",
+    "cuerpo_legal": "Código del Trabajo",
+    "articulo": "Artículo 163",
+    "tema": "Indemnización por años de servicio",
+    "texto": "Si el contrato hubiere estado vigente un año o más y el empleador le pusiere término en conformidad al artículo 161, deberá pagar al trabajador la indemnización por años de servicio que las partes hayan convenido, siempre que ésta fuere de un monto superior a la establecida en el inciso siguiente. A falta de esta estipulación, el empleador deberá pagar al trabajador una indemnización equivalente a treinta días de la última remuneración mensual devengada por cada año de servicio y fracción superior a seis meses, prestados continuamente a dicho empleador. Esta indemnización tendrá un límite máximo de trescientos treinta días de remuneración.",
+    "completo": false,
+    "nota": "Faltan los incisos sobre contratos por obra o faena determinada y las reglas especiales para trabajadores de casa particular; ver fuente oficial.",
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=207436"
+  },
+  {
+    "id": "cc-102",
+    "cuerpo_legal": "Código Civil",
+    "articulo": "Artículo 102",
+    "tema": "Definición de matrimonio",
+    "texto": "El matrimonio es un contrato solemne por el cual dos personas se unen actual e indisolublemente, y por toda la vida, con el fin de vivir juntos, de procrear, y de auxiliarse mutuamente.",
+    "completo": true,
+    "nota": null,
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=172986"
+  },
+  {
+    "id": "cc-1438",
+    "cuerpo_legal": "Código Civil",
+    "articulo": "Artículo 1438",
+    "tema": "Definición de contrato o convención",
+    "texto": "Contrato o convención es un acto por el cual una parte se obliga para con otra a dar, hacer o no hacer alguna cosa. Cada parte puede ser una o muchas personas.",
+    "completo": true,
+    "nota": null,
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=172986"
+  },
+  {
+    "id": "ley19496-3bis",
+    "cuerpo_legal": "Ley N° 19.496 sobre Protección de los Derechos de los Consumidores",
+    "articulo": "Artículo 3 bis",
+    "tema": "Derecho a retracto en compras (10 días)",
+    "texto": "El consumidor podrá poner término unilateralmente al contrato en el plazo de 10 días contados desde la recepción del producto o desde la contratación del servicio y antes de la prestación del mismo, en los siguientes casos: a) En la compra de bienes y contratación de servicios realizadas en reuniones convocadas o concertadas con dicho objetivo por el proveedor. b) En los contratos celebrados por medios electrónicos, y en aquéllos en que se aceptare una oferta realizada a través de catálogos, avisos o cualquier otra forma de comunicación a distancia, a menos que el proveedor haya dispuesto expresamente lo contrario. Si el consumidor ejerciera este derecho, el proveedor estará obligado a devolverle las sumas abonadas, sin retención de gastos, antes de cuarenta y cinco días siguientes a la comunicación del retracto.",
+    "completo": false,
+    "nota": "Faltan detalles sobre el plazo extendido a 90 días si no hubo confirmación escrita, la excepción por deterioro imputable al consumidor, y las reglas sobre créditos asociados a la compra; ver fuente oficial.",
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=61438"
+  },
+  {
+    "id": "ley18101-3",
+    "cuerpo_legal": "Ley N° 18.101 sobre Arrendamiento de Predios Urbanos",
+    "articulo": "Artículo 3",
+    "tema": "Plazo de desahucio en arriendos mes a mes",
+    "texto": "En los contratos en que el plazo del arrendamiento se haya pactado mes a mes y en los de duración indefinida, el desahucio dado por el arrendador sólo podrá efectuarse judicialmente o mediante notificación personal efectuada por un notario. El plazo de desahucio será de dos meses, contado desde su notificación, y se aumentará en un mes por cada año completo que el arrendatario hubiera ocupado el inmueble. Dicho plazo más el aumento no podrá exceder, en total, de seis meses. El arrendatario desahuciado podrá restituir el bien raíz antes de expirar el plazo establecido en este artículo y, en tal caso, estará obligado a pagar la renta de arrendamiento sólo hasta el día de la restitución.",
+    "completo": true,
+    "nota": null,
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=29526"
+  },
+  {
+    "id": "const-19-1",
+    "cuerpo_legal": "Constitución Política de la República de Chile",
+    "articulo": "Artículo 19, N° 1",
+    "tema": "Derecho a la vida y a la integridad física y psíquica",
+    "texto": "La Constitución asegura a todas las personas: El derecho a la vida y a la integridad física y psíquica de la persona. La ley protege la vida del que está por nacer.",
+    "completo": true,
+    "nota": null,
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+  },
+  {
+    "id": "const-19-24",
+    "cuerpo_legal": "Constitución Política de la República de Chile",
+    "articulo": "Artículo 19, N° 24",
+    "tema": "Derecho de propiedad",
+    "texto": "La Constitución asegura a todas las personas: El derecho de propiedad en sus diversas especies sobre toda clase de bienes corporales o incorporales. Sólo la ley puede establecer el modo de adquirir la propiedad, de usar, gozar y disponer de ella y las limitaciones y obligaciones que deriven de su función social.",
+    "completo": false,
+    "nota": "Este numeral es muy extenso: faltan los párrafos sobre expropiación e indemnización, dominio del Estado sobre minas, y derechos de aprovechamiento de aguas; ver fuente oficial.",
+    "fuente_url": "https://www.bcn.cl/leychile/navegar?idNorma=242302"
+  }
+]

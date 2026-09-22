@@ -1,0 +1,19 @@
+{
+  "name": "lexchile-app",
+  "version": "0.1.0",
+  "description": "Prototipo de Lexchile: buscador + chat con IA (Claude) para legislación chilena, con citas a la fuente.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "diagnosticar-mcp": "node scripts/probar-mcp.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "dotenv": "^18.0.2",
+    "express": "^5.2.1"
+  }
+}
