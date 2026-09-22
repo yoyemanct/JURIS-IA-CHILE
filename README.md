@@ -34,25 +34,36 @@ Esto se llama un patrón **RAG** (Retrieval-Augmented Generation): en vez de dej
 "invente" desde su memoria general, la obligamos a responder solo con documentos reales, y a
 citarlos. Es clave en un tema legal, donde inventar un artículo sería un problema serio.
 
-## ⚠️ Cosas que debes revisar tú (no se probaron en vivo)
+## Consultas de vigencia
 
-Este código se escribió en un entorno con la red restringida a una lista blanca de dominios,
-que **no incluía leyes.pisanvs.cl**. Así que la integración con el corpus completo (todo lo que
-está en `mcpLeyChile.js` y `busquedaHibrida.js`) se hizo siguiendo la documentación pública de
-ese proyecto (`https://leyes.pisanvs.cl/llms.txt`), pero **nunca se ejecutó contra el servidor
-real**. Es la parte del proyecto con más chance de necesitar un ajuste menor.
+El corpus remoto guarda el historial completo de versiones de cada norma, y la app lo expone.
+Esto responde las tres preguntas que el texto vigente, por sí solo, no contesta:
 
-Antes de confiar en esto, corre:
-
-```bash
-npm run diagnosticar-mcp
+```
+http://localhost:3000/api/versiones?idNorma=61438
+http://localhost:3000/api/modificaciones?idNorma=61438
+http://localhost:3000/api/diferencias?idNorma=61438&desde=2011-03-08&hasta=2021-04-13
 ```
 
-Este script se conecta al servidor, imprime la lista real de herramientas disponibles y sus
-parámetros exactos, y hace una búsqueda de prueba. Si algo falla, el mensaje de error te dirá
-si es un problema de conexión o si hay que ajustar un nombre de parámetro en `mcpLeyChile.js`
-(el código está escrito para no romper la app aunque esto falle: si el corpus remoto no
-responde, la app sigue funcionando solo con el corpus local, y te lo avisa en la interfaz).
+La primera lista cada fecha en que la norma cambió y qué ley causó el cambio. La segunda, qué
+normas la modificaron y a cuáles modificó ella. La tercera muestra el diff palabra por palabra
+entre dos fechas — que es como se determina qué texto se aplicaba a un hecho ocurrido en el
+pasado.
+
+El `idNorma` de una norma lo entrega `/api/buscar`.
+
+## Estado de las dos fuentes de legislación
+
+Ambas fueron verificadas contra sus servidores reales en septiembre de 2026, y ambas traen
+diagnóstico propio por si algo cambia:
+
+```bash
+npm run diagnosticar-mcp        # espejo comunitario con historial de versiones
+npm run diagnosticar-leychile   # fuente oficial BCN
+```
+
+El código está escrito para degradar sin romperse: si el corpus remoto no responde, la app
+sigue funcionando con el corpus local de ejemplos y lo avisa en la interfaz.
 
 ## Fuente oficial: LeyChile / BCN
 

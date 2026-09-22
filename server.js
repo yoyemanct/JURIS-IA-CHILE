@@ -6,6 +6,7 @@ const rateLimit = require("express-rate-limit");
 const { buscarContexto } = require("./busquedaHibrida");
 const proveedorIA = require("./proveedorIA");
 const leyChile = require("./fuentes/leyChileOficial");
+const mcp = require("./mcpLeyChile");
 
 const PORT = process.env.PORT || 3000;
 const USAR_CORPUS_REMOTO = process.env.USAR_CORPUS_REMOTO !== "false";
@@ -49,6 +50,63 @@ app.get("/api/proveedores", (req, res) => {
     proveedores: proveedorIA.proveedoresDisponibles(),
     predeterminado: proveedorIA.PROVEEDOR_PREDETERMINADO,
   });
+});
+
+// --- Endpoints de VIGENCIA (corpus con historial de versiones) ---------
+// Responden las tres preguntas que un análisis jurídico serio necesita y
+// que el texto vigente por sí solo no contesta:
+//   ¿cuándo cambió esta norma y por qué ley?   /api/versiones?idNorma=...
+//   ¿cómo se leía antes de la reforma?         /api/diferencias?idNorma=...&desde=...&hasta=...
+//   ¿qué normas la modificaron?                /api/modificaciones?idNorma=...
+
+function exigirIdNorma(req, res) {
+  const idNorma = (req.query.idNorma || "").toString().trim();
+  if (!idNorma || !/^\d+$/.test(idNorma)) {
+    res.status(400).json({
+      error: "Indica 'idNorma' (número entero). Lo obtienes buscando la norma con /api/buscar.",
+    });
+    return null;
+  }
+  return idNorma;
+}
+
+app.get("/api/versiones", limitadorBusqueda, async (req, res) => {
+  const idNorma = exigirIdNorma(req, res);
+  if (!idNorma) return;
+  try {
+    res.json({ idNorma, versiones: await mcp.listarVersiones(idNorma) });
+  } catch (err) {
+    console.error("Error en /api/versiones:", err);
+    res.status(502).json({ error: "No se pudo obtener el historial de versiones.", detalle: err.message });
+  }
+});
+
+app.get("/api/diferencias", limitadorBusqueda, async (req, res) => {
+  const idNorma = exigirIdNorma(req, res);
+  if (!idNorma) return;
+  const desde = (req.query.desde || "").toString().trim();
+  const hasta = (req.query.hasta || "").toString().trim();
+  const fechaValida = (f) => /^\d{4}-\d{2}-\d{2}$/.test(f);
+  if (!fechaValida(desde) || !fechaValida(hasta)) {
+    return res.status(400).json({ error: "Indica 'desde' y 'hasta' en formato AAAA-MM-DD." });
+  }
+  try {
+    res.json({ idNorma, desde, hasta, diferencias: await mcp.compararVersiones(idNorma, desde, hasta) });
+  } catch (err) {
+    console.error("Error en /api/diferencias:", err);
+    res.status(502).json({ error: "No se pudo comparar las versiones.", detalle: err.message });
+  }
+});
+
+app.get("/api/modificaciones", limitadorBusqueda, async (req, res) => {
+  const idNorma = exigirIdNorma(req, res);
+  if (!idNorma) return;
+  try {
+    res.json({ idNorma, modificaciones: await mcp.obtenerModificaciones(idNorma) });
+  } catch (err) {
+    console.error("Error en /api/modificaciones:", err);
+    res.status(502).json({ error: "No se pudo obtener las modificaciones.", detalle: err.message });
+  }
 });
 
 // --- Endpoint: texto oficial de una norma (fuente BCN/LeyChile) --------
