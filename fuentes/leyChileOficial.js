@@ -32,10 +32,23 @@
 // Ojo: artículos y agrupadores (Libro, Título, Párrafo...) usan el MISMO
 // elemento; lo que los distingue es el atributo tipoParte.
 //
-// ADVERTENCIA: este conector se escribió contra el esquema oficial y contra
-// fragmentos reales del XML, pero NO pudo probarse en vivo (el entorno de
-// desarrollo tiene bloqueado el acceso a dominios chilenos). Antes de
-// confiar en él, corre:  npm run diagnosticar-leychile
+// HISTORIAL DE FALLAS (para que no se repitan):
+// La primera versión leía bien los metadatos de la norma pero extraía CERO
+// artículos. La causa eran dos fallas encadenadas, y ambas están corregidas:
+//
+//   1. El servicio entrega el XML en ISO-8859-1 pero no siempre lo declara
+//      en la cabecera HTTP. Al leerlo como UTF-8, cada tilde se rompía; el
+//      texto legal quedaba ilegible.
+//   2. Como consecuencia, el atributo tipoParte="Artículo" llegaba con la
+//      tilde rota y no coincidía con ninguna comparación exacta, así que el
+//      recorrido no reconocía ni un solo artículo.
+//
+// Ahora se detecta la codificación desde el prólogo del XML, y además el
+// reconocimiento de tipos es tolerante a tildes rotas, de modo que una
+// falla de codificación no vuelva a vaciar el articulado completo.
+//
+// Para verificarlo contra el servicio real:  npm run diagnosticar-leychile
+// Si vuelve a fallar:                        npm run inspeccionar-leychile
 // -----------------------------------------------------------------------
 
 const { XMLParser } = require("fast-xml-parser");
@@ -62,6 +75,26 @@ const parser = new XMLParser({
 const cache = new Map();
 const CACHE_TTL_MS = Number(process.env.LEYCHILE_CACHE_MS || 6 * 60 * 60 * 1000);
 
+// El servicio de la BCN entrega el XML en ISO-8859-1 (latín antiguo), pero
+// no siempre lo declara en la cabecera HTTP. Si se decodifica como UTF-8,
+// cada tilde se convierte en un carácter roto — y como el esquema usa
+// "Artículo" con tilde en sus atributos, el articulado entero se vuelve
+// ilegible e imposible de reconocer. Por eso se lee el prólogo del propio
+// XML para saber en qué codificación viene.
+function decodificar(buffer) {
+  const bytes = new Uint8Array(buffer);
+  const prologo = new TextDecoder("ascii").decode(bytes.slice(0, 200));
+  const declarado = prologo.match(/encoding=["']([\w-]+)["']/i);
+  const etiqueta = (declarado ? declarado[1] : "utf-8").toLowerCase();
+  try {
+    return new TextDecoder(etiqueta).decode(bytes);
+  } catch {
+    // Codificación desconocida: se intenta latín, que es lo habitual acá.
+    try { return new TextDecoder("iso-8859-1").decode(bytes); }
+    catch { return new TextDecoder("utf-8").decode(bytes); }
+  }
+}
+
 function comoArray(valor) {
   if (valor === undefined || valor === null) return [];
   return Array.isArray(valor) ? valor : [valor];
@@ -78,10 +111,23 @@ function texto(valor) {
 // El XML usa &#160; (espacio duro) como relleno cuando un campo "no está
 // presente". Para nosotros eso es vacío.
 function limpiar(valor) {
-  return texto(valor).replace(/ /g, " ").trim();
+  return texto(valor).replace(/\u00a0/g, " ").trim();
 }
 
-const TIPOS_ARTICULO = new Set(["Artículo", "Artículo Transitorio", "Disposición", "Disposición Transitoria"]);
+// Se reconoce el tipo de parte con expresiones tolerantes: el punto acepta
+// tanto la tilde correcta como un carácter roto, por si la codificación
+// falla en algún caso. Más vale reconocer un artículo de más que perder
+// todo el articulado por una tilde.
+const PATRONES_ARTICULO = [
+  /^art.culos?( transitorios?)?$/i,
+  /^disposici.n( transitoria)?$/i,
+  /^doble articulado$/i,
+];
+
+function esArticulo(tipoParte) {
+  const t = String(tipoParte || "").trim();
+  return PATRONES_ARTICULO.some((re) => re.test(t));
+}
 
 /**
  * Recorre el árbol recursivo de EstructuraFuncional y devuelve solo los
@@ -96,7 +142,7 @@ function extraerArticulos(nodo, jerarquia, acumulador) {
     const nombre = limpiar(parte?.Metadatos?.NombreParte);
     const tituloParte = limpiar(parte?.Metadatos?.TituloParte);
 
-    if (TIPOS_ARTICULO.has(tipoParte)) {
+    if (esArticulo(tipoParte)) {
       acumulador.push({
         idParte: parte["@idParte"] || null,
         tipoParte,
@@ -120,7 +166,7 @@ function extraerArticulos(nodo, jerarquia, acumulador) {
     const hijos = parte?.EstructurasFuncionales?.EstructuraFuncional;
     if (hijos) {
       const etiqueta = tituloParte || (nombre ? `${tipoParte} ${nombre}` : tipoParte);
-      const siguiente = TIPOS_ARTICULO.has(tipoParte) ? jerarquia : [...jerarquia, etiqueta].filter(Boolean);
+      const siguiente = esArticulo(tipoParte) ? jerarquia : [...jerarquia, etiqueta].filter(Boolean);
       extraerArticulos(hijos, siguiente, acumulador);
     }
   }
@@ -224,7 +270,7 @@ async function obtenerNorma({ idNorma, idLey, fecha } = {}) {
     throw e;
   }
 
-  const xml = await respuesta.text();
+  const xml = decodificar(await respuesta.arrayBuffer());
   const resultado = interpretarNorma(xml, url);
   cache.set(url, { momento: Date.now(), valor: resultado });
   return resultado;
