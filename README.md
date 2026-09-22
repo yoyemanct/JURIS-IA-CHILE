@@ -54,6 +54,35 @@ si es un problema de conexión o si hay que ajustar un nombre de parámetro en `
 (el código está escrito para no romper la app aunque esto falle: si el corpus remoto no
 responde, la app sigue funcionando solo con el corpus local, y te lo avisa en la interfaz).
 
+## Fuente oficial: LeyChile / BCN
+
+Además del espejo comunitario, la app consulta el servicio oficial de intercambio XML de la
+Biblioteca del Congreso Nacional (`fuentes/leyChileOficial.js`). Es la fuente autorizada, sin
+registro ni autenticación, y aporta dos cosas que un análisis jurídico serio necesita:
+
+- **Vigencia verificable**: cada artículo trae su fecha de última modificación y su estado de
+  derogación, así que la herramienta puede afirmar que un texto está vigente en vez de suponerlo.
+- **Versiones históricas**: con una fecha se obtiene el texto tal como regía ese día, que es lo
+  que se necesita para analizar hechos del pasado con la norma aplicable entonces.
+
+Puedes consultarla directamente desde la app:
+
+```
+http://localhost:3000/api/norma?ley=19496
+http://localhost:3000/api/norma?ley=19496&articulo=3
+http://localhost:3000/api/norma?idNorma=172986&fecha=2005-01-01
+```
+
+Este conector se escribió contra el esquema oficial de la BCN, pero **no pudo probarse en vivo**
+desde el entorno donde se desarrolló. Verifícalo antes de confiar en él:
+
+```bash
+npm run diagnosticar-leychile
+```
+
+Para el plan completo de fuentes (jurisprudencia, dictámenes, tramitación, doctrina), qué es
+accesible y qué no, y en qué orden conviene integrarlo, ver **[HOJA-DE-RUTA.md](HOJA-DE-RUTA.md)**.
+
 ## Sobre la fuente del corpus completo (leyes.pisanvs.cl)
 
 Es importante que sepas exactamente qué estás usando:
@@ -264,12 +293,16 @@ Cada vez que hagas `git push` a este repo, Render redespliega solo.
 JURIS-IA-CHILE/
 ├── server.js            # Backend Express: sirve la página y las rutas de la API
 ├── proveedorIA.js        # Elige y llama al proveedor de IA (Claude o Qwen local vía Ollama)
+├── fuentes/
+│   └── leyChileOficial.js # Conector a la fuente oficial BCN/LeyChile (vigencia + versiones)
 ├── search.js            # Motor de búsqueda simple por palabras clave (corpus local)
 ├── mcpLeyChile.js        # Cliente MCP hacia el corpus jurídico completo remoto
 ├── normalizadorMcp.js    # Interpreta las respuestas del servidor remoto de forma flexible
 ├── busquedaHibrida.js    # Combina resultados remotos + locales, con fallback si falla el remoto
 ├── scripts/
-│   └── probar-mcp.js    # Diagnóstico: corre esto primero (ver más arriba)
+│   ├── probar-mcp.js    # Diagnóstico del espejo comunitario (corre esto primero)
+│   └── probar-leychile.js # Diagnóstico de la fuente oficial BCN
+├── HOJA-DE-RUTA.md       # Plan de fuentes y fases del proyecto
 ├── data/
 │   └── corpus.json      # Los 11 artículos de ejemplo (respaldo local)
 ├── public/

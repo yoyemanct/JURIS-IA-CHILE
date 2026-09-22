@@ -5,6 +5,7 @@ const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { buscarContexto } = require("./busquedaHibrida");
 const proveedorIA = require("./proveedorIA");
+const leyChile = require("./fuentes/leyChileOficial");
 
 const PORT = process.env.PORT || 3000;
 const USAR_CORPUS_REMOTO = process.env.USAR_CORPUS_REMOTO !== "false";
@@ -48,6 +49,60 @@ app.get("/api/proveedores", (req, res) => {
     proveedores: proveedorIA.proveedoresDisponibles(),
     predeterminado: proveedorIA.PROVEEDOR_PREDETERMINADO,
   });
+});
+
+// --- Endpoint: texto oficial de una norma (fuente BCN/LeyChile) --------
+// Permite pedir cualquier ley o código por su número, y opcionalmente el
+// texto tal como estaba vigente a una fecha determinada.
+//   /api/norma?ley=19496
+//   /api/norma?idNorma=172986&fecha=2005-01-01
+//   /api/norma?ley=19496&articulo=3
+app.get("/api/norma", limitadorBusqueda, async (req, res) => {
+  const idLey = (req.query.ley || "").toString().trim();
+  const idNorma = (req.query.idNorma || "").toString().trim();
+  const fecha = (req.query.fecha || "").toString().trim();
+  const articulo = (req.query.articulo || "").toString().trim();
+
+  if (!idLey && !idNorma) {
+    return res.status(400).json({
+      error: "Indica 'ley' (número de ley) o 'idNorma'. Ejemplo: /api/norma?ley=19496",
+    });
+  }
+  if (fecha && !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return res.status(400).json({ error: "El parámetro 'fecha' debe tener formato AAAA-MM-DD." });
+  }
+
+  try {
+    if (articulo) {
+      const r = await leyChile.obtenerArticulo({ idLey, idNorma, numeroArticulo: articulo, fecha });
+      if (!r.encontrado) {
+        return res.status(404).json({
+          error: `No se encontró el artículo "${articulo}" en esa norma.`,
+          norma: r.norma,
+        });
+      }
+      return res.json({ fuente: "oficial-bcn", ...r });
+    }
+
+    const norma = await leyChile.obtenerNorma({ idLey, idNorma, fecha });
+    res.json({
+      fuente: "oficial-bcn",
+      ...norma,
+      // El articulado completo de un código puede ser enorme: se entrega el
+      // índice, y el texto de un artículo puntual se pide con &articulo=N
+      articulos: norma.articulos.map((a) => ({
+        articulo: a.articulo,
+        numero: a.numero,
+        jerarquia: a.jerarquia,
+        derogado: a.derogado,
+        fechaVersion: a.fechaVersion,
+        extracto: a.texto.slice(0, 300),
+      })),
+    });
+  } catch (err) {
+    console.error("Error consultando LeyChile:", err);
+    res.status(502).json({ error: err.message, codigo: err.codigo || null });
+  }
 });
 
 // --- Endpoint 1: solo buscador (sin IA) ---------------------------------
