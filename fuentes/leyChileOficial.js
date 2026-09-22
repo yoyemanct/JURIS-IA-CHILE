@@ -32,6 +32,10 @@
 // Ojo: artículos y agrupadores (Libro, Título, Párrafo...) usan el MISMO
 // elemento; lo que los distingue es el atributo tipoParte.
 //
+// VERIFICADO en vivo contra el servicio real de la BCN (septiembre de 2026):
+// extrae los 2.796 artículos del Código Civil distinguiendo 2.728 vigentes
+// de 68 derogados, y entrega correctamente versiones históricas por fecha.
+//
 // HISTORIAL DE FALLAS (para que no se repitan):
 // La primera versión leía bien los metadatos de la norma pero extraía CERO
 // artículos. La causa eran dos fallas encadenadas, y ambas están corregidas:

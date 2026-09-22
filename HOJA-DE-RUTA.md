@@ -128,10 +128,19 @@ abogado ya sabe.
 
 ## Orden propuesto
 
-**Primero, verificar lo que ya está escrito.** El conector a LeyChile y el conector al
-espejo comunitario se escribieron sin poder probarse contra los servicios reales. Nada
-nuevo debería construirse encima de cimientos sin verificar. Se prueban con
-`npm run diagnosticar-leychile` y `npm run diagnosticar-mcp`.
+**Primero, verificar lo que ya está escrito. — HECHO (septiembre de 2026).** Ambos
+conectores quedaron probados contra sus servicios reales. El espejo comunitario conecta y
+expone sus ocho herramientas. La fuente oficial extrae los 2.796 artículos del Código
+Civil, distingue los 68 derogados de los 2.728 vigentes, y entrega versiones históricas
+por fecha. Se vuelven a comprobar cuando haga falta con `npm run diagnosticar-leychile` y
+`npm run diagnosticar-mcp`.
+
+El camino hasta ahí dejó una lección que conviene recordar: el conector fallaba en
+silencio, devolviendo cero artículos sin error alguno, porque la BCN escribe las tildes
+como entidades numéricas y el atributo `tipoParte="Art&#237;culo"` no coincidía con nada.
+Los metadatos se leían bien porque son ASCII puro. Un componente que falla sin avisar es
+más peligroso que uno que se cae: por eso el diagnóstico ahora advierte explícitamente
+cuando una norma responde pero no entrega artículos.
 
 **Segundo, la capa de vigencia.** Que cada artículo citado en un informe venga con su fecha
 de versión y su estado de derogación, verificados contra la fuente oficial. Esto es lo que
