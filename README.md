@@ -98,12 +98,11 @@ Necesitas Node.js 18 o superior (`node --version` para comprobarlo). Descárgalo
 
 ## Paso 3: Instala y configura el proyecto
 
-Clona este repositorio (o descárgalo) y entra a la carpeta. *(El repo en GitHub todavía se
-llama `Lexchile` — si ya lo renombraste desde Settings, usa la URL nueva en vez de esta):*
+Clona este repositorio (o descárgalo) y entra a la carpeta:
 
 ```bash
-git clone https://github.com/yoyemanct/Lexchile.git
-cd Lexchile
+git clone https://github.com/yoyemanct/JURIS-IA-CHILE.git
+cd JURIS-IA-CHILE
 npm install
 cp .env.example .env
 ```
@@ -153,7 +152,7 @@ mensual** y alertas por correo. Esa es tu red de seguridad real: si algo se disp
 
 1. Crea una cuenta en **https://render.com** (puedes entrar con tu cuenta de GitHub).
 2. Dale a **"New +" → "Web Service"** y autoriza a Render a ver tus repos de GitHub.
-3. Elige el repositorio **`yoyemanct/Lexchile`**.
+3. Elige el repositorio **`yoyemanct/JURIS-IA-CHILE`**.
 4. Configura así:
    - **Runtime**: Node
    - **Build Command**: `npm install`
@@ -197,7 +196,7 @@ Cada vez que hagas `git push` a este repo, Render redespliega solo.
 ## Estructura del proyecto
 
 ```
-Lexchile/
+JURIS-IA-CHILE/
 ├── server.js            # Backend Express: sirve la página y las rutas de la API
 ├── search.js            # Motor de búsqueda simple por palabras clave (corpus local)
 ├── mcpLeyChile.js        # Cliente MCP hacia el corpus jurídico completo remoto
