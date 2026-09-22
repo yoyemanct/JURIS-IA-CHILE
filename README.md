@@ -169,6 +169,29 @@ Abre `http://localhost:3000` en tu navegador y prueba preguntas como:
 - Preguntas más técnicas de otras áreas del derecho (debería encontrarlas en el corpus
   completo remoto, aunque no estén en los 11 ejemplos locales).
 
+## Acceso directo en el escritorio (Windows)
+
+El archivo `JURIS-IA-CHILE.bat` es un lanzador: enciende el servidor si no esta corriendo,
+espera a que responda y abre la app en tu navegador. Si el servidor ya estaba corriendo,
+solo abre el navegador (no intenta levantarlo dos veces).
+
+Para crear el acceso directo en el escritorio, pega esto en PowerShell (ajusta la ruta si
+tu proyecto esta en otra carpeta):
+
+```powershell
+$carpeta = "D:\Proyectos\JURIS-IA-CHILE"
+$ws = New-Object -ComObject WScript.Shell
+$lnk = $ws.CreateShortcut("$env:USERPROFILE\Desktop\JURIS IA CHILE.lnk")
+$lnk.TargetPath = "$carpeta\JURIS-IA-CHILE.bat"
+$lnk.WorkingDirectory = $carpeta
+$lnk.IconLocation = "$carpeta\public\juris.ico"
+$lnk.Description = "Abre Juris IA Chile"
+$lnk.WindowStyle = 7
+$lnk.Save()
+```
+
+El icono (`public/juris.ico`) tambien se usa como favicon de la pagina web.
+
 ## Publicarlo para que gente externa lo use
 
 ### Antes de abrirlo al público: entiende el costo
@@ -250,7 +273,9 @@ JURIS-IA-CHILE/
 ├── data/
 │   └── corpus.json      # Los 11 artículos de ejemplo (respaldo local)
 ├── public/
-│   └── index.html       # Interfaz web (buscador + chat), un solo archivo HTML/CSS/JS
+│   ├── index.html       # Interfaz web (buscador + chat), un solo archivo HTML/CSS/JS
+│   └── juris.ico        # Icono de la app (acceso directo + favicon)
+├── JURIS-IA-CHILE.bat    # Lanzador para Windows (enciende el servidor y abre el navegador)
 ├── .env.example          # Plantilla de configuración (copiar a .env)
 └── package.json
 ```
