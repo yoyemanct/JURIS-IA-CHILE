@@ -138,6 +138,41 @@
   }
   .doc-card a { color: var(--azul-claro); font-size: 0.85rem; }
 
+  .pestanas { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--borde); }
+  /* Las pestañas son <button>, así que hay que ganarle en especificidad a
+     los estilos generales de botón (incluido su :hover), o se ven como un
+     bloque azul sólido. */
+  .pestanas .pestana,
+  .pestanas .pestana:hover:not(:disabled) {
+    padding: 10px 18px; border: none; background: none; cursor: pointer;
+    font-size: 0.95rem; color: var(--gris); border-bottom: 3px solid transparent;
+    border-radius: 0;
+  }
+  .pestanas .pestana:hover:not(:disabled) { color: var(--azul); }
+  .pestanas .pestana.activa,
+  .pestanas .pestana.activa:hover:not(:disabled) {
+    color: var(--azul); border-bottom-color: var(--azul-claro); font-weight: 600;
+  }
+
+  .zona-archivo {
+    border: 2px dashed var(--borde); border-radius: 10px; padding: 26px 18px;
+    text-align: center; background: var(--blanco); cursor: pointer; margin-bottom: 12px;
+  }
+  .zona-archivo:hover, .zona-archivo.encima { border-color: var(--azul-claro); background: #f0f6fb; }
+  .zona-archivo .principal { color: var(--azul); font-weight: 600; margin-bottom: 4px; }
+  .zona-archivo .secundario { color: var(--gris); font-size: 0.83rem; }
+  .archivo-elegido { color: var(--azul); font-weight: 600; }
+
+  .privacidad {
+    font-size: 0.83rem; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px;
+    border: 1px solid;
+  }
+  .privacidad.local { background: #e9f6ed; border-color: #b6ddc3; color: #1e6b3c; }
+  .privacidad.nube  { background: #fdeecb; border-color: #f0c86b; color: #8a5a00; }
+
+  .columna { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .columna input[type="text"] { width: 100%; }
+
   .estado { color: var(--gris); font-style: italic; margin-bottom: 16px; }
   .vacio { color: var(--gris); text-align: center; padding: 40px 0; }
 </style>
@@ -162,6 +197,11 @@
       <select id="input-proveedor" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--borde);"></select>
     </div>
 
+    <div class="pestanas">
+      <button type="button" class="pestana activa" data-panel="panel-consulta">Consulta legal</button>
+      <button type="button" class="pestana" data-panel="panel-documento">Analizar mi documento</button>
+    </div>
+
     <form id="form-consulta">
       <input
         type="text"
@@ -170,6 +210,20 @@
         autocomplete="off"
       />
       <button type="submit" id="btn-consultar">Preguntar</button>
+    </form>
+
+    <form id="form-documento" style="display:none;" class="columna">
+      <div id="privacidad" class="privacidad local"></div>
+
+      <div class="zona-archivo" id="zona-archivo">
+        <div class="principal" id="texto-zona">Arrastra aquí tu documento, o haz clic para elegirlo</div>
+        <div class="secundario">Contrato, demanda, escritura, sentencia — PDF, Word (.docx) o texto</div>
+        <input type="file" id="input-archivo" accept=".pdf,.docx,.txt,.md,.rtf" style="display:none;" />
+      </div>
+
+      <input type="text" id="input-pregunta-doc" autocomplete="off"
+             placeholder="¿Qué quieres saber? Ej: ¿qué riesgos tiene para el arrendatario?" />
+      <button type="submit" id="btn-documento">Analizar documento</button>
     </form>
 
     <div id="estado" class="estado" style="display:none;"></div>
@@ -199,6 +253,8 @@
           .join("");
         if (data.predeterminado) inputProveedor.value = data.predeterminado;
         selectorProveedor.style.display = "block";
+        inputProveedor.addEventListener("change", actualizarPrivacidad);
+        actualizarPrivacidad();
       } catch (err) {
         // Si esto falla, simplemente no se muestra el selector; el backend
         // igual usará su proveedor predeterminado.
@@ -267,6 +323,115 @@
         })
         .join("");
     }
+
+    // --- Pestañas -------------------------------------------------------
+    const paneles = { "panel-consulta": form, "panel-documento": document.getElementById("form-documento") };
+    document.querySelectorAll(".pestana").forEach((boton) => {
+      boton.addEventListener("click", () => {
+        document.querySelectorAll(".pestana").forEach((b) => b.classList.remove("activa"));
+        boton.classList.add("activa");
+        for (const [id, panel] of Object.entries(paneles)) {
+          panel.style.display = id === boton.dataset.panel ? (id === "panel-documento" ? "flex" : "flex") : "none";
+        }
+        resultado.innerHTML = "";
+      });
+    });
+
+    // --- Documentos -----------------------------------------------------
+    const formDoc = document.getElementById("form-documento");
+    const zona = document.getElementById("zona-archivo");
+    const textoZona = document.getElementById("texto-zona");
+    const inputArchivo = document.getElementById("input-archivo");
+    const inputPreguntaDoc = document.getElementById("input-pregunta-doc");
+    const botonDoc = document.getElementById("btn-documento");
+    const privacidad = document.getElementById("privacidad");
+
+    // Cuál proveedor va a procesar el archivo decide si el documento sale o
+    // no del computador. El usuario tiene que saberlo ANTES de subirlo, no
+    // después, así que se dice en grande y no en letra chica.
+    function actualizarPrivacidad() {
+      const elegido = selectorProveedor.style.display !== "none" ? inputProveedor.value : "qwen";
+      if (elegido === "claude") {
+        privacidad.className = "privacidad nube";
+        privacidad.textContent =
+          "Atención: está seleccionado Claude, que funciona en la nube. El texto de este documento se enviará a los servidores de Anthropic para ser analizado. Si el documento tiene información confidencial de un cliente, cambia a Qwen local antes de subirlo.";
+      } else {
+        privacidad.className = "privacidad local";
+        privacidad.textContent =
+          "Tu documento se procesa completamente en este computador, con Qwen local. No se envía a internet ni se guarda copia en disco.";
+      }
+    }
+    actualizarPrivacidad();
+
+    let archivoElegido = null;
+    function mostrarArchivo(archivo) {
+      archivoElegido = archivo || null;
+      textoZona.innerHTML = archivo
+        ? `<span class="archivo-elegido">${escapeHtml(archivo.name)}</span> — ${(archivo.size / 1024).toFixed(0)} KB`
+        : "Arrastra aquí tu documento, o haz clic para elegirlo";
+    }
+
+    zona.addEventListener("click", () => inputArchivo.click());
+    inputArchivo.addEventListener("change", () => mostrarArchivo(inputArchivo.files[0]));
+    ["dragenter", "dragover"].forEach((ev) =>
+      zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.add("encima"); })
+    );
+    ["dragleave", "drop"].forEach((ev) =>
+      zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.remove("encima"); })
+    );
+    zona.addEventListener("drop", (e) => {
+      const archivo = e.dataTransfer?.files?.[0];
+      if (archivo) { inputArchivo.files = e.dataTransfer.files; mostrarArchivo(archivo); }
+    });
+
+    formDoc.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!archivoElegido) { alert("Primero elige un documento."); return; }
+      const pregunta = inputPreguntaDoc.value.trim();
+      if (!pregunta) { inputPreguntaDoc.focus(); return; }
+
+      const datos = new FormData();
+      datos.append("archivo", archivoElegido);
+      datos.append("pregunta", pregunta);
+      if (selectorProveedor.style.display !== "none") datos.append("proveedor", inputProveedor.value);
+
+      botonDoc.disabled = true;
+      estado.style.display = "block";
+      estado.textContent = `Leyendo ${archivoElegido.name}, buscando las normas aplicables y analizando… esto puede tardar varios minutos con un modelo local.`;
+      resultado.innerHTML = "";
+
+      try {
+        const res = await fetch("/api/documento", { method: "POST", body: datos });
+        const data = await res.json();
+        if (!res.ok) {
+          resultado.innerHTML = `<div class="respuesta"><h2>Error</h2>${escapeHtml(data.error || "Error desconocido")}</div>`;
+          return;
+        }
+
+        const d = data.documento || {};
+        const avisoRecorte = d.recortado
+          ? `<div class="aviso" style="background:#fdeecb;border-color:#f0c86b;color:#8a5a00;">El documento era extenso (${d.caracteres.toLocaleString("es-CL")} caracteres). Se analizaron las ${d.fragmentos_usados} secciones más relacionadas con tu pregunta, de ${d.fragmentos_totales}. Hay partes que no se leyeron.</div>`
+          : "";
+
+        const nombreProveedor = NOMBRES_PROVEEDOR[data.proveedor_usado] || data.proveedor_usado || "la IA";
+        resultado.innerHTML = `
+          ${avisoRecorte}
+          <div class="respuesta informe">
+            <h2>Análisis de ${escapeHtml(data.archivo)} — por ${escapeHtml(nombreProveedor)}</h2>
+            ${renderInforme(data.respuesta)}
+          </div>
+          <div>
+            <h2 style="color:#6b7280; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.03em;">Normas usadas como base</h2>
+            ${renderDocs(data.normas_usadas) || '<div class="vacio">No se encontraron normas relacionadas.</div>'}
+          </div>
+        `;
+      } catch (err) {
+        resultado.innerHTML = `<div class="respuesta"><h2>Error de conexión</h2>${escapeHtml(err.message)}</div>`;
+      } finally {
+        botonDoc.disabled = false;
+        estado.style.display = "none";
+      }
+    });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();

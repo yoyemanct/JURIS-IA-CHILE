@@ -7,6 +7,8 @@ const { buscarContexto } = require("./busquedaHibrida");
 const proveedorIA = require("./proveedorIA");
 const leyChile = require("./fuentes/leyChileOficial");
 const mcp = require("./mcpLeyChile");
+const multer = require("multer");
+const lectorDocumentos = require("./fuentes/documentos");
 
 const PORT = process.env.PORT || 3000;
 const USAR_CORPUS_REMOTO = process.env.USAR_CORPUS_REMOTO !== "false";
@@ -34,6 +36,14 @@ const limitadorIA = rateLimit({
   message: {
     error: `Has alcanzado el límite de ${LIMITE_CONSULTAS_IA} preguntas cada ${VENTANA_MINUTOS} minutos. Espera un rato y vuelve a intentar.`,
   },
+});
+
+// Los archivos se procesan en memoria y se descartan: no se guarda copia
+// en disco. Para documentos con material de clientes, eso importa.
+const MAX_MB_ARCHIVO = Number(process.env.MAX_MB_ARCHIVO || 20);
+const subida = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_MB_ARCHIVO * 1024 * 1024, files: 1 },
 });
 
 const limitadorBusqueda = rateLimit({
@@ -297,6 +307,141 @@ REGLAS ESTRICTAS E INNEGOCIABLES:
       codigo: err?.codigo || null,
     });
   }
+});
+
+// --- Endpoint: analizar un documento propio contra la legislación ------
+// El archivo se lee en memoria, se extrae su texto, se buscan las normas
+// pertinentes y se le pide a la IA un análisis del documento a la luz de
+// esas normas. El archivo no se guarda en ninguna parte.
+app.post("/api/documento", limitadorIA, subida.single("archivo"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      error: `Falta el archivo. Formatos aceptados: ${lectorDocumentos.formatosAceptados()}.`,
+    });
+  }
+
+  const pregunta = (req.body?.pregunta || "").toString().trim();
+  if (!pregunta) {
+    return res.status(400).json({
+      error: "Indica qué quieres saber del documento (ej: '¿qué riesgos tiene para el arrendatario?').",
+    });
+  }
+  if (pregunta.length > MAX_LARGO_PREGUNTA) {
+    return res.status(400).json({ error: `La pregunta es demasiado larga (máximo ${MAX_LARGO_PREGUNTA} caracteres).` });
+  }
+
+  const disponibles = proveedorIA.proveedoresDisponibles();
+  if (disponibles.length === 0) {
+    return res.status(500).json({ error: "No hay ningún proveedor de IA configurado en el servidor." });
+  }
+  const proveedorPedido = (req.body?.proveedor || "").toString().trim();
+  if (proveedorPedido && !disponibles.some((p) => p.id === proveedorPedido)) {
+    return res.status(400).json({ error: `El proveedor "${proveedorPedido}" no está disponible.` });
+  }
+
+  // 1. Leer el documento
+  let textoDocumento;
+  try {
+    textoDocumento = await lectorDocumentos.extraerTexto(req.file.buffer, req.file.originalname);
+  } catch (err) {
+    return res.status(400).json({ error: err.message, codigo: err.codigo || null });
+  }
+  if (!textoDocumento.trim()) {
+    return res.status(400).json({ error: "No se pudo extraer texto del documento (llegó vacío)." });
+  }
+
+  const seleccion = lectorDocumentos.seleccionarFragmentos(textoDocumento, pregunta);
+
+  // 2. Buscar normas pertinentes. Se combina la pregunta con el inicio del
+  //    documento, porque la pregunta sola ("¿qué riesgos tiene?") no dice
+  //    nada sobre la materia; el documento sí.
+  let relevantes = [];
+  let remotoDisponible = false;
+  let remotoError = null;
+  try {
+    ({ documentos: relevantes, remotoDisponible, remotoError } = await buscarContexto(
+      `${pregunta} ${textoDocumento.slice(0, 1200)}`,
+      10
+    ));
+  } catch (err) {
+    console.error("Error buscando contexto para el documento:", err);
+  }
+
+  const contextoLegal = relevantes
+    .map((doc, i) => `[Norma ${i + 1}] ${doc.cuerpo_legal}, ${doc.articulo}\n"${doc.texto}"\nFuente: ${doc.fuente_url}`)
+    .join("\n\n");
+
+  const systemPrompt = `Eres un asistente jurídico especializado en derecho chileno. Se te entrega un documento real de un abogado (contrato, demanda, escritura, sentencia u otro) y normas legales chilenas como contexto. Tu trabajo es analizar el documento a la luz de esas normas.
+
+ESTRUCTURA OBLIGATORIA:
+
+## Qué es este documento
+Identifica el tipo de documento, las partes que intervienen y su objeto. Si el documento llega incompleto o recortado, dilo.
+
+## Contenido relevante para la pregunta
+Las cláusulas, considerandos o secciones que responden lo preguntado. **Cita textualmente** la parte pertinente del documento, entre comillas, identificando dónde está (número de cláusula, artículo, considerando).
+
+## Análisis legal
+Cómo se relaciona ese contenido con las normas entregadas como contexto. Cita cada norma como "Cuerpo legal, artículo N". Señala si alguna cláusula contradice una norma, si hay algo que la ley exige y el documento no contempla, o si alguna disposición podría ser inoponible o nula.
+
+## Puntos de atención
+Lo que a tu juicio merece revisión: ambigüedades, vacíos, cláusulas desfavorables para una parte, plazos que corren, condiciones que podrían discutirse. Sé concreto y apóyate en el texto.
+
+## Qué debe verificarse antes de actuar
+Sección obligatoria. Enumera con honestidad lo que no pudiste revisar: si el documento venía recortado y qué parte no leíste; que no tienes acceso a jurisprudencia ni dictámenes; que no puedes confirmar la vigencia de las normas citadas; anexos, firmas o documentos referidos que no están a la vista; y cualquier norma que probablemente aplique pero no esté entre las entregadas.
+
+REGLAS ESTRICTAS:
+1. Cita el documento textualmente cuando hagas una afirmación sobre su contenido. Nunca describas una cláusula que no está en el texto que recibiste.
+2. Usa solo las normas entregadas como contexto. No inventes artículos ni números.
+3. Si el documento no contiene lo necesario para responder, dilo derechamente.
+4. No emitas una opinión legal definitiva ni garantices resultados.
+5. Escribe en español de Chile, con precisión técnica.
+6. Cierra recordando que esto es información general y no reemplaza la revisión de un abogado.`;
+
+  const avisoRecorte = seleccion.recortado
+    ? `\n\nADVERTENCIA: el documento era extenso, así que se seleccionaron las ${seleccion.fragmentosUsados} secciones más relacionadas con la pregunta, de ${seleccion.totalFragmentos} en total. Hay partes del documento que NO estás viendo; adviértelo en tu análisis.`
+    : "";
+
+  const userMessage = `NORMAS CHILENAS COMO CONTEXTO:\n\n${contextoLegal || "(no se encontraron normas relacionadas)"}\n\n` +
+    `=== DOCUMENTO APORTADO POR EL USUARIO: ${req.file.originalname} ===\n\n${seleccion.texto}\n\n=== FIN DEL DOCUMENTO ===${avisoRecorte}\n\n` +
+    `PREGUNTA DEL USUARIO SOBRE ESTE DOCUMENTO: ${pregunta}`;
+
+  try {
+    const { texto, proveedor } = await proveedorIA.responder({
+      proveedor: proveedorPedido,
+      systemPrompt,
+      userMessage,
+    });
+    res.json({
+      archivo: req.file.originalname,
+      pregunta,
+      respuesta: texto,
+      proveedor_usado: proveedor,
+      documento: {
+        caracteres: textoDocumento.length,
+        recortado: seleccion.recortado,
+        fragmentos_usados: seleccion.fragmentosUsados,
+        fragmentos_totales: seleccion.totalFragmentos,
+      },
+      normas_usadas: relevantes,
+      corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
+      aviso_corpus_completo: !remotoDisponible ? remotoError : null,
+    });
+  } catch (err) {
+    console.error("Error analizando el documento:", err);
+    res.status(502).json({ error: err?.message || "Error al analizar el documento.", codigo: err?.codigo || null });
+  }
+});
+
+// Errores de subida (archivo demasiado grande, etc.)
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    const mensaje = err.code === "LIMIT_FILE_SIZE"
+      ? `El archivo supera el límite de ${MAX_MB_ARCHIVO} MB.`
+      : `Error al subir el archivo: ${err.message}`;
+    return res.status(400).json({ error: mensaje });
+  }
+  return next(err);
 });
 
 app.listen(PORT, () => {

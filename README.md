@@ -34,6 +34,33 @@ Esto se llama un patrón **RAG** (Retrieval-Augmented Generation): en vez de dej
 "invente" desde su memoria general, la obligamos a responder solo con documentos reales, y a
 citarlos. Es clave en un tema legal, donde inventar un artículo sería un problema serio.
 
+## Analizar tus propios documentos
+
+La pestaña "Analizar mi documento" permite subir un contrato, una demanda, una escritura o una
+sentencia (PDF, Word `.docx` o texto) y preguntar sobre él. La app extrae el texto, busca las
+normas chilenas aplicables según el contenido del documento, y pide un análisis que cita tanto
+las cláusulas del documento como los artículos de ley.
+
+**Por qué esto importa para un abogado:** con Qwen local, el documento se lee y se analiza
+íntegramente en tu computador. No viaja a ningún servidor y no se guarda copia en disco — el
+archivo se procesa en memoria y se descarta. Para material sujeto a secreto profesional, esa es
+una diferencia sustantiva frente a cualquier servicio en la nube.
+
+Si tienes Claude configurado y lo seleccionas, el texto del documento **sí** se envía a
+Anthropic. La app te lo advierte en pantalla antes de que subas nada, con un aviso que cambia
+de color según el proveedor elegido. Esa advertencia es deliberada: la decisión tiene que
+tomarse antes de subir el archivo, no después.
+
+Documentos extensos: un modelo local tiene una ventana de lectura limitada. Cuando el documento
+excede el presupuesto (`DOC_PRESUPUESTO_CARACTERES`, 18.000 caracteres por omisión), la app no
+lo corta por la mitad: lo divide en secciones, puntúa cada una según su relación con tu
+pregunta, y analiza las más pertinentes — conservando siempre el inicio, donde están las partes
+y el objeto. La interfaz te avisa cuántas secciones se leyeron de cuántas, para que sepas que
+hay partes que no se revisaron.
+
+Un PDF escaneado (una imagen, sin texto seleccionable) no se puede leer; la app lo dice en vez
+de devolver un análisis vacío. Haría falta pasarle un OCR primero.
+
 ## Consultas de vigencia
 
 El corpus remoto guarda el historial completo de versiones de cada norma, y la app lo expone.
@@ -305,7 +332,8 @@ JURIS-IA-CHILE/
 ├── server.js            # Backend Express: sirve la página y las rutas de la API
 ├── proveedorIA.js        # Elige y llama al proveedor de IA (Claude o Qwen local vía Ollama)
 ├── fuentes/
-│   └── leyChileOficial.js # Conector a la fuente oficial BCN/LeyChile (vigencia + versiones)
+│   ├── leyChileOficial.js # Conector a la fuente oficial BCN/LeyChile (vigencia + versiones)
+│   └── documentos.js     # Lee documentos del usuario (PDF/Word/texto) y selecciona fragmentos
 ├── search.js            # Motor de búsqueda simple por palabras clave (corpus local)
 ├── mcpLeyChile.js        # Cliente MCP hacia el corpus jurídico completo remoto
 ├── normalizadorMcp.js    # Interpreta las respuestas del servidor remoto de forma flexible
