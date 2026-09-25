@@ -9,6 +9,9 @@ const PLANES = {
     nombre: "Gratis",
     precio: 0,
     consultasMes: Number(process.env.PLAN_GRATIS_CONSULTAS || 5),
+    // Quienes prueban gratis usan un modelo más económico, para que su costo
+    // en créditos de AI Gateway sea mínimo. Vacío = el modelo general.
+    modelo: (process.env.PLAN_GRATIS_MODELO ?? "google/gemini-2.5-flash").trim(),
   },
   pro: {
     id: "pro",
@@ -16,6 +19,7 @@ const PLANES = {
     precio: Number(process.env.PLAN_PRO_PRECIO || 19990),
     // 0 = ilimitado. Un tope alto evita abusos sin molestar a un usuario real.
     consultasMes: Number(process.env.PLAN_PRO_CONSULTAS || 0),
+    modelo: (process.env.PLAN_PRO_MODELO || "").trim(),
   },
 };
 

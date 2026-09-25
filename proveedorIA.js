@@ -263,7 +263,9 @@ async function responderConVercel(opciones) {
 }
 
 async function responderConVercelCredencial(opciones, credencial) {
-  const modelos = [GATEWAY_MODELO, ...GATEWAY_RESPALDOS.filter((m) => m !== GATEWAY_MODELO)];
+  // El plan del usuario puede pedir un modelo propio; los generales quedan de respaldo.
+  const principal = opciones.modelo || GATEWAY_MODELO;
+  const modelos = [...new Set([principal, GATEWAY_MODELO, ...GATEWAY_RESPALDOS])];
   let ultimoError;
   for (const modelo of modelos) {
     let empezo = false;
@@ -446,9 +448,10 @@ const PROVEEDORES = { vercel: responderConVercel, claude: responderConClaude, qw
  * ninguno / se pidió uno que no existe). onTexto recibe cada fragmento de
  * texto a medida que el modelo lo escribe.
  */
-async function responder({ proveedor, systemPrompt, userMessage, onTexto, maxTokens, temperatura }) {
+async function responder({ proveedor, systemPrompt, userMessage, onTexto, maxTokens, temperatura, modelo }) {
   const elegido = PROVEEDORES[proveedor] ? proveedor : proveedorPredeterminado();
-  return PROVEEDORES[elegido]({ systemPrompt, userMessage, onTexto, maxTokens, temperatura });
+  // `modelo` solo aplica a AI Gateway, que atiende modelos de varias empresas.
+  return PROVEEDORES[elegido]({ systemPrompt, userMessage, onTexto, maxTokens, temperatura, modelo });
 }
 
 /**
