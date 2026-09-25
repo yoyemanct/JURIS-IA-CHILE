@@ -1,6 +1,6 @@
 # Verificación del mapa de artículos clave contra LeyChile
 
-Fecha: 2026-09-25T04:53:12.593Z. Artículos revisados: 113. Correctos: 113. Con problemas: 0.
+Fecha: 2026-09-25T04:58:06.088Z. Artículos revisados: 113. Correctos: 113. Con problemas: 0.
 
 | Tema | Norma | Artículo | Resultado | Detalle |
 |---|---|---|---|---|
