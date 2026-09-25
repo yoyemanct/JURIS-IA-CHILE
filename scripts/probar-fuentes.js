@@ -4,6 +4,8 @@ const pjud = require("../fuentes/jurisprudencia/pjud");
 const { buscarSentenciasTC } = require("../fuentes/jurisprudencia/tconstitucional");
 const { buscarDictamenes } = require("../fuentes/jurisprudencia/contraloria");
 const { buscarDoctrina } = require("../fuentes/doctrina");
+const dt = require("../fuentes/jurisprudencia/direcciontrabajo");
+const { buscarTDLC } = require("../fuentes/jurisprudencia/tdlc");
 
 async function probar(nombre, fn) {
   const t = Date.now();
@@ -23,5 +25,8 @@ async function probar(nombre, fn) {
   await probar("Corte de Apelaciones", () => pjud.buscarSentencias({ tribunal: "corte_apelaciones", todas: "recurso proteccion", limite: 1 }));
   await probar("Tribunal Constitucional", () => buscarSentenciasTC({ consulta: "debido proceso", limite: 1 }));
   await probar("Contraloría", () => buscarDictamenes({ texto: "feriado legal", limite: 1 }));
+  await probar("Dirección del Trabajo", () => dt.buscarDictamenesDT({ consulta: "feriado anual trabajadores", limite: 2 }));
+  await probar("TDLC", () => buscarTDLC({ consulta: "colusión farmacias", limite: 2 }));
+  await probar("Corte Suprema (cortacircuito, debe fallar rápido)", () => pjud.buscarSentencias({ tribunal: "corte_suprema", todas: "otra consulta", limite: 1 }));
   await probar("Doctrina", () => buscarDoctrina({ consulta: "despido injustificado indemnización", limite: 1 }));
 })();

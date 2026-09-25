@@ -28,6 +28,13 @@ const BUSCADORES = {
 const cacheSesiones = new CacheTTL({ maximo: 20, ttlMs: 10 * 60 * 1000 });
 const cacheBusquedas = new CacheTTL({ maximo: 300, ttlMs: 12 * 60 * 60 * 1000 });
 
+// Cortacircuito: si el buscador rechaza el acceso (por ejemplo, con un
+// desafío anti-bot en vez de la página), no se reintenta en cada consulta
+// durante un rato: fallaría igual y cada intento cuesta segundos.
+const PAUSA_TRAS_BLOQUEO_MS = Number(process.env.PJUD_PAUSA_MS || 10 * 60 * 1000);
+let bloqueadoHasta = 0;
+let motivoBloqueo = "";
+
 function diagnosticar(res) {
   const ora = (res.texto || "").match(/ORA-\d+[^<&]*/);
   if (ora) {
@@ -52,7 +59,15 @@ function sesion(tribunal) {
     const id = (res.texto.match(/var\s+id_buscador_activo\s*=\s*(\d+)/) || [])[1] || b.id;
     const setCookie = res.headers && res.headers.getSetCookie ? res.headers.getSetCookie() : [];
     const cookies = setCookie.map((c) => c.split(";")[0]).join("; ");
-    if (!token) throw new Error("El Poder Judicial cambió su página: no se encontró el token CSRF.");
+    if (!token) {
+      const antibot = /bobcmn|captcha|challenge|TSPD/i.test(res.texto);
+      const mensaje = antibot
+        ? "El Poder Judicial no permite la consulta automática (su sitio responde con un desafío anti-bot)."
+        : "El Poder Judicial cambió su página: no se encontró el token CSRF.";
+      bloqueadoHasta = Date.now() + PAUSA_TRAS_BLOQUEO_MS;
+      motivoBloqueo = mensaje;
+      throw new Error(mensaje);
+    }
     return { token, cookies, id, slug: b.slug, nombre: b.nombre };
   });
 }
@@ -256,6 +271,7 @@ async function buscarSentencias(p = {}) {
     throw new Error("Falta el criterio de búsqueda de jurisprudencia.");
   }
   const limite = Math.min(Math.max(Number(p.limite) || 3, 1), 10);
+  if (Date.now() < bloqueadoHasta) throw new Error(motivoBloqueo);
   const clave = `${tribunal}|${limite}|${armarFiltros(p)}|${p.orden || ""}`;
 
   return cacheBusquedas.recordar(clave, async () => {

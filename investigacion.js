@@ -16,6 +16,8 @@ const pjud = require("./fuentes/jurisprudencia/pjud");
 const { buscarSentenciasTC } = require("./fuentes/jurisprudencia/tconstitucional");
 const { buscarDictamenes } = require("./fuentes/jurisprudencia/contraloria");
 const { buscarDoctrina } = require("./fuentes/doctrina");
+const dt = require("./fuentes/jurisprudencia/direcciontrabajo");
+const { buscarTDLC } = require("./fuentes/jurisprudencia/tdlc");
 const { tokenizar } = require("./search");
 const { CacheTTL, claveDeTexto } = require("./cache");
 
@@ -49,6 +51,8 @@ const PROMPT_PLAN = `Eres un investigador jurídico chileno. Recibes una consult
   "sedes": ["corte_suprema", y a lo más UNA más de: "corte_apelaciones", "laborales", "penales", "familia", "cobranza", "civiles"],
   "constitucional": true si hay un derecho fundamental, una inaplicabilidad o un asunto constitucional en juego; si no, false,
   "contraloria": true solo si involucra a la Administración del Estado, funcionarios públicos o municipalidades; si no, false,
+  "direccion_trabajo": true si es una materia laboral o de seguridad social (la Dirección del Trabajo interpreta la legislación laboral); si no, false,
+  "libre_competencia": true solo si trata de colusión, abuso de posición dominante, operaciones de concentración u otra materia de libre competencia; si no, false,
   "doctrina": "consulta breve con los conceptos doctrinales centrales, o cadena vacía",
   "materia": una de "civil", "laboral", "familia", "alimentos", "penal", "arriendo", "policia_local", "constitucional", "tributario", "otra",
   "normas_procesales": ["nombres oficiales de hasta 3 cuerpos legales que regulan el procedimiento o la materia, ej: 'Código de Procedimiento Civil', 'Código del Trabajo', 'Código Procesal Penal', 'Ley 19.968 crea los Tribunales de Familia'"]
@@ -93,6 +97,8 @@ function planHeuristico(pregunta) {
     sedes: ["corte_suprema"],
     constitucional: materia === "constitucional",
     contraloria: /municipal|funcionari|estatuto administrativo|servicio publico|contrata|sumario administrativo/.test(t),
+    direccion_trabajo: materia === "laboral",
+    libre_competencia: /colusi|libre competencia|monopoli|posicion dominante|cartel|concentracion economica/.test(t),
     doctrina: terminos.join(" "),
     materia,
     normas_procesales: NORMAS_PROCESALES[materia] || [],
@@ -118,6 +124,8 @@ function sanearPlan(bruto, respaldo) {
     sedes: sedes.slice(0, 2),
     constitucional: bruto.constitucional === true,
     contraloria: bruto.contraloria === true,
+    direccion_trabajo: bruto.direccion_trabajo === true || (bruto.direccion_trabajo === undefined && respaldo.direccion_trabajo),
+    libre_competencia: bruto.libre_competencia === true,
     doctrina: texto(bruto.doctrina) || respaldo.doctrina,
     materia,
     normas_procesales: normas.length ? normas : NORMAS_PROCESALES[materia] || [],
@@ -196,6 +204,19 @@ async function buscarJurisprudencia(plan) {
     tareas.push({
       etiqueta: "Contraloría",
       promesa: buscarDictamenes({ texto: consultaLibre, limite: 2 }).then((r) => r.resultados),
+    });
+  }
+
+  if (plan.direccion_trabajo) {
+    tareas.push({
+      etiqueta: "Dirección del Trabajo",
+      promesa: dt.buscarDictamenesDT({ consulta: consultaLibre, limite: 2 }).then((r) => r.resultados),
+    });
+  }
+  if (plan.libre_competencia) {
+    tareas.push({
+      etiqueta: "Tribunal de Defensa de la Libre Competencia",
+      promesa: buscarTDLC({ consulta: consultaLibre, limite: 2 }).then((r) => r.resultados),
     });
   }
 
