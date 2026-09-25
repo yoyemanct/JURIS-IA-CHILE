@@ -136,10 +136,13 @@ async function buscarSinCache(pregunta, limite) {
     }
   }
 
-  const documentosLocales = buscarLocal(corpusLocal, pregunta, limite).map((doc) => ({
-    ...doc,
-    origen: "local",
-  }));
+  // El corpus local (unos pocos ejemplos curados) es solo un respaldo: se
+  // usa únicamente si el corpus completo no respondió o no encontró nada.
+  // Mezclarlo siempre metía artículos ajenos a la consulta.
+  const usarLocal = !remotoDisponible || documentosRemotos.length === 0;
+  const documentosLocales = usarLocal
+    ? buscarLocal(corpusLocal, pregunta, limite).map((doc) => ({ ...doc, origen: "local" }))
+    : [];
 
   const documentos = [...documentosRemotos, ...documentosLocales].slice(0, limite);
 
