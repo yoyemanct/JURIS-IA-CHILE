@@ -15,6 +15,7 @@ const lectorDocumentos = require("./fuentes/documentos");
 const prompts = require("./prompts");
 const { investigar } = require("./investigacion");
 const cuentasRutas = require("./cuentas/rutas");
+const planes = require("./cuentas/planes");
 const pjud = require("./fuentes/jurisprudencia/pjud");
 const { buscarSentenciasTC } = require("./fuentes/jurisprudencia/tconstitucional");
 const { buscarDictamenes } = require("./fuentes/jurisprudencia/contraloria");
@@ -288,8 +289,13 @@ async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
 
   try {
     canal?.enviar("estado", { etapa: "buscando", mensaje: mensajeBuscando });
-    const { meta, systemPrompt, userMessage, claveCache, maxTokens } = await preparar();
+    const { meta, systemPrompt, userMessage, claveCache: claveBase, maxTokens } = await preparar();
     canal?.enviar("documentos", meta);
+
+    // Cada plan puede tener su propio modelo (el gratis, uno más económico).
+    // La caché se separa por modelo para no mezclar calidades entre planes.
+    const modeloPlan = req.usuario ? planes.planDe(req.usuario).modelo || undefined : undefined;
+    const claveCache = claveBase && modeloPlan ? `${claveBase}|${modeloPlan}` : claveBase;
 
     const enCache = claveCache ? cacheRespuestas.obtener(claveCache) : undefined;
     if (enCache) {
@@ -306,6 +312,7 @@ async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
       systemPrompt,
       userMessage,
       maxTokens,
+      modelo: modeloPlan,
       onTexto: canal ? (t) => canal.enviar("texto", { t }) : undefined,
     });
     if (claveCache) cacheRespuestas.guardar(claveCache, { texto, proveedor: usado, modelo });
