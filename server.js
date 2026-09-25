@@ -549,7 +549,14 @@ const MINUTOS_ESTADO_FUENTES = Number(process.env.MINUTOS_ESTADO_FUENTES || 10);
 const cacheEstadoFuentes = new CacheTTL({ maximo: 2, ttlMs: MINUTOS_ESTADO_FUENTES * 60 * 1000 });
 
 app.get("/api/fuentes", limitadorBusqueda, async (req, res) => {
-  const estado = await cacheEstadoFuentes.recordar("estado", probarFuentes);
+  // Si todas responden, el estado se guarda los minutos configurados; si
+  // alguna falla, solo un minuto, para que la portada se corrija sola pronto.
+  let estado = cacheEstadoFuentes.obtener("estado");
+  if (!estado) {
+    estado = await probarFuentes();
+    const todasOk = estado.resultados.every((r) => r.ok);
+    cacheEstadoFuentes.guardar("estado", estado, todasOk ? undefined : 60 * 1000);
+  }
   res.set("Cache-Control", "public, max-age=60");
   res.json(estado);
 });
