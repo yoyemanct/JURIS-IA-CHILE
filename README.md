@@ -42,6 +42,11 @@ Para usarla en tu computador hay dos caminos:
 
 Luego ejecuta `npm start`. Ni `.env` ni `.env.local` se suben a GitHub.
 
+Región: `vercel.json` fija las funciones en **São Paulo (`gru1`)**, la región de Vercel más
+cercana a Chile. Las fuentes (BCN, Poder Judicial, Tribunal Constitucional, Contraloría) están
+en Chile, así que cada consulta viaja menos, y algunos de esos sitios filtran conexiones que
+llegan desde centros de datos lejanos.
+
 Límites a tener en cuenta en Vercel: el archivo subido en "Analizar documento" no puede
 superar ~4,5 MB (límite de la plataforma), y Qwen local no está disponible allí.
 
