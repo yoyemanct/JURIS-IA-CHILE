@@ -505,7 +505,7 @@
         </div>
         <div class="garantia">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 13-7.5 7.5a2.12 2.12 0 0 1-3-3L11 10"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/></svg>
-          <div><b>Jurisprudencia</b>Corte Suprema, Cortes de Apelaciones, juzgados laborales, civiles, de familia y penales, Tribunal Constitucional y dictámenes de Contraloría.</div>
+          <div><b>Jurisprudencia</b>Tribunal Constitucional, Tribunal de Defensa de la Libre Competencia, dictámenes de Contraloría y de la Dirección del Trabajo, y tribunales ordinarios cuando el Poder Judicial lo permite.</div>
         </div>
         <div class="garantia">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
@@ -540,10 +540,12 @@
             <p class="revistas">Si el Poder Judicial no permite la consulta automática, puedes buscar directamente en su <a href="https://juris.pjud.cl" target="_blank" rel="noopener">buscador oficial de jurisprudencia ↗</a>.</p>
           </div>
           <div class="grupo">
-            <h3>Constitucional y administrativa</h3>
+            <h3>Constitucional, administrativa y especializada</h3>
             <ul>
               <li><span class="led verificando" data-fuente="tc"></span><div>Tribunal Constitucional<small>Sentencias de inaplicabilidad, inconstitucionalidad y control</small></div></li>
               <li><span class="led verificando" data-fuente="cgr"></span><div>Contraloría General de la República<small>Dictámenes de jurisprudencia administrativa</small></div></li>
+              <li><span class="led verificando" data-fuente="dt"></span><div>Dirección del Trabajo<small>Dictámenes que interpretan la legislación laboral</small></div></li>
+              <li><span class="led verificando" data-fuente="tdlc"></span><div>Tribunal de Defensa de la Libre Competencia<small>Sentencias sobre colusión, abuso de posición dominante y concentraciones</small></div></li>
             </ul>
           </div>
           <div class="grupo">
@@ -1030,7 +1032,7 @@
       verificarVigencia(turno);
     }
 
-    const NOMBRE_FUENTE = { pjud: "Poder Judicial", tc: "Tribunal Constitucional", cgr: "Contraloría" };
+    const NOMBRE_FUENTE = { pjud: "Poder Judicial", tc: "Tribunal Constitucional", cgr: "Contraloría", dt: "Dirección del Trabajo", tdlc: "TDLC" };
     const CLASE_APORTE = { "fija doctrina": "ok", "resuelve el fondo": "", "no entra al fondo": "alerta" };
 
     function renderJurisprudencia(turno, fallos) {
@@ -1066,7 +1068,7 @@
             ${pasajes}${extracto}
             ${normas || descriptores ? `<div class="chips">${normas}${descriptores}</div>` : ""}
             <div class="fuente-pie">
-              <a href="${escapeHtml(urlSegura(f.url))}" target="_blank" rel="noopener">Ver ${f.fuente === "cgr" ? "dictamen" : "fallo"} ↗</a>
+              <a href="${escapeHtml(urlSegura(f.url))}" target="_blank" rel="noopener">Ver ${f.fuente === "cgr" || f.fuente === "dt" ? "dictamen" : f.fuente === "tdlc" ? "sentencia" : "fallo"} ↗</a>
               ${f.pdf ? `<a href="${escapeHtml(urlSegura(f.pdf))}" target="_blank" rel="noopener">PDF ↗</a>` : ""}
               ${nota}
             </div>

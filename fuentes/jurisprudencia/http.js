@@ -27,6 +27,8 @@ const RITMO = {
   "juris.pjud.cl": 300,
   "buscador-backend.tcchile.cl": 300,
   "www.contraloria.cl": 400,
+  "www.dt.gob.cl": 350,
+  "www.tdlc.cl": 350,
 };
 
 const ultimaPeticion = new Map();

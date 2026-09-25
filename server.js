@@ -18,6 +18,8 @@ const pjud = require("./fuentes/jurisprudencia/pjud");
 const { buscarSentenciasTC } = require("./fuentes/jurisprudencia/tconstitucional");
 const { buscarDictamenes } = require("./fuentes/jurisprudencia/contraloria");
 const { buscarDoctrina } = require("./fuentes/doctrina");
+const direccionTrabajo = require("./fuentes/jurisprudencia/direcciontrabajo");
+const { buscarTDLC } = require("./fuentes/jurisprudencia/tdlc");
 const { CacheTTL, claveDeTexto } = require("./cache");
 
 const PORT = process.env.PORT || 3000;
@@ -527,6 +529,8 @@ app.get("/api/jurisprudencia", limitadorBusqueda, async (req, res) => {
     if (fuente === "tc") r = await buscarSentenciasTC({ consulta: q, limite });
     else if (fuente === "cgr") r = await buscarDictamenes({ texto: q, limite });
     else if (fuente === "doctrina") r = await buscarDoctrina({ consulta: q, limite });
+    else if (fuente === "dt") r = await direccionTrabajo.buscarDictamenesDT({ consulta: q, limite });
+    else if (fuente === "tdlc") r = await buscarTDLC({ consulta: q, limite });
     else {
       if (!pjud.BUSCADORES[tribunal]) {
         return res.status(400).json({ error: `Tribunal desconocido. Opciones: ${Object.keys(pjud.BUSCADORES).join(", ")}` });
@@ -596,6 +600,14 @@ async function probarFuentes() {
       const r = await buscarDictamenes({ texto: "feriado legal", limite: 1 });
       return `${r.total} dictámenes en el índice`;
     }),
+    probar("dt", "Dirección del Trabajo (dictámenes)", async () => {
+      const r = await direccionTrabajo.buscarDictamenesDT({ consulta: "feriado anual", limite: 1 });
+      return `${r.total} dictámenes indexados (${r.anios.join(", ")})`;
+    }),
+    probar("tdlc", "Tribunal de Defensa de la Libre Competencia", async () => {
+      const r = await buscarTDLC({ consulta: "colusión", limite: 1 });
+      return `${r.total} sentencias en el catálogo`;
+    }),
     probar("doctrina", "Doctrina (Crossref + OpenAlex)", async () => {
       const r = await buscarDoctrina({ consulta: "despido injustificado indemnización", limite: 1 });
       return `${r.resultados.length} artículo(s) de acceso abierto verificados`;
@@ -626,6 +638,9 @@ app.use((err, req, res, next) => {
 
 // Abre la conexión con el corpus remoto apenas arranca el servidor, para
 // que la primera pregunta no pague el costo del saludo inicial.
+// El índice de dictámenes de la Dirección del Trabajo se arma de antemano.
+if (process.env.USAR_JURISPRUDENCIA !== "false") direccionTrabajo.precalentar();
+
 if (USAR_CORPUS_REMOTO) {
   mcp.conectar().catch((err) => console.warn("Corpus remoto aún no disponible:", err.message));
 }
