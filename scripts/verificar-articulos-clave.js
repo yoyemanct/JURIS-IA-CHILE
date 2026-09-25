@@ -5,8 +5,7 @@
 // Uso: node scripts/verificar-articulos-clave.js [--salida evals/articulos-clave.md]
 
 const fs = require("fs");
-const mcp = require("../mcpLeyChile");
-const { resolverNorma } = require("../busquedaHibrida");
+const { buscarArticulosExactos } = require("../busquedaHibrida");
 const { MAPA } = require("../articulosClave");
 const { claveDeTexto } = require("../cache");
 
@@ -21,15 +20,14 @@ async function main() {
         if (!vistos.has(clave)) {
           vistos.set(clave, (async () => {
             try {
-              const ley = await resolverNorma(norma);
-              if (!ley) return { ok: false, detalle: "norma no encontrada" };
-              const art = await mcp.obtenerArticulo(ley.idNorma, numero);
-              const texto = claveDeTexto(art?.texto || "");
-              if (!texto) return { ok: false, detalle: `artículo vacío (idNorma ${ley.idNorma}, ${ley.titulo})` };
+              // El mismo camino que usa la app: XML oficial de la BCN y, si falla, el corpus alternativo.
+              const [doc] = await buscarArticulosExactos([{ norma, articulos: [numero] }], 1);
+              if (!doc) return { ok: false, detalle: "artículo no encontrado en ninguna fuente" };
+              const texto = claveDeTexto(doc.texto || "");
               const faltan = palabras.filter((p) => !texto.includes(p));
               return {
                 ok: faltan.length === 0,
-                detalle: faltan.length ? `faltan: ${faltan.join(", ")} — texto: "${texto.slice(0, 160)}…"` : `idNorma ${ley.idNorma}`,
+                detalle: `${doc.fuente}${doc.derogado ? " — DEROGADO" : ""}${faltan.length ? ` — faltan: ${faltan.join(", ")} — texto: "${texto.slice(0, 160)}…"` : ` — vigente al ${doc.vigencia || "?"}`}`,
               };
             } catch (err) {
               return { ok: false, detalle: `error: ${err.message}` };

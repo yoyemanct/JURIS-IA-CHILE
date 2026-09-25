@@ -222,9 +222,11 @@ function contextoConsulta(documentos) {
       const avisoExtracto = doc.completo === false
         ? `\nAdvertencia: este es un EXTRACTO del artículo, no su texto íntegro. ${doc.nota || ""}`
         : "";
-      const avisoOrigen = doc.origen === "remoto"
-        ? "\n(Fuente: LeyChile, corpus completo.)"
-        : "\n(Fuente: ejemplo local curado a mano, corpus de demostración limitado.)";
+      const avisoOrigen = doc.fuente === "BCN (XML oficial)"
+        ? `\n(Fuente: BCN, texto oficial${doc.vigencia ? `, versión del ${doc.vigencia}` : ""}${doc.derogado ? "; ARTÍCULO DEROGADO" : ""}.)`
+        : doc.origen === "remoto"
+          ? "\n(Fuente: corpus alternativo de LeyChile; su versión puede no ser la vigente: si un plazo o requisito de este texto difiere de lo que sabes vigente, advierte la discrepancia y recomienda confirmarlo en la BCN.)"
+          : "\n(Fuente: ejemplo local curado a mano, corpus de demostración limitado.)";
       return `[Norma ${i + 1}] ${doc.cuerpo_legal}, ${doc.articulo}\nTexto: "${doc.texto}"${avisoExtracto}${avisoOrigen}\nEnlace: ${doc.fuente_url}`;
     })
     .join("\n\n");

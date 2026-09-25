@@ -91,7 +91,7 @@ const MAPA = [
     id: "alimentos",
     patron: /alimento|pension alimenticia|pension de alimentos/,
     normas: [
-      { norma: "Ley 14.908", articulos: { 3: ["alimentante"], 7: ["cincuenta por ciento"] } },
+      { norma: "Ley 14.908", articulos: { 3: ["alimentante"], 7: ["pension"] } },
       { norma: CC, articulos: { 321: ["alimentos"], 323: ["alimentos"], 332: ["alimentos"] } },
       { norma: "Ley 19.968", articulos: { 106: ["mediacion"] } },
     ],
@@ -99,7 +99,7 @@ const MAPA = [
   {
     id: "divorcio",
     patron: /divorci/,
-    normas: [{ norma: "Ley 19.947", articulos: { 54: ["culpa"], 55: ["cese"] } }],
+    normas: [{ norma: "Ley 19.947", articulos: { 54: ["falta imputable"], 55: ["cese"] } }],
   },
   {
     id: "posesion_efectiva",
@@ -120,7 +120,7 @@ const MAPA = [
   {
     id: "posesion",
     patron: /posesion(?! efectiva)|poseedor|usucapion|prescripcion adquisitiva/,
-    normas: [{ norma: CC, articulos: { 700: ["tenencia"], 702: ["regular"], 714: ["mera tenencia"], 724: ["registro"], 730: ["usurpa"], 2492: ["prescripcion"], 2498: ["prescripcion"], 2508: ["diez anos"] } }],
+    normas: [{ norma: CC, articulos: { 700: ["tenencia"], 702: ["regular"], 714: ["mera tenencia"], 724: ["registro"], 730: ["usurpa"], 2492: ["prescripcion"], 2498: ["prescripcion"], 2508: ["prescripcion ordinaria"], 2511: ["diez anos"] } }],
   },
   {
     id: "prescripcion_deudas",
@@ -134,7 +134,7 @@ const MAPA = [
     id: "juicio_ejecutivo",
     patron: /juicio ejecutivo|pagare|letra de cambio|cheque|titulo ejecutivo|mandamiento de ejecucion|cobro ejecutivo/,
     normas: [
-      { norma: CPC, articulos: { 434: ["titulo ejecutivo"], 441: ["mandamiento"], 443: ["requerimiento"], 459: ["cuatro dias"], 464: ["excepciones"], 470: ["excepciones"] } },
+      { norma: CPC, articulos: { 434: ["juicio ejecutivo"], 441: ["mandamiento"], 443: ["requerimiento"], 459: ["cuatro dias"], 464: ["excepciones"], 470: ["excepciones"] } },
       { norma: "Ley 18.092", articulos: { 102: ["pagare"], 107: ["pagare"] } },
     ],
   },
@@ -147,7 +147,7 @@ const MAPA = [
     id: "querella_estafa",
     patron: /estafa|defraudaci|engano/,
     normas: [
-      { norma: "Código Penal", articulos: { 467: ["defraudare"], 468: ["defraudare"], 473: ["defraudare"] } },
+      { norma: "Código Penal", articulos: { 467: ["engano"], 468: ["pena"], 473: ["pena"] } },
       { norma: "Código Procesal Penal", articulos: { 111: ["querella"], 113: ["querella"] } },
     ],
   },
