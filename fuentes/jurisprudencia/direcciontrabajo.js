@@ -27,6 +27,21 @@ const ANIOS = {
 
 const cacheAnios = new CacheTTL({ maximo: 30, ttlMs: 7 * 24 * 60 * 60 * 1000 });
 
+// Índice histórico (2005 en adelante), generado cada semana por GitHub Actions
+// con scripts/actualizar-indice-dt.js y guardado en el repositorio. Así la
+// app busca en todos los años sin tener que descargar cientos de portadillas
+// en cada arranque; los años recientes se siguen consultando en vivo.
+let indiceHistorico = null;
+function historico() {
+  if (indiceHistorico) return indiceHistorico;
+  try {
+    indiceHistorico = require("../../data/indices/dt.json");
+  } catch {
+    indiceHistorico = { generado: null, anios: {} };
+  }
+  return indiceHistorico;
+}
+
 const decodificar = (s) =>
   String(s || "")
     .replace(/&#xA;/gi, " ")
@@ -87,7 +102,9 @@ async function buscarDictamenesDT({ consulta, limite = 2 }) {
   if (!String(consulta || "").trim()) throw new Error("Falta la consulta.");
   const anios = aniosRecientes();
   const porAnio = await Promise.all(anios.map((a) => indiceAnio(a).catch(() => [])));
-  const corpus = porAnio.flat();
+  const hist = historico();
+  const aniosHistoricos = Object.keys(hist.anios).map(Number).filter((a) => !anios.includes(a));
+  const corpus = [...porAnio.flat(), ...aniosHistoricos.flatMap((a) => hist.anios[a] || [])];
   if (!corpus.length) throw new Error("No se pudo construir el índice de dictámenes de la Dirección del Trabajo.");
 
   const limpia = sinTildes(consulta);
@@ -126,7 +143,8 @@ async function buscarDictamenesDT({ consulta, limite = 2 }) {
       url: d.url,
     }));
 
-  return { total: corpus.length, tribunal: "Dirección del Trabajo", anios, resultados };
+  const todos = [...new Set([...anios, ...aniosHistoricos])].sort((a, b) => b - a);
+  return { total: corpus.length, tribunal: "Dirección del Trabajo", anios: todos, indice_generado: hist.generado, resultados };
 }
 
 // Arma el índice en segundo plano al arrancar: construirlo toma varios
@@ -136,4 +154,4 @@ function precalentar() {
   for (const a of aniosRecientes()) indiceAnio(a).catch(() => {});
 }
 
-module.exports = { buscarDictamenesDT, precalentar, parsearMes };
+module.exports = { buscarDictamenesDT, precalentar, parsearMes, indiceAnio, ANIOS };

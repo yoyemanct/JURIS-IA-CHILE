@@ -18,6 +18,7 @@ const { buscarDictamenes } = require("./fuentes/jurisprudencia/contraloria");
 const { buscarDoctrina } = require("./fuentes/doctrina");
 const dt = require("./fuentes/jurisprudencia/direcciontrabajo");
 const { buscarTDLC } = require("./fuentes/jurisprudencia/tdlc");
+const { buscarOficiosSII } = require("./fuentes/jurisprudencia/sii");
 const { tokenizar } = require("./search");
 const { CacheTTL, claveDeTexto } = require("./cache");
 
@@ -52,6 +53,7 @@ const PROMPT_PLAN = `Eres un investigador jurídico chileno. Recibes una consult
   "constitucional": true si hay un derecho fundamental, una inaplicabilidad o un asunto constitucional en juego; si no, false,
   "contraloria": true solo si involucra a la Administración del Estado, funcionarios públicos o municipalidades; si no, false,
   "direccion_trabajo": true si es una materia laboral o de seguridad social (la Dirección del Trabajo interpreta la legislación laboral); si no, false,
+  "sii": true si es una materia tributaria (impuestos, IVA, renta, obligaciones con el SII); si no, false,
   "libre_competencia": true solo si trata de colusión, abuso de posición dominante, operaciones de concentración u otra materia de libre competencia; si no, false,
   "doctrina": "consulta breve con los conceptos doctrinales centrales, o cadena vacía",
   "materia": una de "civil", "laboral", "familia", "alimentos", "penal", "arriendo", "policia_local", "constitucional", "tributario", "otra",
@@ -74,10 +76,10 @@ function materiaPorPalabras(texto) {
   if (/arriend|arrendatari|arrendador|desahucio|restitucion/.test(t)) return "arriendo";
   if (/despid|trabajador|empleador|laboral|finiquito|sueldo|remuneracion|tutela laboral|vacaciones|feriado/.test(t)) return "laboral";
   if (/divorci|cuidado personal|relacion directa|visitas|violencia intrafamiliar|familia/.test(t)) return "familia";
-  if (/querella|denuncia|delito|penal|imputad|fiscal|estafa|robo|hurto/.test(t)) return "penal";
+  if (/impuesto|\biva\b|\bsii\b|tributari|credito fiscal|renta/.test(t)) return "tributario";
+  if (/querella|denuncia|delito|penal|imputad|fiscalia|estafa|robo|hurto/.test(t)) return "penal";
   if (/consumidor|sernac|policia local|transito|choque/.test(t)) return "policia_local";
   if (/recurso de proteccion|inaplicabilidad|constitucional|garantia/.test(t)) return "constitucional";
-  if (/impuesto|sii|tributari/.test(t)) return "tributario";
   if (/demanda|juicio|ejecutivo|pagare|cheque|embargo|prescripcion|contrato|civil|posesion/.test(t)) return "civil";
   return "otra";
 }
@@ -99,6 +101,7 @@ function planHeuristico(pregunta) {
     contraloria: /municipal|funcionari|estatuto administrativo|servicio publico|contrata|sumario administrativo/.test(t),
     direccion_trabajo: materia === "laboral",
     libre_competencia: /colusi|libre competencia|monopoli|posicion dominante|cartel|concentracion economica/.test(t),
+    sii: materia === "tributario" || /\biva\b|impuesto|renta|tributari|boleta|factura/.test(t),
     doctrina: terminos.join(" "),
     materia,
     normas_procesales: NORMAS_PROCESALES[materia] || [],
@@ -126,6 +129,7 @@ function sanearPlan(bruto, respaldo) {
     contraloria: bruto.contraloria === true,
     direccion_trabajo: bruto.direccion_trabajo === true || (bruto.direccion_trabajo === undefined && respaldo.direccion_trabajo),
     libre_competencia: bruto.libre_competencia === true,
+    sii: bruto.sii === true || (bruto.sii === undefined && respaldo.sii),
     doctrina: texto(bruto.doctrina) || respaldo.doctrina,
     materia,
     normas_procesales: normas.length ? normas : NORMAS_PROCESALES[materia] || [],
@@ -211,6 +215,12 @@ async function buscarJurisprudencia(plan) {
     tareas.push({
       etiqueta: "Dirección del Trabajo",
       promesa: dt.buscarDictamenesDT({ consulta: consultaLibre, limite: 2 }).then((r) => r.resultados),
+    });
+  }
+  if (plan.sii) {
+    tareas.push({
+      etiqueta: "Servicio de Impuestos Internos",
+      promesa: buscarOficiosSII({ consulta: consultaLibre, limite: 2 }).then((r) => r.resultados),
     });
   }
   if (plan.libre_competencia) {

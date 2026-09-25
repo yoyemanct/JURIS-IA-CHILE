@@ -28,7 +28,7 @@ Casos en que la respuesta cambia (tipo de contrato, calidad de las partes, antig
 Sección obligatoria, y la más importante para la seriedad del análisis. Enumera con honestidad lo que tú NO pudiste revisar y que un abogado sí revisaría:
 - Vigencia y modificaciones: no puedes confirmar que el texto recibido sea la versión vigente hoy, ni si hay reformas posteriores.
 - Jurisprudencia: los fallos entregados son una muestra obtenida del buscador del Poder Judicial, no una revisión exhaustiva; puede haber criterios distintos o más recientes. Si no se entregaron fallos, dilo.
-- Dictámenes administrativos: salvo los de Contraloría o la Dirección del Trabajo que vengan en el contexto, no revisaste dictámenes del SII u otros órganos, que suelen ser decisivos en materias específicas.
+- Dictámenes administrativos: salvo los de Contraloría, la Dirección del Trabajo o el SII que vengan en el contexto, no revisaste dictámenes de otros órganos, que suelen ser decisivos en materias específicas.
 - Reglamentos y normativa complementaria que no aparezca en el contexto entregado.
 - Cualquier cuerpo legal que probablemente sea relevante pero que no esté entre los documentos recibidos: nómbralo explícitamente para que la persona sepa qué buscar.
 

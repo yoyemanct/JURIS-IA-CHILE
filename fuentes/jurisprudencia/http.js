@@ -29,6 +29,7 @@ const RITMO = {
   "www.contraloria.cl": 400,
   "www.dt.gob.cl": 350,
   "www.tdlc.cl": 350,
+  "www3.sii.cl": 200,
 };
 
 const ultimaPeticion = new Map();
