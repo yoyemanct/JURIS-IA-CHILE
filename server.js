@@ -542,49 +542,60 @@ app.get("/api/jurisprudencia", limitadorBusqueda, async (req, res) => {
 
 // --- Diagnóstico de fuentes ----------------------------------------------
 // Prueba cada fuente externa con una consulta real y dice cuál responde.
-// Sirve para comprobar, ya publicada la app, que todo está conectado.
+// La portada lo usa para mostrar el estado en vivo de cada fuente, así que el
+// resultado se guarda unos minutos: las visitas no disparan búsquedas reales
+// en los tribunales cada vez.
+const MINUTOS_ESTADO_FUENTES = Number(process.env.MINUTOS_ESTADO_FUENTES || 10);
+const cacheEstadoFuentes = new CacheTTL({ maximo: 2, ttlMs: MINUTOS_ESTADO_FUENTES * 60 * 1000 });
+
 app.get("/api/fuentes", limitadorBusqueda, async (req, res) => {
-  const probar = async (nombre, fn) => {
+  const estado = await cacheEstadoFuentes.recordar("estado", probarFuentes);
+  res.set("Cache-Control", "public, max-age=60");
+  res.json(estado);
+});
+
+async function probarFuentes() {
+  const probar = async (id, nombre, fn) => {
     const inicio = Date.now();
     try {
       const detalle = await Promise.race([
         fn(),
         new Promise((_, reject) => setTimeout(() => reject(new Error("tiempo de espera agotado")), 25000)),
       ]);
-      return { fuente: nombre, ok: true, ms: Date.now() - inicio, detalle };
+      return { id, fuente: nombre, ok: true, ms: Date.now() - inicio, detalle };
     } catch (err) {
-      return { fuente: nombre, ok: false, ms: Date.now() - inicio, error: err.message };
+      return { id, fuente: nombre, ok: false, ms: Date.now() - inicio, error: err.message };
     }
   };
   const resultados = await Promise.all([
-    probar("Legislación (leyes.pisanvs.cl)", async () => {
+    probar("legislacion", "Legislación (leyes.pisanvs.cl)", async () => {
       const r = await buscarContexto("feriado anual vacaciones", 3);
       if (!r.remotoDisponible) throw new Error(r.remotoError || "sin respuesta");
       return `${r.documentos.length} artículos`;
     }),
-    probar("LeyChile oficial (BCN)", async () => {
+    probar("bcn", "LeyChile oficial (BCN)", async () => {
       const r = await leyChile.obtenerArticulo({ idNorma: "207436", numeroArticulo: "67" });
       return r.encontrado ? "Código del Trabajo, art. 67 encontrado" : "respondió, pero sin el artículo";
     }),
-    probar("Corte Suprema (juris.pjud.cl)", async () => {
+    probar("pjud", "Poder Judicial (juris.pjud.cl)", async () => {
       const r = await pjud.buscarSentencias({ tribunal: "corte_suprema", todas: "nulidad despido", limite: 1 });
       return `${r.total} fallos en el índice`;
     }),
-    probar("Tribunal Constitucional", async () => {
+    probar("tc", "Tribunal Constitucional", async () => {
       const r = await buscarSentenciasTC({ consulta: "debido proceso", limite: 1 });
       return `${r.total} sentencias en el índice`;
     }),
-    probar("Contraloría (dictámenes)", async () => {
+    probar("cgr", "Contraloría (dictámenes)", async () => {
       const r = await buscarDictamenes({ texto: "feriado legal", limite: 1 });
       return `${r.total} dictámenes en el índice`;
     }),
-    probar("Doctrina (Crossref + OpenAlex)", async () => {
+    probar("doctrina", "Doctrina (Crossref + OpenAlex)", async () => {
       const r = await buscarDoctrina({ consulta: "despido injustificado indemnización", limite: 1 });
       return `${r.resultados.length} artículo(s) de acceso abierto verificados`;
     }),
   ]);
-  res.json({ comprobado_en: new Date().toISOString(), resultados });
-});
+  return { comprobado_en: new Date().toISOString(), resultados };
+}
 
 // --- Salud del servicio -------------------------------------------------
 app.get("/api/salud", (req, res) => {

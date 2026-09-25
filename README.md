@@ -82,6 +82,10 @@ Búsqueda directa y diagnóstico:
 /api/fuentes                                           (prueba cada fuente y dice cuál responde)
 ```
 
+La portada muestra la lista de fuentes con un indicador en vivo (verde: respondiendo; ámbar:
+no responde en este momento). El estado se comprueba con una búsqueda real y se guarda 10
+minutos (`MINUTOS_ESTADO_FUENTES`), para que las visitas no disparen consultas a los tribunales.
+
 Estos conectores están adaptados de [Responsa](https://github.com/djlarrix/Responsa) (licencia
 MIT, ver `THIRD_PARTY_NOTICES.md`), que los verificó contra los servicios reales en agosto de
 2026. Los buscadores públicos pueden cambiar sin aviso: `/api/fuentes` es la forma rápida de
