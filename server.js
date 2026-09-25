@@ -9,6 +9,8 @@ const leyChile = require("./fuentes/leyChileOficial");
 const mcp = require("./mcpLeyChile");
 const multer = require("multer");
 const lectorDocumentos = require("./fuentes/documentos");
+const prompts = require("./prompts");
+const { CacheTTL, claveDeTexto } = require("./cache");
 
 const PORT = process.env.PORT || 3000;
 const USAR_CORPUS_REMOTO = process.env.USAR_CORPUS_REMOTO !== "false";
@@ -58,7 +60,7 @@ const limitadorBusqueda = rateLimit({
 app.get("/api/proveedores", (req, res) => {
   res.json({
     proveedores: proveedorIA.proveedoresDisponibles(),
-    predeterminado: proveedorIA.PROVEEDOR_PREDETERMINADO,
+    predeterminado: proveedorIA.proveedorPredeterminado(),
   });
 });
 
@@ -194,7 +196,118 @@ app.get("/api/buscar", limitadorBusqueda, async (req, res) => {
   }
 });
 
-// --- Endpoint 2: pregunta en lenguaje natural + respuesta de la IA -----
+// --- Streaming ------------------------------------------------------------
+// Las respuestas de la IA se envían como Server-Sent Events: primero los
+// artículos encontrados (la persona ya puede leerlos) y luego el informe a
+// medida que el modelo lo escribe. Eventos:
+//   estado      { etapa, mensaje }
+//   documentos  { documentos, corpus_completo_disponible, aviso_corpus_completo, ... }
+//   texto       { t }                         fragmento del informe
+//   fin         { proveedor_usado, modelo, desde_cache }
+//   error       { error, codigo }
+function abrirStream(res) {
+  res.status(200);
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+  return {
+    enviar(evento, datos) {
+      if (res.writableEnded) return;
+      res.write(`event: ${evento}\ndata: ${JSON.stringify(datos)}\n\n`);
+    },
+    cerrar() {
+      if (!res.writableEnded) res.end();
+    },
+  };
+}
+
+function quiereStream(req) {
+  const pedido = req.body?.stream;
+  return pedido === true || pedido === "true" || (req.headers.accept || "").includes("text/event-stream");
+}
+
+// Respuestas completas ya generadas. Una pregunta idéntica (misma
+// redacción normalizada, mismo proveedor, sin conversación previa) se
+// responde al instante. Solo se guardan respuestas hechas con el corpus
+// completo disponible.
+const CACHE_RESPUESTAS_MINUTOS = Number(process.env.CACHE_RESPUESTAS_MINUTOS || 360);
+const cacheRespuestas = new CacheTTL({ maximo: 300, ttlMs: CACHE_RESPUESTAS_MINUTOS * 60 * 1000 });
+
+function validarProveedor(req, res) {
+  const disponibles = proveedorIA.proveedoresDisponibles();
+  if (disponibles.length === 0) {
+    res.status(500).json({
+      error:
+        "No hay ningún proveedor de IA configurado en el servidor (ni AI_GATEWAY_API_KEY, ni ANTHROPIC_API_KEY, ni Qwen local). Revisa el archivo .env (ver README).",
+    });
+    return null;
+  }
+  const pedido = (req.body?.proveedor || "").toString().trim();
+  if (pedido && !disponibles.some((p) => p.id === pedido)) {
+    res.status(400).json({
+      error: `El proveedor "${pedido}" no está disponible en este servidor.`,
+      proveedores_disponibles: disponibles,
+    });
+    return null;
+  }
+  return pedido || proveedorIA.proveedorPredeterminado();
+}
+
+/**
+ * Ejecuta una generación con la IA, en streaming o en JSON según lo que
+ * pida el cliente. `preparar` busca el contexto y devuelve
+ * { meta, systemPrompt, userMessage, claveCache }.
+ */
+async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
+  const stream = quiereStream(req);
+  const canal = stream ? abrirStream(res) : null;
+  const inicio = Date.now();
+
+  try {
+    canal?.enviar("estado", { etapa: "buscando", mensaje: mensajeBuscando });
+    const { meta, systemPrompt, userMessage, claveCache } = await preparar();
+    canal?.enviar("documentos", meta);
+
+    const enCache = claveCache ? cacheRespuestas.obtener(claveCache) : undefined;
+    if (enCache) {
+      const final = { proveedor_usado: enCache.proveedor, modelo: enCache.modelo, desde_cache: true, ms: Date.now() - inicio };
+      if (!stream) return res.json({ ...meta, respuesta: enCache.texto, ...final });
+      canal.enviar("texto", { t: enCache.texto });
+      canal.enviar("fin", final);
+      return canal.cerrar();
+    }
+
+    canal?.enviar("estado", { etapa: "redactando", mensaje: "Redactando el informe…" });
+    const { texto, proveedor: usado, modelo } = await proveedorIA.responder({
+      proveedor,
+      systemPrompt,
+      userMessage,
+      onTexto: canal ? (t) => canal.enviar("texto", { t }) : undefined,
+    });
+    if (claveCache) cacheRespuestas.guardar(claveCache, { texto, proveedor: usado, modelo });
+
+    const final = { proveedor_usado: usado, modelo, desde_cache: false, ms: Date.now() - inicio };
+    if (!stream) return res.json({ ...meta, respuesta: texto, ...final });
+    canal.enviar("fin", final);
+    canal.cerrar();
+  } catch (err) {
+    console.error("Error generando la respuesta:", err);
+    const error = {
+      error: err?.message || "Ocurrió un error al generar la respuesta. Revisa la consola del servidor.",
+      codigo: err?.codigo || null,
+    };
+    if (canal) {
+      canal.enviar("error", error);
+      return canal.cerrar();
+    }
+    const status = err?.status && err.status < 500 ? err.status : 502;
+    res.status(status).json(error);
+  }
+}
+
+// --- Endpoint 2: pregunta en lenguaje natural + informe de la IA --------
 app.post("/api/consultar", limitadorIA, async (req, res) => {
   const pregunta = (req.body?.pregunta || "").toString().trim();
   if (!pregunta) {
@@ -205,108 +318,33 @@ app.post("/api/consultar", limitadorIA, async (req, res) => {
       error: `La pregunta es demasiado larga (máximo ${MAX_LARGO_PREGUNTA} caracteres). Resúmela y vuelve a intentar.`,
     });
   }
-  const proveedoresDisponibles = proveedorIA.proveedoresDisponibles();
-  if (proveedoresDisponibles.length === 0) {
-    return res.status(500).json({
-      error:
-        "No hay ningún proveedor de IA configurado en el servidor (ni ANTHROPIC_API_KEY ni Qwen local). Revisa el archivo .env (ver README).",
-    });
-  }
-  const proveedorPedido = (req.body?.proveedor || "").toString().trim();
-  if (proveedorPedido && !proveedoresDisponibles.some((p) => p.id === proveedorPedido)) {
-    return res.status(400).json({
-      error: `El proveedor "${proveedorPedido}" no está disponible en este servidor.`,
-      proveedores_disponibles: proveedoresDisponibles,
-    });
-  }
+  const proveedor = validarProveedor(req, res);
+  if (!proveedor) return;
+  const historial = prompts.sanearHistorial(req.body?.historial);
 
-  let relevantes, remotoDisponible, remotoError;
-  try {
-    ({ documentos: relevantes, remotoDisponible, remotoError } = await buscarContexto(pregunta, 14));
-  } catch (err) {
-    console.error("Error buscando contexto:", err);
-    return res.status(500).json({ error: "Error interno buscando contexto legal.", detalle: err.message });
-  }
-
-  const contexto = relevantes
-    .map((doc, i) => {
-      const avisoExtracto = doc.completo === false
-        ? `\nAdvertencia: este es un EXTRACTO del artículo, no su texto íntegro. ${doc.nota || ""}`
-        : "";
-      const avisoOrigen = doc.origen === "remoto"
-        ? "\n(Fuente: corpus jurídico completo, reconstruido desde BCN.)"
-        : "\n(Fuente: ejemplo local curado a mano, corpus de demostración limitado.)";
-      return `[Documento ${i + 1}]\nCuerpo legal: ${doc.cuerpo_legal}\nArtículo: ${doc.articulo}\nTema: ${doc.tema}\nTexto: "${doc.texto}"${avisoExtracto}${avisoOrigen}\nFuente: ${doc.fuente_url}`;
-    })
-    .join("\n\n");
-
-  const avisoCorpusCompleto = !remotoDisponible
-    ? `\n\nNota interna: el corpus jurídico completo no estuvo disponible en esta consulta (${remotoError}). Solo se usaron los ejemplos locales limitados.`
-    : "";
-
-  const systemPrompt = `Eres un asistente jurídico especializado en derecho chileno. Trabajas como lo haría un equipo legal: no despachas una respuesta corta, sino un análisis ordenado, riguroso y honesto sobre sus propios límites.
-
-ESTRUCTURA OBLIGATORIA DE TU RESPUESTA (usa estos títulos, en este orden; omite una sección solo si de verdad no aplica):
-
-## Respuesta directa
-Dos o tres frases que respondan concretamente lo preguntado. Sin rodeos.
-
-## Marco normativo aplicable
-Cada norma pertinente del contexto, citada como "Cuerpo legal, artículo N", explicando qué dispone. Cita el texto literal entre comillas cuando el tenor exacto importe. Si hay varias normas relacionadas (regla general y excepción, ley y su modificación), explica cómo se articulan entre sí.
-
-## Análisis
-Cómo se aplican esas normas a lo preguntado. Distingue la regla general de sus excepciones. Señala los requisitos que deben cumplirse, los plazos, y de quién es la carga de probar cada cosa si viene al caso.
-
-## Situaciones particulares y excepciones
-Casos en que la respuesta cambia (tipo de contrato, calidad de las partes, antigüedad, regímenes especiales, normas transitorias). Si la pregunta no entrega datos suficientes para determinar qué régimen aplica, dilo y explica de qué dato depende.
-
-## Qué debe verificarse antes de actuar
-Sección obligatoria, y la más importante para la seriedad del análisis. Enumera con honestidad lo que tú NO pudiste revisar y que un abogado sí revisaría:
-- Vigencia y modificaciones: no puedes confirmar que el texto recibido sea la versión vigente hoy, ni si hay reformas posteriores.
-- Jurisprudencia: no tienes acceso a fallos de la Corte Suprema ni de Cortes de Apelaciones, que en Chile determinan cómo se interpreta la norma en la práctica.
-- Dictámenes administrativos: no tienes acceso a dictámenes de la Dirección del Trabajo, Contraloría, SII u otros órganos, que suelen ser decisivos en materias específicas.
-- Reglamentos y normativa complementaria que no aparezca en el contexto entregado.
-- Cualquier cuerpo legal que probablemente sea relevante pero que no esté entre los documentos recibidos: nómbralo explícitamente para que la persona sepa qué buscar.
-
-## Conclusión
-Cierre breve y práctico: qué hacer con esta información y ante quién acudir (tribunal, servicio público, abogado especialista en la materia).
-
-REGLAS ESTRICTAS E INNEGOCIABLES:
-1. Usa SOLO la información de los documentos legales entregados como contexto. Nunca inventes un artículo, una ley, un número, un plazo ni una cita que no esté literalmente en ese contexto.
-2. Si el contexto no alcanza para responder, dilo con todas sus letras en "Respuesta directa" y dedica la respuesta a explicar qué normas habría que revisar. Una respuesta honesta que reconoce un vacío vale mucho más que una completa inventada.
-3. Todo número de artículo que escribas debe aparecer tal cual en los documentos. Ante la duda, describe la norma sin numerarla.
-4. Si un documento viene marcado como EXTRACTO, adviértelo al citarlo y recomienda revisar el texto íntegro en la fuente oficial.
-5. Si solo recibiste documentos del corpus local de demostración (ejemplos curados a mano, no el corpus completo), adviértelo al inicio: la respuesta puede estar ignorando legislación relevante.
-6. Nunca presentes tu análisis como una opinión legal definitiva ni garantices un resultado.
-7. Escribe en español de Chile, con precisión técnica pero comprensible. Si la pregunta viene en lenguaje cotidiano, mantén el rigor pero explica los términos técnicos que uses.
-8. Cierra siempre recordando que esto es información general, que no constituye asesoría legal y que no reemplaza a un abogado o abogada.`;
-
-  const userMessage = `Documentos disponibles como contexto:\n\n${contexto || "(no se encontraron documentos relevantes)"}${avisoCorpusCompleto}\n\nPregunta del usuario: ${pregunta}`;
-
-  try {
-    const { texto: textoRespuesta, proveedor: proveedorUsado } = await proveedorIA.responder({
-      proveedor: proveedorPedido,
-      systemPrompt,
-      userMessage,
-    });
-
-    res.json({
-      pregunta,
-      respuesta: textoRespuesta,
-      proveedor_usado: proveedorUsado,
-      documentos_usados: relevantes,
-      corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
-      aviso_corpus_completo: !remotoDisponible ? remotoError : null,
-    });
-  } catch (err) {
-    console.error("Error consultando al proveedor de IA:", err);
-    res.status(502).json({
-      error:
-        err?.message ||
-        "Ocurrió un error al generar la respuesta. Revisa la consola del servidor.",
-      codigo: err?.codigo || null,
-    });
-  }
+  await generar(req, res, {
+    proveedor,
+    mensajeBuscando: "Buscando normas aplicables en la legislación chilena…",
+    preparar: async () => {
+      // En una repregunta, la pregunta anterior aporta la materia
+      // ("¿y si es a plazo fijo?" por sí sola no dice de qué se habla).
+      const consultaBusqueda = historial.length
+        ? `${pregunta} ${historial[historial.length - 1].pregunta}`
+        : pregunta;
+      const { documentos, remotoDisponible, remotoError } = await buscarContexto(consultaBusqueda, 14);
+      return {
+        meta: {
+          pregunta,
+          documentos_usados: documentos,
+          corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
+          aviso_corpus_completo: !remotoDisponible ? remotoError : null,
+        },
+        systemPrompt: prompts.PROMPT_CONSULTA,
+        userMessage: prompts.mensajeConsulta({ pregunta, documentos, remotoDisponible, remotoError, historial }),
+        claveCache: remotoDisponible && historial.length === 0 ? `${proveedor}|${claveDeTexto(pregunta)}` : null,
+      };
+    },
+  });
 });
 
 // --- Endpoint: analizar un documento propio contra la legislación ------
@@ -330,14 +368,8 @@ app.post("/api/documento", limitadorIA, subida.single("archivo"), async (req, re
     return res.status(400).json({ error: `La pregunta es demasiado larga (máximo ${MAX_LARGO_PREGUNTA} caracteres).` });
   }
 
-  const disponibles = proveedorIA.proveedoresDisponibles();
-  if (disponibles.length === 0) {
-    return res.status(500).json({ error: "No hay ningún proveedor de IA configurado en el servidor." });
-  }
-  const proveedorPedido = (req.body?.proveedor || "").toString().trim();
-  if (proveedorPedido && !disponibles.some((p) => p.id === proveedorPedido)) {
-    return res.status(400).json({ error: `El proveedor "${proveedorPedido}" no está disponible.` });
-  }
+  const proveedor = validarProveedor(req, res);
+  if (!proveedor) return;
 
   // 1. Leer el documento
   let textoDocumento;
@@ -352,85 +384,114 @@ app.post("/api/documento", limitadorIA, subida.single("archivo"), async (req, re
 
   const seleccion = lectorDocumentos.seleccionarFragmentos(textoDocumento, pregunta);
 
-  // 2. Buscar normas pertinentes. Se combina la pregunta con el inicio del
-  //    documento, porque la pregunta sola ("¿qué riesgos tiene?") no dice
-  //    nada sobre la materia; el documento sí.
-  let relevantes = [];
-  let remotoDisponible = false;
-  let remotoError = null;
-  try {
-    ({ documentos: relevantes, remotoDisponible, remotoError } = await buscarContexto(
-      `${pregunta} ${textoDocumento.slice(0, 1200)}`,
-      10
-    ));
-  } catch (err) {
-    console.error("Error buscando contexto para el documento:", err);
+  await generar(req, res, {
+    proveedor,
+    mensajeBuscando: `Leyendo ${req.file.originalname} y buscando las normas aplicables…`,
+    preparar: async () => {
+      // 2. Buscar normas pertinentes. Se combina la pregunta con el inicio
+      //    del documento, porque la pregunta sola ("¿qué riesgos tiene?") no
+      //    dice nada sobre la materia; el documento sí.
+      let normas = [];
+      let remotoDisponible = false;
+      let remotoError = null;
+      try {
+        ({ documentos: normas, remotoDisponible, remotoError } = await buscarContexto(
+          `${pregunta} ${textoDocumento.slice(0, 1200)}`,
+          10
+        ));
+      } catch (err) {
+        console.error("Error buscando contexto para el documento:", err);
+      }
+      return {
+        meta: {
+          archivo: req.file.originalname,
+          pregunta,
+          documento: {
+            caracteres: textoDocumento.length,
+            recortado: seleccion.recortado,
+            fragmentos_usados: seleccion.fragmentosUsados,
+            fragmentos_totales: seleccion.totalFragmentos,
+          },
+          normas_usadas: normas,
+          corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
+          aviso_corpus_completo: !remotoDisponible ? remotoError : null,
+        },
+        systemPrompt: prompts.PROMPT_DOCUMENTO,
+        userMessage: prompts.mensajeDocumento({
+          pregunta,
+          normas,
+          nombreArchivo: req.file.originalname,
+          seleccion,
+        }),
+        // Los documentos de clientes nunca se cachean.
+        claveCache: null,
+      };
+    },
+  });
+});
+
+// --- Endpoint: verificación de vigencia contra la fuente oficial (BCN) --
+// Recibe los artículos citados y confirma, contra el XML oficial de
+// LeyChile, si cada uno está vigente o derogado y la fecha de su última
+// versión. Se consulta aparte del informe para no retrasar la respuesta:
+// la interfaz lo pide en paralelo y marca cada artículo cuando llega.
+const TIMEOUT_VIGENCIA_MS = Number(process.env.TIMEOUT_VIGENCIA_MS || 20000);
+
+app.post("/api/vigencia", limitadorBusqueda, async (req, res) => {
+  const pedidos = Array.isArray(req.body?.articulos) ? req.body.articulos.slice(0, 20) : [];
+  const validos = pedidos
+    .map((a) => ({ idNorma: String(a?.idNorma || "").trim(), numero: String(a?.numero || "").trim() }))
+    .filter((a) => /^\d+$/.test(a.idNorma) && a.numero);
+  if (validos.length === 0) {
+    return res.status(400).json({ error: "Envía 'articulos': [{ idNorma, numero }]." });
   }
 
-  const contextoLegal = relevantes
-    .map((doc, i) => `[Norma ${i + 1}] ${doc.cuerpo_legal}, ${doc.articulo}\n"${doc.texto}"\nFuente: ${doc.fuente_url}`)
-    .join("\n\n");
-
-  const systemPrompt = `Eres un asistente jurídico especializado en derecho chileno. Se te entrega un documento real de un abogado (contrato, demanda, escritura, sentencia u otro) y normas legales chilenas como contexto. Tu trabajo es analizar el documento a la luz de esas normas.
-
-ESTRUCTURA OBLIGATORIA:
-
-## Qué es este documento
-Identifica el tipo de documento, las partes que intervienen y su objeto. Si el documento llega incompleto o recortado, dilo.
-
-## Contenido relevante para la pregunta
-Las cláusulas, considerandos o secciones que responden lo preguntado. **Cita textualmente** la parte pertinente del documento, entre comillas, identificando dónde está (número de cláusula, artículo, considerando).
-
-## Análisis legal
-Cómo se relaciona ese contenido con las normas entregadas como contexto. Cita cada norma como "Cuerpo legal, artículo N". Señala si alguna cláusula contradice una norma, si hay algo que la ley exige y el documento no contempla, o si alguna disposición podría ser inoponible o nula.
-
-## Puntos de atención
-Lo que a tu juicio merece revisión: ambigüedades, vacíos, cláusulas desfavorables para una parte, plazos que corren, condiciones que podrían discutirse. Sé concreto y apóyate en el texto.
-
-## Qué debe verificarse antes de actuar
-Sección obligatoria. Enumera con honestidad lo que no pudiste revisar: si el documento venía recortado y qué parte no leíste; que no tienes acceso a jurisprudencia ni dictámenes; que no puedes confirmar la vigencia de las normas citadas; anexos, firmas o documentos referidos que no están a la vista; y cualquier norma que probablemente aplique pero no esté entre las entregadas.
-
-REGLAS ESTRICTAS:
-1. Cita el documento textualmente cuando hagas una afirmación sobre su contenido. Nunca describas una cláusula que no está en el texto que recibiste.
-2. Usa solo las normas entregadas como contexto. No inventes artículos ni números.
-3. Si el documento no contiene lo necesario para responder, dilo derechamente.
-4. No emitas una opinión legal definitiva ni garantices resultados.
-5. Escribe en español de Chile, con precisión técnica.
-6. Cierra recordando que esto es información general y no reemplaza la revisión de un abogado.`;
-
-  const avisoRecorte = seleccion.recortado
-    ? `\n\nADVERTENCIA: el documento era extenso, así que se seleccionaron las ${seleccion.fragmentosUsados} secciones más relacionadas con la pregunta, de ${seleccion.totalFragmentos} en total. Hay partes del documento que NO estás viendo; adviértelo en tu análisis.`
-    : "";
-
-  const userMessage = `NORMAS CHILENAS COMO CONTEXTO:\n\n${contextoLegal || "(no se encontraron normas relacionadas)"}\n\n` +
-    `=== DOCUMENTO APORTADO POR EL USUARIO: ${req.file.originalname} ===\n\n${seleccion.texto}\n\n=== FIN DEL DOCUMENTO ===${avisoRecorte}\n\n` +
-    `PREGUNTA DEL USUARIO SOBRE ESTE DOCUMENTO: ${pregunta}`;
-
-  try {
-    const { texto, proveedor } = await proveedorIA.responder({
-      proveedor: proveedorPedido,
-      systemPrompt,
-      userMessage,
-    });
-    res.json({
-      archivo: req.file.originalname,
-      pregunta,
-      respuesta: texto,
-      proveedor_usado: proveedor,
-      documento: {
-        caracteres: textoDocumento.length,
-        recortado: seleccion.recortado,
-        fragmentos_usados: seleccion.fragmentosUsados,
-        fragmentos_totales: seleccion.totalFragmentos,
-      },
-      normas_usadas: relevantes,
-      corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
-      aviso_corpus_completo: !remotoDisponible ? remotoError : null,
-    });
-  } catch (err) {
-    console.error("Error analizando el documento:", err);
-    res.status(502).json({ error: err?.message || "Error al analizar el documento.", codigo: err?.codigo || null });
+  // Una descarga por norma, aunque se pidan varios artículos de ella.
+  const porNorma = new Map();
+  for (const a of validos) {
+    if (!porNorma.has(a.idNorma)) porNorma.set(a.idNorma, []);
+    porNorma.get(a.idNorma).push(a.numero);
   }
+
+  const resultados = [];
+  await Promise.all(
+    [...porNorma.entries()].map(async ([idNorma, numeros]) => {
+      try {
+        let temporizador;
+        await Promise.race([
+          leyChile.obtenerNorma({ idNorma }),
+          new Promise((_, reject) => {
+            temporizador = setTimeout(() => reject(new Error("Tiempo de espera agotado")), TIMEOUT_VIGENCIA_MS);
+          }),
+        ]).finally(() => clearTimeout(temporizador));
+        for (const numero of numeros) {
+          const r = await leyChile.obtenerArticulo({ idNorma, numeroArticulo: numero });
+          resultados.push({
+            idNorma,
+            numero,
+            estado: !r.encontrado ? "no_encontrado" : r.articulo.derogado || r.norma.derogado ? "derogado" : "vigente",
+            fechaVersion: r.articulo?.fechaVersion || r.norma.fechaVersion || null,
+            fuenteUrl: r.norma.fuenteUrl || null,
+          });
+        }
+      } catch (err) {
+        for (const numero of numeros) {
+          resultados.push({ idNorma, numero, estado: "error", error: err.message });
+        }
+      }
+    })
+  );
+  res.set("Cache-Control", "private, max-age=600");
+  res.json({ verificado_en: new Date().toISOString(), fuente: "LeyChile / BCN (oficial)", resultados });
+});
+
+// --- Salud del servicio -------------------------------------------------
+app.get("/api/salud", (req, res) => {
+  res.json({
+    ok: true,
+    proveedores: proveedorIA.proveedoresDisponibles().map((p) => p.id),
+    corpus_remoto: USAR_CORPUS_REMOTO,
+  });
 });
 
 // Errores de subida (archivo demasiado grande, etc.)
@@ -444,19 +505,31 @@ app.use((err, req, res, next) => {
   return next(err);
 });
 
-app.listen(PORT, () => {
-  console.log(`Juris IA Chile escuchando en http://localhost:${PORT}`);
-  console.log(
-    `Límites activos: ${LIMITE_CONSULTAS_IA} preguntas y ${LIMITE_BUSQUEDAS} búsquedas por IP cada ${VENTANA_MINUTOS} min.`
-  );
-  const disponibles = proveedorIA.proveedoresDisponibles();
-  if (disponibles.length === 0) {
-    console.warn(
-      "ADVERTENCIA: no hay ningún proveedor de IA configurado (ni ANTHROPIC_API_KEY ni Qwen local). El buscador funcionará, pero el chat con IA no."
-    );
-  } else {
+// Abre la conexión con el corpus remoto apenas arranca el servidor, para
+// que la primera pregunta no pague el costo del saludo inicial.
+if (USAR_CORPUS_REMOTO) {
+  mcp.conectar().catch((err) => console.warn("Corpus remoto aún no disponible:", err.message));
+}
+
+// En Vercel, la plataforma importa `app` y se encarga de recibir las
+// peticiones; en local (npm start) se levanta el servidor normalmente.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Juris IA Chile escuchando en http://localhost:${PORT}`);
     console.log(
-      `Proveedores de IA disponibles: ${disponibles.map((p) => p.id).join(", ")} (predeterminado: ${proveedorIA.PROVEEDOR_PREDETERMINADO}).`
+      `Límites activos: ${LIMITE_CONSULTAS_IA} preguntas y ${LIMITE_BUSQUEDAS} búsquedas por IP cada ${VENTANA_MINUTOS} min.`
     );
-  }
-});
+    const disponibles = proveedorIA.proveedoresDisponibles();
+    if (disponibles.length === 0) {
+      console.warn(
+        "ADVERTENCIA: no hay ningún proveedor de IA configurado (ni AI_GATEWAY_API_KEY, ni ANTHROPIC_API_KEY, ni Qwen local). El buscador funcionará, pero el chat con IA no."
+      );
+    } else {
+      console.log(
+        `Proveedores de IA disponibles: ${disponibles.map((p) => p.id).join(", ")} (predeterminado: ${proveedorIA.proveedorPredeterminado()}).`
+      );
+    }
+  });
+}
+
+module.exports = app;

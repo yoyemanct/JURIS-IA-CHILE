@@ -13,6 +13,40 @@ Fuente de datos del corpus jurídico completo: [leyes.pisanvs.cl](https://leyes.
 la legislación chilena desde la Biblioteca del Congreso Nacional. Ver la sección más abajo para
 detalles de licencia y de qué tan confiable es esta fuente.
 
+## Publicar en Vercel (recomendado)
+
+La app está lista para desplegarse en [Vercel](https://vercel.com) sin configuración extra:
+Vercel detecta el servidor Express (`server.js`) y sirve la interfaz desde `public/`.
+
+1. En Vercel, **Add New → Project** e importa este repositorio.
+2. En **Settings → Environment Variables** agrega `AI_GATEWAY_API_KEY` con tu clave de
+   Vercel AI Gateway (opcional si usas la autenticación automática de Vercel), y si quieres
+   `VERCEL_AI_MODEL` para elegir el modelo (ver `.env.example`).
+3. **Deploy.** Listo: la app queda publicada con su propia URL.
+
+Para usarla en tu computador con la misma clave, ponla en tu archivo `.env` y ejecuta
+`npm start`.
+
+Límites a tener en cuenta en Vercel: el archivo subido en "Analizar documento" no puede
+superar ~4,5 MB (límite de la plataforma), y Qwen local no está disponible allí.
+
+### Por qué responde rápido
+
+- **Streaming:** el informe aparece en pantalla a medida que la IA lo escribe; se empieza a
+  leer en uno o dos segundos.
+- **Búsqueda en paralelo:** las normas se consultan todas a la vez y no una tras otra. Si el
+  corpus remoto tarda, se usa lo que alcanzó a llegar.
+- **Caché:** las búsquedas y respuestas recientes quedan guardadas; una pregunta repetida se
+  responde al instante.
+- **Respaldo entre modelos:** si el modelo principal falla o no responde, el gateway pasa
+  solo al siguiente (`VERCEL_AI_MODELOS_RESPALDO`).
+
+### Verificación de vigencia
+
+Cada artículo citado se contrasta, en paralelo al informe, con el XML oficial de LeyChile/BCN
+(`POST /api/vigencia`). La interfaz lo marca como "Vigente · versión DD-MM-AAAA" o
+"Derogado", y avisa en el informe si alguna norma usada está derogada.
+
 ## ¿Cómo funciona?
 
 1. Escribes una pregunta en lenguaje natural (ej: "¿cuántos días de vacaciones tengo al año?").
