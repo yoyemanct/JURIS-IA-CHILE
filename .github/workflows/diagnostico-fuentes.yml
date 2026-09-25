@@ -19,6 +19,16 @@ jobs:
       - name: Estado de la app publicada
         continue-on-error: true
         run: curl -sS -m 90 https://juris-ia-chile.vercel.app/api/fuentes | head -c 6000; echo
+      - name: Estado de cuentas y cobro en la app publicada
+        continue-on-error: true
+        run: |
+          for base in https://derechochileia.xyz https://juris-ia-chile.vercel.app; do
+            echo "== $base"
+            curl -sS -m 30 -o /tmp/c -w "HTTP %{http_code}\n" "$base/api/cuenta"; head -c 700 /tmp/c; echo
+            curl -sS -m 30 -o /dev/null -w "Google: HTTP %{http_code} -> %{redirect_url}\n" "$base/api/cuenta/google" | cut -c1-160
+            curl -sS -m 30 -o /tmp/c -w "Consulta sin cuenta: HTTP %{http_code}\n" -X POST "$base/api/consultar" -H 'Content-Type: application/json' -d '{"pregunta":"prueba de acceso"}'; head -c 200 /tmp/c; echo
+            curl -sS -m 30 -o /tmp/c -w "Webhook (id inexistente): HTTP %{http_code}\n" -X POST "$base/api/pagos/webhook" -H 'Content-Type: application/json' -d '{"type":"subscription_preapproval","data":{"id":"diagnostico-inexistente"}}'; head -c 200 /tmp/c; echo
+          done
       - name: Peticiones crudas a cada sitio
         continue-on-error: true
         run: |
