@@ -33,33 +33,85 @@ async function estadoCuenta(usuario) {
     google_activo: COBRO_ACTIVO && google.CONFIGURADO,
     usuario: cuentas.publico(usuario),
     plan: { id: plan.id, nombre: plan.nombre, admin: Boolean(plan.admin) },
-    uso: usuario ? { usadas: await planes.usoDelMes(usuario.id), limite: plan.consultasMes } : null,
-    planes: Object.values(planes.PLANES).map((p) => ({ id: p.id, nombre: p.nombre, precio: p.precio, consultasMes: p.consultasMes })),
+    uso: usuario ? await planes.usoActual(usuario) : null,
+    descuento_disponible: planes.tieneDescuento(usuario),
+    planes: Object.values(planes.PLANES).map((p) => ({
+      id: p.id,
+      nombre: p.nombre,
+      precio: p.precio,
+      consultas: p.consultas,
+      periodo: p.periodo,
+      precioPrimerMes: p.precioPrimerMes,
+      descuentoPrimerMes: p.descuentoPrimerMes,
+    })),
     contacto: CONTACTO,
   };
 }
 
-// Registra una suscripción de Mercado Pago en la cuenta de su usuario.
-async function sincronizarSuscripcion(idPreapproval) {
+/**
+ * Registra una suscripción de Mercado Pago en la cuenta de su usuario y, si
+ * ya se cobró el primer mes con descuento, sube los cobros siguientes al
+ * precio normal. `trasCobro`: el aviso que la dispara es un cobro recibido.
+ */
+async function sincronizarSuscripcion(idPreapproval, { trasCobro = false } = {}) {
   const s = await mp.obtenerSuscripcion(idPreapproval);
   const idUsuario = s.external_reference;
   if (!idUsuario) return null;
   const usuario = await almacen.obtener(`usuario:${idUsuario}`);
   if (!usuario) return null;
   const previo = usuario.suscripcion || {};
+  const pro = planes.PLANES.pro;
+  let monto = s.auto_recurring && s.auto_recurring.transaction_amount;
+  const autorizada = s.status === "authorized";
+  const cobrada = trasCobro || Boolean(s.summarized && (s.summarized.charged_quantity >= 1 || s.summarized.last_charged_date));
+
+  // Primer mes con descuento ya cobrado: desde el segundo cobro, precio normal.
+  let precioNormalAplicado = previo.precioNormalAplicado || false;
+  if (autorizada && cobrada && monto && monto < pro.precio) {
+    try {
+      await mp.actualizarMonto(s.id, pro.precio);
+      monto = pro.precio;
+      precioNormalAplicado = true;
+      console.log(JSON.stringify({ evento: "precio_normal_aplicado", usuario: idUsuario, suscripcion: s.id, monto }));
+    } catch (err) {
+      // Se reintentará en el próximo aviso o al abrir la cuenta.
+      console.error("No se pudo subir la suscripción al precio normal:", err.message, err.detalle || "");
+    }
+  }
+
   // Mientras la suscripción está autorizada, el acceso llega hasta el próximo
   // cobro; si se cancela, se conserva lo ya pagado hasta esa fecha.
-  const pagadoHasta = s.status === "authorized" && s.next_payment_date ? s.next_payment_date : previo.pagadoHasta || null;
+  const pagadoHasta = autorizada && s.next_payment_date ? s.next_payment_date : previo.pagadoHasta || null;
   return cuentas.actualizarUsuario(idUsuario, {
+    // El descuento del primer mes se usa una sola vez por cuenta.
+    descuentoUsado: usuario.descuentoUsado || autorizada,
     suscripcion: {
       id: s.id,
       estado: s.status,
-      monto: s.auto_recurring && s.auto_recurring.transaction_amount,
+      monto,
+      precioNormalAplicado,
       proximoCobro: s.next_payment_date || null,
       pagadoHasta,
       actualizado: new Date().toISOString(),
     },
   });
+}
+
+// Red de seguridad: si una suscripción sigue con el monto rebajado y se
+// acerca el segundo cobro, se revisa al abrir la cuenta (por si se perdió el
+// aviso del primer cobro).
+async function revisarPrecioPendiente(usuario) {
+  const s = usuario && usuario.suscripcion;
+  if (!s || s.estado !== "authorized" || s.precioNormalAplicado || !(s.monto < planes.PLANES.pro.precio)) return usuario;
+  const hace = Date.now() - new Date(s.actualizado || 0).getTime();
+  const faltan = new Date(s.proximoCobro || 0).getTime() - Date.now();
+  if (hace < 6 * 3600 * 1000 || faltan > 10 * 86400 * 1000) return usuario;
+  try {
+    return (await sincronizarSuscripcion(s.id)) || usuario;
+  } catch (err) {
+    console.error("No se pudo revisar el precio de la suscripción:", err.message);
+    return usuario;
+  }
 }
 
 function registrarRutas(app) {
@@ -73,7 +125,7 @@ function registrarRutas(app) {
 
   app.get("/api/cuenta", async (req, res) => {
     try {
-      const usuario = COBRO_ACTIVO ? await cuentas.usuarioDeSolicitud(req) : null;
+      const usuario = COBRO_ACTIVO ? await revisarPrecioPendiente(await cuentas.usuarioDeSolicitud(req)) : null;
       res.set("Cache-Control", "no-store");
       res.json(await estadoCuenta(usuario));
     } catch (err) {
@@ -137,10 +189,12 @@ function registrarRutas(app) {
     const usuario = await cuentas.usuarioDeSolicitud(req);
     if (!usuario) return res.status(401).json({ error: "Inicia sesión para suscribirte." });
     try {
+      const pro = planes.PLANES.pro;
       const s = await mp.crearSuscripcion({
         usuario,
-        plan: planes.PLANES.pro,
+        plan: pro,
         urlRetorno: `${urlBase(req)}/?pago=retorno`,
+        montoInicial: planes.tieneDescuento(usuario) ? pro.precioPrimerMes : pro.precio,
       });
       await cuentas.actualizarUsuario(usuario.id, {
         suscripcion: { ...(usuario.suscripcion || {}), id: s.id, estado: s.status || "pending", actualizado: new Date().toISOString() },
@@ -196,7 +250,8 @@ function registrarRutas(app) {
         const pago = await fetch(`${(process.env.MP_API_URL || "https://api.mercadopago.com").replace(/\/+$/, "")}/authorized_payments/${encodeURIComponent(idDato)}`, {
           headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` },
         }).then((r) => r.json());
-        if (pago && pago.preapproval_id) await sincronizarSuscripcion(pago.preapproval_id);
+        const cobrado = pago && (pago.status === "processed" || (pago.payment && pago.payment.status === "approved"));
+        if (pago && pago.preapproval_id) await sincronizarSuscripcion(pago.preapproval_id, { trasCobro: Boolean(cobrado) });
       }
       res.status(200).json({ ok: true });
     } catch (err) {
@@ -222,8 +277,15 @@ async function exigirPlan(req, res, next) {
     }
     const r = await planes.consumirConsulta(usuario);
     if (!r.permitido) {
+      const pro = planes.PLANES.pro;
+      const clp = (n) => `$${Number(n).toLocaleString("es-CL")}`;
+      const oferta = planes.tieneDescuento(usuario)
+        ? `El primer mes del plan ${pro.nombre} cuesta ${clp(pro.precioPrimerMes)} (${pro.descuentoPrimerMes}% de descuento) y luego ${clp(pro.precio)} al mes.`
+        : `El plan ${pro.nombre} cuesta ${clp(pro.precio)} al mes.`;
       return res.status(402).json({
-        error: `Usaste tus ${r.limite} consultas gratuitas de este mes. Suscríbete al plan ${planes.PLANES.pro.nombre} para seguir consultando sin límite.`,
+        error: r.plan.periodo === "prueba"
+          ? `Ya usaste tu consulta de prueba. Suscríbete para seguir consultando sin límite: ${oferta}`
+          : `Alcanzaste el límite de ${r.limite} consultas de este mes.`,
         codigo: "LIMITE_PLAN",
         uso: { usadas: r.usadas, limite: r.limite },
       });

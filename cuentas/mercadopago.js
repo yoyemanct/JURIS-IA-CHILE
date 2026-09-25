@@ -36,10 +36,19 @@ async function llamar(metodo, ruta, cuerpo) {
 /**
  * Crea una suscripción mensual para el usuario y devuelve { id, init_point }.
  * `external_reference` guarda el id del usuario para reconocerlo en el aviso.
+ *
+ * Descuento del primer mes: Mercado Pago no tiene "primer cobro con
+ * descuento" en las suscripciones, así que se crea con el monto rebajado y,
+ * cuando se registra el primer cobro, se sube al precio normal con
+ * actualizarMonto(). El motivo (reason) lo informa en el checkout.
  */
-async function crearSuscripcion({ usuario, plan, urlRetorno }) {
+async function crearSuscripcion({ usuario, plan, urlRetorno, montoInicial }) {
+  const conDescuento = montoInicial && montoInicial < plan.precio;
+  const clp = (n) => `$${Number(n).toLocaleString("es-CL")}`;
   return llamar("POST", "/preapproval", {
-    reason: `Derecho Chile IA — Plan ${plan.nombre}`,
+    reason: conDescuento
+      ? `Derecho Chile IA — Plan ${plan.nombre}: primer mes ${clp(montoInicial)} (${plan.descuentoPrimerMes}% dcto.), luego ${clp(plan.precio)}/mes`
+      : `Derecho Chile IA — Plan ${plan.nombre}`,
     external_reference: usuario.id,
     payer_email: usuario.correo,
     back_url: urlRetorno,
@@ -47,9 +56,16 @@ async function crearSuscripcion({ usuario, plan, urlRetorno }) {
     auto_recurring: {
       frequency: 1,
       frequency_type: "months",
-      transaction_amount: plan.precio,
+      transaction_amount: conDescuento ? montoInicial : plan.precio,
       currency_id: "CLP",
     },
+  });
+}
+
+/** Cambia el monto de los próximos cobros de una suscripción. */
+async function actualizarMonto(id, monto) {
+  return llamar("PUT", `/preapproval/${encodeURIComponent(id)}`, {
+    auto_recurring: { transaction_amount: monto, currency_id: "CLP" },
   });
 }
 
@@ -79,6 +95,7 @@ function firmaValida(req, idDato) {
 
 module.exports = {
   crearSuscripcion,
+  actualizarMonto,
   obtenerSuscripcion,
   cancelarSuscripcion,
   firmaValida,

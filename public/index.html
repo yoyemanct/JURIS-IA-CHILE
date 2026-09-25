@@ -207,6 +207,8 @@
   .precio h3 { margin: 0; font-size: 1rem; }
   .precio .monto { font-family: var(--serif); font-size: 1.8rem; font-weight: 700; }
   .precio .monto small { font-family: var(--sans); font-size: .85rem; color: var(--texto-3); font-weight: 500; }
+  .precio .precio-luego { font-size: .8rem; color: var(--texto-2); margin-top: -6px; }
+  .precio .precio-luego s { color: var(--texto-3); }
   .precio ul { margin: 0; padding-left: 18px; font-size: .88rem; color: var(--texto-2); display: grid; gap: 4px; }
   .precio .btn-primario, .precio .btn-sec { justify-content: center; margin-top: auto; }
   .nota-legal { font-size: .76rem; color: var(--texto-3); margin-top: 14px; }
@@ -619,7 +621,7 @@
     <form class="modal" id="form-acceso" autocomplete="on">
       <button type="button" class="btn-icono cerrar" data-cerrar aria-label="Cerrar">✕</button>
       <h2 id="titulo-acceso">Crea tu cuenta gratis</h2>
-      <p class="sub" id="sub-acceso">Incluye consultas gratuitas cada mes. Sin tarjeta.</p>
+      <p class="sub" id="sub-acceso">Incluye una consulta de prueba gratis. Sin tarjeta.</p>
       <a class="btn-sec oculto" id="btn-google" href="/api/cuenta/google" style="width:100%;justify-content:center;padding:10px;font-weight:600;color:var(--texto);text-decoration:none">
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
         Continuar con Google
@@ -643,7 +645,7 @@
       <p class="sub" id="sub-planes"></p>
       <div class="precios" id="lista-precios"></div>
       <div id="gestion-cuenta" style="margin-top:16px"></div>
-      <p class="nota-legal">Pagos procesados por Mercado Pago. La suscripción se renueva cada mes y puedes cancelarla cuando quieras; conservas el plan hasta el fin del período pagado. Se emite factura o boleta electrónica.</p>
+      <p class="nota-legal">Pagos procesados por Mercado Pago. La suscripción se renueva cada mes y puedes cancelarla cuando quieras; conservas el plan hasta el fin del período pagado. El descuento del primer mes se aplica una sola vez por cuenta: Mercado Pago cobra el precio rebajado el primer mes y, desde el segundo, el precio normal informado. Se emite factura o boleta electrónica.</p>
     </div>
   </div>
 
@@ -1540,8 +1542,9 @@
         return;
       }
       const esPro = cuenta.plan.id !== "gratis";
-      const uso = !esPro && cuenta.uso && cuenta.uso.limite
-        ? `<span class="uso">${cuenta.uso.usadas}/${cuenta.uso.limite}</span>` : "";
+      const quedan = cuenta.uso && cuenta.uso.limite ? Math.max(0, cuenta.uso.limite - cuenta.uso.usadas) : null;
+      const uso = !esPro && quedan !== null
+        ? `<span class="uso">${quedan ? `${quedan} de prueba` : "prueba usada"}</span>` : "";
       b.innerHTML = `<span class="etiqueta-plan">${escapeHtml(cuenta.plan.nombre)}</span>${uso}<span>${escapeHtml(cuenta.usuario.nombre || cuenta.usuario.correo.split("@")[0])}</span>`;
     }
 
@@ -1567,7 +1570,7 @@
       const registro = m === "registro";
       $("titulo-acceso").textContent = registro ? "Crea tu cuenta gratis" : "Inicia sesión";
       $("sub-acceso").textContent = registro
-        ? `Incluye ${cuenta.planes?.find((p) => p.id === "gratis")?.consultasMes || 5} consultas gratuitas cada mes. Sin tarjeta.`
+        ? textoPrueba() + " Sin tarjeta."
         : "Ingresa con tu correo y contraseña.";
       $("campo-nombre").classList.toggle("oculto", !registro);
       $("btn-google").classList.toggle("oculto", !cuenta.google_activo);
@@ -1607,15 +1610,37 @@
       }
     });
 
+    function textoPrueba() {
+      const n = cuenta.planes?.find((p) => p.id === "gratis")?.consultas || 1;
+      return n === 1
+        ? "Incluye una consulta de prueba gratis, respondida con la misma IA del plan Pro."
+        : `Incluye ${n} consultas de prueba gratis, respondidas con la misma IA del plan Pro.`;
+    }
+
     function abrirPlanes() {
       const planesLista = cuenta.planes || [];
       const actual = cuenta.plan?.id || "gratis";
-      $("sub-planes").textContent = cuenta.usuario && cuenta.uso?.limite
-        ? `Este mes llevas ${cuenta.uso.usadas} de ${cuenta.uso.limite} consultas gratuitas.`
-        : "Elige el plan que se ajuste a tu práctica.";
+      const pro = planesLista.find((p) => p.id === "pro");
+      const conDescuento = cuenta.descuento_disponible && pro?.precioPrimerMes < pro?.precio;
+      const quedan = cuenta.uso?.limite ? Math.max(0, cuenta.uso.limite - cuenta.uso.usadas) : null;
+      $("sub-planes").textContent = actual !== "gratis"
+        ? "Tienes el plan Pro activo."
+        : cuenta.usuario && quedan === 0
+          ? `Ya usaste tu consulta de prueba.${conDescuento ? ` Suscríbete: el primer mes tiene ${pro.descuentoPrimerMes}% de descuento.` : ""}`
+          : conDescuento
+            ? `Prueba gratis y, si te sirve, el primer mes del plan Pro con ${pro.descuentoPrimerMes}% de descuento.`
+            : "Elige el plan que se ajuste a tu práctica.";
       const beneficios = {
-        gratis: (p) => [`${p.consultasMes} consultas al mes`, "Informes, guías de procedimiento y análisis de documentos", "Legislación, jurisprudencia y doctrina"],
-        pro: (p) => [p.consultasMes ? `${p.consultasMes} consultas al mes` : "Consultas ilimitadas", "Todo lo del plan gratis, sin límite mensual", "Ideal para el ejercicio diario de la profesión"],
+        gratis: (p) => [p.consultas === 1 ? "1 consulta de prueba" : `${p.consultas} consultas de prueba`, "Con la misma IA del plan Pro", "Consulta legal, guía de procedimiento o análisis de documento"],
+        pro: (p) => [p.consultas ? `${p.consultas} consultas al mes` : "Consultas ilimitadas", "Informes, guías de procedimiento y análisis de documentos", "Legislación oficial, jurisprudencia y doctrina", "Cancela cuando quieras"],
+      };
+      const montoPlan = (p) => {
+        if (!p.precio) return `<div class="monto">$0 <small>una consulta</small></div>`;
+        if (p.id === "pro" && conDescuento) {
+          return `<div class="monto">${formatoCLP(p.precioPrimerMes)} <small>primer mes</small></div>
+            <div class="precio-luego"><s>${formatoCLP(p.precio)}</s> · ${p.descuentoPrimerMes}% de descuento el primer mes; luego ${formatoCLP(p.precio)} / mes, IVA incluido</div>`;
+        }
+        return `<div class="monto">${formatoCLP(p.precio)} <small>/ mes, IVA incluido</small></div>`;
       };
       $("lista-precios").innerHTML = planesLista.map((p) => {
         const esActual = p.id === actual;
@@ -1623,10 +1648,10 @@
           ? `<button type="button" class="btn-sec" disabled>${esActual ? "Tu plan actual" : "Incluido"}</button>`
           : esActual
             ? '<button type="button" class="btn-sec" disabled>Tu plan actual</button>'
-            : '<button type="button" class="btn-primario" data-suscribir>Suscribirme</button>';
+            : `<button type="button" class="btn-primario" data-suscribir>${conDescuento ? `Suscribirme por ${formatoCLP(p.precioPrimerMes)}` : "Suscribirme"}</button>`;
         return `<div class="precio ${p.id !== "gratis" ? "destacado" : ""}">
           <h3>${escapeHtml(p.nombre)}</h3>
-          <div class="monto">${p.precio ? formatoCLP(p.precio) : "$0"} <small>${p.precio ? "/ mes, IVA incluido" : "para siempre"}</small></div>
+          ${montoPlan(p)}
           <ul>${(beneficios[p.id] || (() => []))(p).map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>
           ${boton}
         </div>`;
