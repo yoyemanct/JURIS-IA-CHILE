@@ -31,8 +31,8 @@ const TEMPERATURA = Number(process.env.TEMPERATURA_IA || 0.2);
 const VERCEL_AI_URL = (process.env.VERCEL_AI_GATEWAY_URL || "https://ai-gateway.vercel.sh/v1").replace(/\/+$/, "");
 // Modelo principal y modelos de respaldo (si el principal falla antes de
 // empezar a responder, se prueba el siguiente). Formato "proveedor/modelo".
-const VERCEL_AI_MODEL = process.env.VERCEL_AI_MODEL || "anthropic/claude-sonnet-4.5";
-const VERCEL_AI_RESPALDOS = (process.env.VERCEL_AI_MODELOS_RESPALDO || "anthropic/claude-haiku-4.5,google/gemini-2.5-flash")
+const VERCEL_AI_MODEL = process.env.VERCEL_AI_MODEL || "anthropic/claude-haiku-4.5";
+const VERCEL_AI_RESPALDOS = (process.env.VERCEL_AI_MODELOS_RESPALDO || "google/gemini-2.5-flash")
   .split(",")
   .map((m) => m.trim())
   .filter(Boolean);

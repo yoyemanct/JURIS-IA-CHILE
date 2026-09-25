@@ -24,6 +24,12 @@ Vercel detecta el servidor Express (`server.js`) y sirve la interfaz desde `publ
    `VERCEL_AI_MODEL` para elegir el modelo (ver `.env.example`).
 3. **Deploy.** Listo: la app queda publicada con su propia URL.
 
+**Costo:** Vercel AI Gateway cobra por uso, al precio de lista de cada modelo, e incluye un
+crédito mensual gratuito. El modelo por defecto es `anthropic/claude-haiku-4.5` (rápido y
+económico); `google/gemini-2.5-flash` rinde más consultas con el mismo crédito, y
+`anthropic/claude-sonnet-4.5` da el análisis más fino a un costo unas tres veces mayor.
+Revisa los precios vigentes en vercel.com/ai-gateway/models.
+
 Para usarla en tu computador con la misma clave, ponla en tu archivo `.env` y ejecuta
 `npm start`.
 
