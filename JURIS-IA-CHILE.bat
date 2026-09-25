@@ -1,8 +1,8 @@
 @echo off
-title Juris IA Chile
+title Derecho Chile IA
 cd /d "%~dp0"
 
-REM Lanzador de Juris IA Chile.
+REM Lanzador de Derecho Chile IA.
 REM 1) Si el servidor ya esta corriendo, solo abre el navegador.
 REM 2) Si no, lo inicia (ventana minimizada), espera a que responda y abre el navegador.
 
@@ -10,11 +10,11 @@ call :revisar
 if "%listo%"=="1" goto abrir
 
 echo.
-echo   Iniciando Juris IA Chile...
+echo   Iniciando Derecho Chile IA...
 echo   (esto puede demorar unos segundos la primera vez)
 echo.
 
-start "Juris IA Chile - servidor" /min cmd /k "npm start"
+start "Derecho Chile IA - servidor" /min cmd /k "npm start"
 
 set intentos=0
 :esperar
@@ -26,7 +26,7 @@ if %intentos% lss 40 goto esperar
 
 echo.
 echo   No se pudo iniciar el servidor.
-echo   Revisa la ventana minimizada "Juris IA Chile - servidor" para ver el error.
+echo   Revisa la ventana minimizada "Derecho Chile IA - servidor" para ver el error.
 echo.
 pause
 exit /b 1

@@ -14,7 +14,7 @@
 const { pedir } = require("./jurisprudencia/http");
 const { CacheTTL } = require("../cache");
 
-const CORREO = process.env.CROSSREF_MAILTO || "juris-ia-chile@example.org";
+const CORREO = process.env.CROSSREF_MAILTO || "derecho-chile-ia@example.org";
 const CROSSREF = process.env.CROSSREF_URL || "https://api.crossref.org";
 const OPENALEX = process.env.OPENALEX_URL || "https://api.openalex.org";
 const TIMEOUT_MS = Number(process.env.DOCTRINA_TIMEOUT_MS || 12000);
@@ -137,7 +137,7 @@ async function enlaceResponde(url) {
     const res = await fetch(url, {
       signal: ctrl.signal,
       redirect: "follow",
-      headers: { Range: "bytes=0-2047", "User-Agent": "Mozilla/5.0 (Juris IA Chile)", Accept: "*/*" },
+      headers: { Range: "bytes=0-2047", "User-Agent": "Mozilla/5.0 (Derecho Chile IA)", Accept: "*/*" },
     });
     const ok = res.ok || res.status === 206;
     if (!ok) return false;
