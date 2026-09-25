@@ -20,8 +20,9 @@ Vercel detecta el servidor Express (`server.js`) y sirve la interfaz desde `publ
 
 1. En Vercel, **Add New → Project** e importa este repositorio.
 2. En **Settings → Environment Variables** agrega `AI_GATEWAY_API_KEY` con tu clave de
-   Vercel AI Gateway (opcional si usas la autenticación automática de Vercel), y si quieres
-   `VERCEL_AI_MODEL` para elegir el modelo (ver `.env.example`).
+   Vercel AI Gateway (opcional si usas la autenticación automática de Vercel). Es la única
+   variable necesaria; si quieres otro modelo, agrega `AI_GATEWAY_MODEL` (ver `.env.example`).
+   No pegues el `.env.example` completo: Vercel rechaza nombres que empiecen con `VERCEL_`.
 3. **Deploy.** Listo: la app queda publicada con su propia URL.
 
 **Costo:** Vercel AI Gateway cobra por uso, al precio de lista de cada modelo, e incluye un
@@ -51,7 +52,7 @@ superar ~4,5 MB (límite de la plataforma), y Qwen local no está disponible all
 - **Caché:** las búsquedas y respuestas recientes quedan guardadas; una pregunta repetida se
   responde al instante.
 - **Respaldo entre modelos:** si el modelo principal falla o no responde, el gateway pasa
-  solo al siguiente (`VERCEL_AI_MODELOS_RESPALDO`).
+  solo al siguiente (`AI_GATEWAY_MODELOS_RESPALDO`).
 
 ### Verificación de vigencia
 
