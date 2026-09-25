@@ -6,6 +6,9 @@
 <title>Juris IA Chile — Asistente de legislación chilena</title>
 <meta name="description" content="Consulta la legislación chilena con inteligencia artificial. Informes jurídicos con citas exactas a la ley y verificación de vigencia en la BCN." />
 <meta name="theme-color" content="#0f2238" />
+<meta name="author" content="Jorge Muñoz Yeber, Abogado" />
+<meta property="og:title" content="Juris IA Chile — por Jorge Muñoz Yeber, Abogado" />
+<meta property="og:description" content="Asistente de IA para la legislación chilena, con citas exactas a la ley y verificación de vigencia en la BCN." />
 <link rel="icon" href="/juris.ico" type="image/x-icon" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -296,6 +299,14 @@
     background: linear-gradient(transparent, var(--bg) 26%);
   }
 
+  .autoria {
+    margin-top: 18px; display: inline-flex; align-items: center; gap: 10px; font-size: .9rem; color: var(--texto-2);
+  }
+  .autoria .linea { width: 28px; height: 1px; background: var(--borde-fuerte); }
+  .autoria b { font-family: var(--serif); font-weight: 700; color: var(--texto); font-size: 1rem; }
+  .solo-impresion { display: none; }
+  footer .credito { color: var(--texto-2); font-size: .84rem; margin-bottom: 8px; }
+  footer .credito b { font-family: var(--serif); color: var(--texto); font-size: .95rem; }
   footer {
     border-top: 1px solid var(--borde); color: var(--texto-3); font-size: .78rem; padding: 18px 20px 26px; text-align: center;
   }
@@ -326,6 +337,7 @@
     .tarjeta, .fuente { box-shadow: none; }
     .fuente-texto { max-height: none; }
     .fuente-texto::after { display: none; }
+    .solo-impresion { display: block; font-family: var(--serif); border-bottom: 1px solid #999; padding-bottom: 8px; margin-bottom: 16px; }
   }
 </style>
 </head>
@@ -352,6 +364,7 @@
   </header>
 
   <main>
+    <div class="solo-impresion">Juris IA Chile — creado por Jorge Muñoz Yeber, Abogado</div>
     <!-- Vista inicial -->
     <section id="vista-inicio">
       <div class="hero">
@@ -361,6 +374,7 @@
         </span>
         <h1>Tu asistente de derecho chileno</h1>
         <p>Pregunta en lenguaje simple y recibe un informe jurídico estructurado, con cada artículo citado y su vigencia verificada en la BCN.</p>
+        <div class="autoria"><span class="linea" aria-hidden="true"></span><span>Creado por <b>Jorge Muñoz Yeber</b>, Abogado</span><span class="linea" aria-hidden="true"></span></div>
       </div>
     </section>
 
@@ -442,6 +456,7 @@
   </main>
 
   <footer>
+    <p class="credito">Juris IA Chile · Creado por <b>Jorge Muñoz Yeber</b>, Abogado · © <span id="anio">2026</span></p>
     <p><b>Juris IA Chile</b> entrega información general y no constituye asesoría legal. No reemplaza a un abogado o abogada.</p>
     <p>Fuentes: <a href="https://leyes.pisanvs.cl" target="_blank" rel="noopener">leyes.pisanvs.cl</a> (proyecto ley-chile) y <a href="https://www.bcn.cl/leychile" target="_blank" rel="noopener">LeyChile — Biblioteca del Congreso Nacional</a>.</p>
   </footer>
@@ -860,7 +875,7 @@
         if (!b) return;
         const accion = b.dataset.accion;
         const fuentes = turno.documentos.map((d, i) => `${i + 1}. ${d.cuerpo_legal}, ${d.articulo} — ${d.fuente_url}`).join("\n");
-        const completo = `# Consulta: ${turno.pregunta}\n\n${turno.texto}\n\n---\n\n## Normas consultadas\n\n${fuentes}\n\n_Generado con Juris IA Chile el ${new Date().toLocaleString("es-CL")}. Información general; no constituye asesoría legal._\n`;
+        const completo = `# Consulta: ${turno.pregunta}\n\n${turno.texto}\n\n---\n\n## Normas consultadas\n\n${fuentes}\n\n_Generado con Juris IA Chile (creado por Jorge Muñoz Yeber, Abogado) el ${new Date().toLocaleString("es-CL")}. Información general; no constituye asesoría legal._\n`;
         if (accion === "copiar") {
           try { await navigator.clipboard.writeText(completo); toast("Informe copiado"); }
           catch { toast("No se pudo copiar"); }
@@ -1015,7 +1030,9 @@
       $("ejemplos").classList.toggle("oculto", modo !== "consulta");
       dockConsulta.classList.remove("dock");
       $("btn-nueva").classList.add("oculto");
-      inputPregunta.placeholder = "Ej: ¿Cuántos días de vacaciones me corresponden al año?";
+      inputPregunta.placeholder = matchMedia("(max-width: 640px)").matches
+        ? "Escribe tu pregunta legal…"
+        : "Ej: ¿Cuántos días de vacaciones me corresponden al año?";
       $("btn-consultar-texto").textContent = "Consultar";
       window.scrollTo({ top: 0, behavior: "smooth" });
       inputPregunta.focus();
@@ -1083,6 +1100,9 @@
     });
 
     // ---------------- Inicio ----------------
+    $("anio").textContent = new Date().getFullYear();
+    // En pantallas angostas el ejemplo largo no cabe en una línea.
+    if (matchMedia("(max-width: 640px)").matches) inputPregunta.placeholder = "Escribe tu pregunta legal…";
     cargarProveedores();
     inputPregunta.focus();
   })();
