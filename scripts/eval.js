@@ -174,6 +174,7 @@ async function ejecutarCaso(v, caso, { generar, modelo }) {
     }
   }
   salida.respuesta = final;
+  salida.bruto = bruto;
   salida.chequeos = revisar(caso, { documentos, jurisprudencia, bruto, final });
   salida.ms = Date.now() - inicio;
   return salida;

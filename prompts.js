@@ -23,7 +23,7 @@ const SECCIONES = {
   ],
   procedimiento: [
     { titulo: "Ficha del procedimiento" },
-    { titulo: "Antes de demandar" },
+    { titulo: "Antes de demandar", alternativas: ["Antes de presentar", "Antes de solicitar", "Antes de interponer", "Antes de querellarse", "Antes de denunciar", "Antes de iniciar"] },
     { titulo: "Tramitación paso a paso" },
     { titulo: "Escritos clave" },
     { titulo: "Tabla de plazos" },
@@ -112,7 +112,7 @@ ESTRUCTURA (títulos "##" exactos, en este orden):
 Tabla de dos columnas (Aspecto | Detalle) con: tipo de procedimiento; normas aplicables; tribunal competente (materia, cuantía y territorio); comparecencia (Ley 18.120: patrocinio y poder); prescripción o caducidad de la acción; tramitación electrónica (Ley 20.886, Oficina Judicial Virtual).
 
 ## Antes de demandar
-Antecedentes y documentos necesarios, y gestiones previas cuando correspondan (gestiones preparatorias, mediación previa obligatoria, reclamo administrativo, notificación de protesto, etc.).
+(Si el trámite no es una demanda, usa "Antes de presentar", "Antes de solicitar" o "Antes de interponer".) Antecedentes y documentos necesarios, y gestiones previas cuando correspondan (gestiones preparatorias, mediación previa obligatoria, reclamo administrativo, notificación de protesto, etc.).
 
 ## Tramitación paso a paso
 Etapas numeradas en orden cronológico, desde la presentación hasta la sentencia firme y su cumplimiento. Para cada etapa:

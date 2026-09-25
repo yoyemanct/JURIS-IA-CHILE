@@ -24,7 +24,7 @@ async function obtener() {
       const partes = [];
       if (d.uf?.valor) partes.push(`UF ${pesos(d.uf.valor)} (${String(d.uf.fecha || "").slice(0, 10)})`);
       if (d.utm?.valor) partes.push(`UTM ${pesos(d.utm.valor)} (${String(d.utm.fecha || "").slice(0, 7)})`);
-      return partes.length ? `${partes.join("; ")}. Fuente: mindicador.cl (Banco Central / SII).` : null;
+      return partes.length ? `${partes.join("; ")}. Si usas estos valores, atribúyelos al Banco Central (UF) y al SII (UTM), con su fecha.` : null;
     } finally {
       clearTimeout(temporizador);
     }

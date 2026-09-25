@@ -41,9 +41,16 @@ const PROHIBIDAS = [
 
 const PREAMBULO = /^(colega|estimad[oa]s?|hola|buen(os|as) (dias|tardes|noches)|recibi (tu|su)|excelente pregunta|buena pregunta|gracias por|con gusto|claro[,!.]|por supuesto)/;
 
+// La marca pedida al modelo, en todas sus variantes: "(no verificado en esta
+// búsqueda)", "(no verificado en esta búsqueda; verificar en el art. 468 CPC)",
+// "Datos marcados como no verificados en esta búsqueda". No es una frase
+// prohibida: es la advertencia que se pide.
+const MARCA_VARIANTES = /(?:marcad[oa]s? como )?no verificad[oa]s?(?: [a-z]+){0,3} en (?:esta|la) busqueda/g;
+const sinMarcas = (t) => sinTildes(t).replace(MARCA_VARIANTES, " ");
+
 /** Busca frases prohibidas. Devuelve [{ id, fragmento }]. */
 function buscarProhibidas(texto, modo) {
-  const base = sinTildes(texto).split(sinTildes(MARCA_NO_VERIFICADO)).join(" ");
+  const base = sinMarcas(texto);
   const hallazgos = [];
   for (const p of PROHIBIDAS) {
     if (p.excepto?.includes(modo)) continue;
@@ -54,7 +61,7 @@ function buscarProhibidas(texto, modo) {
 }
 
 function contieneProhibida(oracion, modo) {
-  const base = sinTildes(oracion).split(sinTildes(MARCA_NO_VERIFICADO)).join(" ");
+  const base = sinMarcas(oracion);
   return PROHIBIDAS.some((p) => !p.excepto?.includes(modo) && p.re.test(base));
 }
 
@@ -117,7 +124,7 @@ const normalizarTitulo = (t) => sinTildes(t).replace(/^[#\s\d.)-]+/, "").replace
 function revisarSecciones(texto, modo) {
   const esperadas = SECCIONES[modo] || [];
   const titulos = [...texto.matchAll(/^##\s+(.+)$/gm)].map((m) => normalizarTitulo(m[1]));
-  const posiciones = esperadas.map((s) => titulos.findIndex((t) => t.startsWith(normalizarTitulo(s.titulo))));
+  const posiciones = esperadas.map((s) => titulos.findIndex((t) => [s.titulo, ...(s.alternativas || [])].some((a) => t.startsWith(normalizarTitulo(a)))));
   const faltan = esperadas.filter((s, i) => !s.opcional && posiciones[i] === -1).map((s) => s.titulo);
   const presentes = posiciones.filter((p) => p !== -1);
   const fueraDeOrden = presentes.some((p, i) => i > 0 && p < presentes[i - 1]);
@@ -153,16 +160,25 @@ function similitudCita(cita, fuentesBigramas) {
 const CITA = /[“"«]([^”"»\n]{40,}?)[”"»]/g;
 const MENCIONA_ARTICULO = /\bart(?:[íi]culos?|s?\.)\s*\d/i;
 
+// Solo se revisan las citas atribuidas a un artículo justo antes ("el artículo
+// 700 dispone: “…”"). Las cláusulas propuestas, los modelos de escritos y las
+// citas del documento del usuario no son citas de ley.
+const ATRIBUIDA_A_ARTICULO = /\bart(?:[íi]culos?|s?\.)\s*\d+[^“"«\n]{0,70}$/i;
+const NO_ES_CITA_DE_LEY = /redacci|propuest|suger|cl[aá]usula|modelo|reemplaz|en lo principal|otros[íi]|suma:/i;
+
 function revisarCitas(texto, textosFuente) {
   const fuentesBigramas = textosFuente.filter(Boolean).map((t) => bigramas(palabras(t)));
   const corregidas = [];
   const lineas = texto.split("\n").map((linea) => {
     if (!MENCIONA_ARTICULO.test(linea)) return linea;
     return linea.replace(CITA, (completo, cita, desplazamiento, original) => {
+      const antes = original.slice(Math.max(0, desplazamiento - 90), desplazamiento);
+      if (!ATRIBUIDA_A_ARTICULO.test(antes) || NO_ES_CITA_DE_LEY.test(antes) || NO_ES_CITA_DE_LEY.test(cita.slice(0, 40))) return completo;
       const sim = similitudCita(cita, fuentesBigramas);
       if (sim >= 0.9) return completo;
       corregidas.push({ cita: cita.slice(0, 120), similitud: Math.round(sim * 100) });
-      const yaMarcada = original.slice(desplazamiento + completo.length, desplazamiento + completo.length + 40).includes(MARCA_NO_VERIFICADO);
+      const despues = original.slice(desplazamiento + completo.length, desplazamiento + completo.length + 60);
+      const yaMarcada = sinTildes(despues).search(MARCA_VARIANTES) !== -1;
       return `${cita.trim()}${yaMarcada ? "" : ` ${MARCA_NO_VERIFICADO}`}`;
     });
   });
@@ -211,6 +227,13 @@ function validar(texto, { modo = "consulta", normas = [], jurisprudencia = [], d
 
   const prohibidasOriginales = buscarProhibidas(t, modo);
   if (prohibidasOriginales.length) {
+    // Si la frase va en un paréntesis breve ("(según material de apoyo)"), se
+    // quita solo el paréntesis y la oración se conserva.
+    t = t.replace(/\s*\(([^()\n]{1,160})\)/g, (completo, dentro) => {
+      if (!contieneProhibida(dentro, modo)) return completo;
+      problemas.push({ tipo: "frase_prohibida", detalle: `(${dentro.slice(0, 160)})` });
+      return "";
+    });
     const r = eliminarOraciones(t, (o) => contieneProhibida(o, modo));
     t = r.texto;
     for (const o of r.eliminadas) problemas.push({ tipo: "frase_prohibida", detalle: o.slice(0, 200) });
