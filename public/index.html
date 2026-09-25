@@ -637,6 +637,19 @@
     </form>
   </div>
 
+  <!-- Verificación del correo -->
+  <div class="modal-fondo oculto" id="modal-verificar" role="dialog" aria-modal="true" aria-labelledby="titulo-verificar">
+    <form class="modal" id="form-verificar" autocomplete="off">
+      <button type="button" class="btn-icono cerrar" data-cerrar aria-label="Cerrar">✕</button>
+      <h2 id="titulo-verificar">Confirma tu correo</h2>
+      <p class="sub" id="sub-verificar">Te enviamos un código de 6 dígitos. Ingrésalo para activar tu consulta de prueba gratis.</p>
+      <label class="campo">Código<input type="text" id="verificar-codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required /></label>
+      <div class="error-form" id="verificar-error"></div>
+      <button type="submit" class="btn-primario" id="verificar-enviar">Confirmar</button>
+      <div class="cambiar-modo">¿No te llegó? Revisa tu carpeta de spam o <button type="button" id="verificar-reenviar">envía otro código</button></div>
+    </form>
+  </div>
+
   <!-- Planes y cuenta -->
   <div class="modal-fondo oculto" id="modal-planes" role="dialog" aria-modal="true" aria-labelledby="titulo-planes">
     <div class="modal ancho">
@@ -1265,6 +1278,10 @@
           const data = await res.json().catch(() => ({}));
           if (data.codigo === "REQUIERE_CUENTA") abrirAcceso("registro");
           if (data.codigo === "LIMITE_PLAN") abrirPlanes();
+          if (data.codigo === "VERIFICAR_CORREO") {
+            llamarCuenta("/api/cuenta/verificacion/enviar", {}).catch(() => {});
+            abrirVerificar();
+          }
           throw new Error(data.error || `Error ${res.status}`);
         }
         await leerEventos(res, (evento, datos) => {
@@ -1575,7 +1592,7 @@
       $("campo-nombre").classList.toggle("oculto", !registro);
       $("btn-google").classList.toggle("oculto", !cuenta.google_activo);
       $("separador-google").classList.toggle("oculto", !cuenta.google_activo);
-      $("separador-google").textContent = registro ? "o con tu correo (sin consulta de prueba gratis)" : "o con tu correo";
+      $("separador-google").textContent = registro && !cuenta.verificacion_activa ? "o con tu correo (sin consulta de prueba gratis)" : "o con tu correo";
       $("acceso-clave").autocomplete = registro ? "new-password" : "current-password";
       $("acceso-enviar").textContent = registro ? "Crear cuenta" : "Ingresar";
       $("acceso-cambiar").innerHTML = registro
@@ -1603,11 +1620,50 @@
         });
         pintarCuenta();
         cerrarModales();
-        toast(modoAcceso === "registro" ? "Cuenta creada. ¡Bienvenido!" : "Sesión iniciada");
+        if (modoAcceso === "registro" && necesitaVerificar()) abrirVerificar(cuenta.aviso_verificacion);
+        else toast(modoAcceso === "registro" ? "Cuenta creada. ¡Bienvenido!" : "Sesión iniciada");
       } catch (err) {
         $("acceso-error").textContent = err.message;
       } finally {
         boton.disabled = false;
+      }
+    });
+
+    // Verificación del correo con código (cuentas de correo y contraseña).
+    function necesitaVerificar() {
+      return Boolean(cuenta.verificacion_activa && cuenta.usuario && !cuenta.usuario.google && !cuenta.usuario.verificado);
+    }
+    function abrirVerificar(mensaje) {
+      $("sub-verificar").textContent = `Te enviamos un código de 6 dígitos a ${cuenta.usuario?.correo || "tu correo"}. Ingrésalo para activar tu consulta de prueba gratis.`;
+      $("verificar-error").textContent = mensaje || "";
+      $("verificar-codigo").value = "";
+      cerrarModales();
+      abrirModal("modal-verificar");
+      $("verificar-codigo").focus();
+    }
+    $("form-verificar").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const boton = $("verificar-enviar");
+      boton.disabled = true;
+      $("verificar-error").textContent = "";
+      try {
+        cuenta = await llamarCuenta("/api/cuenta/verificacion/confirmar", { codigo: $("verificar-codigo").value });
+        pintarCuenta();
+        cerrarModales();
+        toast("Correo verificado. Ya puedes usar tu consulta de prueba.");
+      } catch (err) {
+        $("verificar-error").textContent = err.message;
+      } finally {
+        boton.disabled = false;
+      }
+    });
+    $("verificar-reenviar").addEventListener("click", async () => {
+      $("verificar-error").textContent = "";
+      try {
+        await llamarCuenta("/api/cuenta/verificacion/enviar", {});
+        toast("Te enviamos un código nuevo.");
+      } catch (err) {
+        $("verificar-error").textContent = err.message;
       }
     });
 
