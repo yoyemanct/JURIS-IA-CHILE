@@ -16,6 +16,8 @@ const prompts = require("./prompts");
 const { investigar } = require("./investigacion");
 const cuentasRutas = require("./cuentas/rutas");
 const planes = require("./cuentas/planes");
+const { redactar } = require("./redactor");
+const { indicadoresPara } = require("./indicadores");
 const pjud = require("./fuentes/jurisprudencia/pjud");
 const { buscarSentenciasTC } = require("./fuentes/jurisprudencia/tconstitucional");
 const { buscarDictamenes } = require("./fuentes/jurisprudencia/contraloria");
@@ -289,7 +291,7 @@ async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
 
   try {
     canal?.enviar("estado", { etapa: "buscando", mensaje: mensajeBuscando });
-    const { meta, systemPrompt, userMessage, claveCache: claveBase, maxTokens } = await preparar();
+    const { meta, systemPrompt, userMessage, claveCache: claveBase, maxTokens, modo, fuentes } = await preparar();
     canal?.enviar("documentos", meta);
 
     // Cada plan puede tener su propio modelo (el gratis, uno más económico).
@@ -307,13 +309,18 @@ async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
     }
 
     canal?.enviar("estado", { etapa: "redactando", mensaje: "Redactando el informe…" });
-    const { texto, proveedor: usado, modelo } = await proveedorIA.responder({
+    // redactar(): llama al modelo, completa si se cortó y valida la salida
+    // (frases prohibidas, secciones, citas fieles, roles existentes).
+    const { texto, proveedor: usado, modelo } = await redactar({
       proveedor,
       systemPrompt,
       userMessage,
       maxTokens,
       modelo: modeloPlan,
+      modo,
+      fuentes,
       onTexto: canal ? (t) => canal.enviar("texto", { t }) : undefined,
+      onReemplazo: canal ? (t) => canal.enviar("reemplazo", { t }) : undefined,
     });
     if (claveCache) cacheRespuestas.guardar(claveCache, { texto, proveedor: usado, modelo });
 
@@ -364,8 +371,13 @@ app.post("/api/consultar", limitadorIA, cuentasRutas.exigirPlan, async (req, res
       const consultaBusqueda = historial.length
         ? `${pregunta} ${historial[historial.length - 1].pregunta}`
         : pregunta;
-      const r = await investigar({ pregunta, consultaBusqueda, proveedor, modo });
+      const [r, indicadores] = await Promise.all([
+        investigar({ pregunta, consultaBusqueda, proveedor, modo }),
+        indicadoresPara(consultaBusqueda),
+      ]);
       return {
+        modo,
+        fuentes: { normas: r.documentos, jurisprudencia: r.jurisprudencia },
         meta: {
           pregunta,
           modo,
@@ -377,7 +389,7 @@ app.post("/api/consultar", limitadorIA, cuentasRutas.exigirPlan, async (req, res
           corpus_completo_disponible: USAR_CORPUS_REMOTO && r.remotoDisponible,
           aviso_corpus_completo: !r.remotoDisponible ? r.remotoError : null,
         },
-        systemPrompt: modo === "procedimiento" ? prompts.PROMPT_PROCEDIMIENTO : prompts.PROMPT_CONSULTA,
+        systemPrompt: prompts.promptSistema(modo),
         userMessage: prompts.mensajeConsulta({
           pregunta,
           documentos: r.documentos,
@@ -387,9 +399,10 @@ app.post("/api/consultar", limitadorIA, cuentasRutas.exigirPlan, async (req, res
           jurisprudencia: r.jurisprudencia,
           doctrina: r.doctrina,
           modo,
+          indicadores,
         }),
         // Una guía de tramitación completa es bastante más larga que un informe.
-        maxTokens: modo === "procedimiento" ? Number(process.env.MAX_TOKENS_PROCEDIMIENTO || 8000) : Number(process.env.MAX_TOKENS_CONSULTA || 6000),
+        maxTokens: modo === "procedimiento" ? Number(process.env.MAX_TOKENS_PROCEDIMIENTO || 10000) : Number(process.env.MAX_TOKENS_CONSULTA || 6000),
         claveCache: r.remotoDisponible && historial.length === 0 ? `${proveedor}|${modo}|${claveDeTexto(pregunta)}` : null,
       };
     },
@@ -453,6 +466,7 @@ app.post("/api/documento", limitadorIA, cuentasRutas.exigirPlan, subida.single("
       }
       const normas = r.documentos;
       const { remotoDisponible, remotoError } = r;
+      const indicadores = await indicadoresPara(`${pregunta} ${textoDocumento.slice(0, 3000)}`);
       return {
         meta: {
           archivo: req.file.originalname,
@@ -470,7 +484,9 @@ app.post("/api/documento", limitadorIA, cuentasRutas.exigirPlan, subida.single("
           corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
           aviso_corpus_completo: !remotoDisponible ? remotoError : null,
         },
-        systemPrompt: prompts.PROMPT_DOCUMENTO,
+        modo: "documento",
+        fuentes: { normas, jurisprudencia: r.jurisprudencia, documento: textoDocumento },
+        systemPrompt: prompts.promptSistema("documento"),
         userMessage: prompts.mensajeDocumento({
           pregunta,
           normas,
@@ -478,6 +494,7 @@ app.post("/api/documento", limitadorIA, cuentasRutas.exigirPlan, subida.single("
           seleccion,
           jurisprudencia: r.jurisprudencia,
           doctrina: r.doctrina,
+          indicadores,
         }),
         maxTokens: Number(process.env.MAX_TOKENS_CONSULTA || 6000),
         // Los documentos de clientes nunca se cachean.

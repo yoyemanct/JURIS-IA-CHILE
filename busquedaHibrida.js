@@ -194,7 +194,8 @@ function resolverNorma(nombre) {
       const limpio = numero.replace(/\./g, "");
       const exacta = leyes.find((l) => String(l.numero || "").replace(/\D/g, "") === limpio) ||
         leyes.find((l) => new RegExp(`^(ley|dfl|decreto)?\\s*(n[°º.]?\\s*)?${limpio}\\b`, "i").test(String(l.titulo).replace(/(\d)\.(\d)/g, "$1$2")));
-      if (exacta) return exacta;
+      // Pedida por número y no encontrada: mejor nada que una ley equivocada.
+      return exacta || null;
     }
     return leyes[0] || null;
   }, { guardarSi: (ley) => Boolean(ley) });

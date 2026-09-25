@@ -218,6 +218,7 @@ async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onT
   }
 
   let texto = "";
+  let finishReason = null;
   for await (const linea of leerLineas(respuesta.body)) {
     if (!linea.startsWith("data:")) continue;
     const datos = linea.slice(5).trim();
@@ -236,11 +237,13 @@ async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onT
       texto += delta;
       onTexto?.(delta);
     }
+    // "length" = se agotó max_tokens y la respuesta quedó cortada.
+    if (evento.choices?.[0]?.finish_reason) finishReason = evento.choices[0].finish_reason;
   }
   if (!texto.trim()) {
     throw errorCon("VERCEL_RESPUESTA_VACIA", `El modelo ${modelo} respondió sin texto.`);
   }
-  return { texto, proveedor: "vercel", modelo };
+  return { texto, proveedor: "vercel", modelo, finishReason };
 }
 
 async function responderConVercel(opciones) {
@@ -310,8 +313,8 @@ async function responderConClaude({ systemPrompt, userMessage, onTexto, maxToken
     texto += delta;
     onTexto?.(delta);
   });
-  await stream.finalMessage();
-  return { texto, proveedor: "claude", modelo: CLAUDE_MODEL };
+  const final = await stream.finalMessage();
+  return { texto, proveedor: "claude", modelo: CLAUDE_MODEL, finishReason: final?.stop_reason === "max_tokens" ? "length" : "stop" };
 }
 
 // --- Qwen local vía Ollama (streaming NDJSON) --------------------------------
@@ -418,6 +421,7 @@ async function responderConQwen({ systemPrompt, userMessage, onTexto, maxTokens,
   }
 
   let texto = "";
+  let finishReason = null;
   const filtro = crearFiltroPensamiento((t) => {
     texto += t;
     onTexto?.(t);
@@ -432,13 +436,14 @@ async function responderConQwen({ systemPrompt, userMessage, onTexto, maxTokens,
     }
     if (evento.error) throw errorCon("QWEN_ERROR_STREAM", `Ollama: ${evento.error}`);
     if (evento.message?.content) filtro.agregar(evento.message.content);
+    if (evento.done_reason) finishReason = evento.done_reason;
   }
   filtro.terminar();
 
   if (!texto.trim()) {
     throw errorCon("QWEN_RESPUESTA_VACIA", "Ollama respondió sin contenido de texto (respuesta vacía o formato inesperado).");
   }
-  return { texto: texto.trim(), proveedor: "qwen", modelo: OLLAMA_MODEL };
+  return { texto: texto.trim(), proveedor: "qwen", modelo: OLLAMA_MODEL, finishReason };
 }
 
 const PROVEEDORES = { vercel: responderConVercel, claude: responderConClaude, qwen: responderConQwen };
