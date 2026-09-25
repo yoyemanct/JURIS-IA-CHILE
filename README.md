@@ -145,6 +145,14 @@ Esto se llama un patrón **RAG** (Retrieval-Augmented Generation): en vez de dej
 "invente" desde su memoria general, la obligamos a responder solo con documentos reales, y a
 citarlos. Es clave en un tema legal, donde inventar un artículo sería un problema serio.
 
+## Calidad de las respuestas y evaluación
+
+- **Fuentes por materia:** cada pregunta se clasifica (laboral, civil, familia, consumidor, arrendamiento, comercial, procesal, penal, tributario, administrativo, constitucional) y se descartan las normas de otra materia (`materias.js`).
+- **Artículos clave:** para las consultas frecuentes se traen directo los artículos que abriría un abogado (`articulosClave.js`), verificados cada vez contra LeyChile (`evals/articulos-clave.md`).
+- **Texto oficial primero:** los artículos salen del texto oficial de la BCN (copia semanal en `data/codigos` o XML en línea); leyes.pisanvs.cl queda de respaldo.
+- **Validador de salida** (`validador.js`): sin frases sobre el funcionamiento interno, sin preámbulos, secciones completas, citas fieles al texto oficial, sin roles inventados; si una respuesta se corta, se continúa (`redactor.js`).
+- **Evaluación:** `npm run eval` corre 25 casos contra las fuentes reales y genera `evals/reporte.md`. En GitHub: *Actions → Evaluación de respuestas → Run workflow* (requiere el secreto `AI_GATEWAY_API_KEY`).
+
 ## Analizar tus propios documentos
 
 La pestaña "Analizar mi documento" permite subir un contrato, una demanda, una escritura o una

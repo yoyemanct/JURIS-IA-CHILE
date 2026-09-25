@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: ["claude/**"]
-    paths: ["scripts/actualizar-indice-dt.js", "fuentes/jurisprudencia/direcciontrabajo.js", ".github/workflows/actualizar-indices.yml"]
+    paths: ["scripts/actualizar-indice-dt.js", "scripts/actualizar-codigos.js", "fuentes/leyChileOficial.js", "fuentes/jurisprudencia/direcciontrabajo.js", ".github/workflows/actualizar-indices.yml"]
   # Cada domingo a las 4:00 (Chile).
   schedule:
     - cron: "0 7 * * 0"
@@ -20,11 +20,13 @@ jobs:
       - run: npm ci
       - name: Índice de dictámenes de la Dirección del Trabajo
         run: node scripts/actualizar-indice-dt.js
+      - name: Texto oficial vigente de los códigos grandes (BCN)
+        run: node scripts/actualizar-codigos.js
       - name: Guardar si cambió
         run: |
           git config user.name "Derecho Chile IA (índices)"
           git config user.email "actions@users.noreply.github.com"
-          git add data/indices
+          git add data/indices data/codigos
           if git diff --cached --quiet; then echo "Sin cambios"; exit 0; fi
-          git commit -m "Actualiza el índice de dictámenes de la Dirección del Trabajo"
-          git push
+          git commit -m "Actualiza índices de jurisprudencia y texto oficial de los códigos"
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"

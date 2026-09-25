@@ -12,7 +12,9 @@
     "dev": "node --watch server.js",
     "diagnosticar-mcp": "node scripts/probar-mcp.js",
     "diagnosticar-leychile": "node scripts/probar-leychile.js",
-    "inspeccionar-leychile": "node scripts/inspeccionar-leychile.js"
+    "inspeccionar-leychile": "node scripts/inspeccionar-leychile.js",
+    "eval": "node scripts/eval.js",
+    "verificar-articulos-clave": "node scripts/verificar-articulos-clave.js"
   },
   "license": "MIT",
   "dependencies": {

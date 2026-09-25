@@ -13,11 +13,12 @@
 const path = require("path");
 const mammoth = require("mammoth");
 
-// Presupuesto de caracteres del documento que se le pasa al modelo. Un
-// modelo local con ventana de 12k tokens no puede tragarse un expediente
-// completo; cuando el documento excede esto, se seleccionan los fragmentos
-// más relevantes para la pregunta en vez de cortar por la mitad.
-const PRESUPUESTO_CARACTERES = Number(process.env.DOC_PRESUPUESTO_CARACTERES || 18000);
+// Presupuesto de caracteres del documento que se le pasa al modelo. Los
+// modelos en la nube leen cómodamente ~90.000 caracteres (unas 40 páginas),
+// así que casi todo contrato, finiquito o escrito se analiza COMPLETO, sin
+// perder cláusulas. Solo un expediente más largo se reduce a los fragmentos
+// más relevantes para la pregunta. Con un modelo local conviene bajarlo.
+const PRESUPUESTO_CARACTERES = Number(process.env.DOC_PRESUPUESTO_CARACTERES || 90000);
 
 const EXTENSIONES = {
   ".pdf": "pdf",

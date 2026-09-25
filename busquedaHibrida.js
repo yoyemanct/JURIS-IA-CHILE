@@ -12,6 +12,7 @@
 const path = require("path");
 const fs = require("fs");
 const mcp = require("./mcpLeyChile");
+const leyChileOficial = require("./fuentes/leyChileOficial");
 const { normalizarLeyes, normalizarArticulos } = require("./normalizadorMcp");
 const { buscar: buscarLocal } = require("./search");
 const { CacheTTL, claveDeTexto } = require("./cache");
@@ -39,41 +40,30 @@ function enlaceOficial(idNorma) {
   });
 }
 
-async function documentosDeNorma(ley, pregunta, maxArticulos = MAX_ARTICULOS_POR_NORMA) {
-  const [articulosCrudo, fuenteUrl] = await Promise.all([
-    mcp.buscarArticulos(ley.idNorma, pregunta),
-    enlaceOficial(ley.idNorma).catch(() => `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}`),
-  ]);
-  const articulos = normalizarArticulos(articulosCrudo).slice(0, maxArticulos);
+// Documento de contexto a partir de un artículo completo de LeyChile.
+function documentoDeArticulo(ley, art, fuenteUrl) {
+  return {
+    cuerpo_legal: ley.titulo,
+    articulo: art.numero ? `Artículo ${art.numero}` : "(artículo no identificado)",
+    tema: ley.titulo,
+    texto: leyChileOficial.limpiarNotasMargen(art.texto),
+    completo: true, // texto íntegro del artículo desde el corpus completo
+    nota: null,
+    fuente_url: art.url || fuenteUrl,
+    vigencia: art.vigencia || null,
+    origen: "remoto",
+    idNorma: ley.idNorma,
+    numero: art.numero || null,
+  };
+}
 
-  const completos = await Promise.all(
-    articulos.map(async (art) => {
-      let texto = art.texto;
-      // Si search_articles solo entrega un fragmento corto o nada, pedimos el artículo completo.
-      if ((!texto || texto.length < 60) && art.numero) {
-        try {
-          const completo = normalizarArticulos(await mcp.obtenerArticulo(ley.idNorma, art.numero));
-          if (completo[0]?.texto) texto = completo[0].texto;
-        } catch {
-          // Si falla, nos quedamos con lo que ya teníamos (puede ser vacío).
-        }
-      }
-      if (!texto) return null;
-      return {
-        cuerpo_legal: ley.titulo,
-        articulo: art.numero ? `Artículo ${art.numero}` : "(artículo no identificado)",
-        tema: ley.titulo,
-        texto,
-        completo: true, // viene del corpus reconstruido completo, no de un extracto manual
-        nota: null,
-        fuente_url: fuenteUrl,
-        origen: "remoto",
-        idNorma: ley.idNorma,
-        numero: art.numero || null,
-      };
-    })
-  );
-  return completos.filter(Boolean);
+async function documentosDeNorma(ley, pregunta, maxArticulos = MAX_ARTICULOS_POR_NORMA) {
+  const encontrados = await mcp.buscarArticulos(ley.idNorma, pregunta);
+  // search_articles entrega solo fragmentos: se pide el texto íntegro de cada
+  // artículo (del XML oficial de la BCN cuando está disponible), porque un
+  // fragmento no sirve para citar ni para razonar.
+  const numeros = [...new Set(encontrados.filter((a) => a.numero).map((a) => a.numero))].slice(0, maxArticulos);
+  return traerArticulos(ley, numeros);
 }
 
 /**
@@ -168,16 +158,19 @@ async function buscarContexto(pregunta, limite = 6) {
 // Códigos principales, con su idNorma de LeyChile: el buscador por nombre a
 // veces devuelve primero una ley modificatoria en vez del código mismo.
 const CODIGOS = {
-  "codigo civil": { idNorma: "172986", titulo: "Código Civil" },
-  "codigo de procedimiento civil": { idNorma: "22740", titulo: "Código de Procedimiento Civil" },
-  "codigo del trabajo": { idNorma: "207436", titulo: "Código del Trabajo" },
-  "codigo penal": { idNorma: "1984", titulo: "Código Penal" },
-  "codigo procesal penal": { idNorma: "176595", titulo: "Código Procesal Penal" },
-  "codigo organico de tribunales": { idNorma: "25563", titulo: "Código Orgánico de Tribunales" },
-  "codigo de comercio": { idNorma: "1974", titulo: "Código de Comercio" },
-  "codigo tributario": { idNorma: "6374", titulo: "Código Tributario" },
-  "constitucion politica de la republica": { idNorma: "242302", titulo: "Constitución Política de la República" },
+  "codigo civil": { idNorma: 172986, tipo: "dfl", numero: "1", titulo: "Código Civil" },
+  "codigo de procedimiento civil": { idNorma: 22740, tipo: "ley", numero: "1552", titulo: "Código de Procedimiento Civil" },
+  "codigo del trabajo": { idNorma: 207436, tipo: "dfl", numero: "1", titulo: "Código del Trabajo" },
+  "codigo penal": { idNorma: 1984, tipo: "cod", numero: "PENAL", titulo: "Código Penal" },
+  "codigo procesal penal": { idNorma: 176595, tipo: "ley", numero: "19696", titulo: "Código Procesal Penal" },
+  "codigo de comercio": { idNorma: 1974, tipo: "cod", numero: "DE COMERCIO", titulo: "Código de Comercio" },
+  "codigo tributario": { idNorma: 6374, tipo: "dl", numero: "830", titulo: "Código Tributario" },
+  // No está en el corpus alternativo: se usa solo la copia oficial local.
+  "codigo organico de tribunales": { idNorma: 25563, tipo: "ley", numero: "7421", titulo: "Código Orgánico de Tribunales" },
+  "constitucion politica de la republica": { idNorma: 242302, tipo: "dto", numero: "100", titulo: "Constitución Política de la República" },
 };
+// El servidor exige tipo y número para cada consulta: se registran los códigos.
+Object.values(CODIGOS).forEach((c) => mcp.registrarNorma(c));
 
 // idNorma de una norma nombrada ("Código de Procedimiento Civil"), según el
 // primer resultado de search_laws. Se cachea: el nombre no cambia de norma.
@@ -186,8 +179,20 @@ function resolverNorma(nombre) {
   const conocido = CODIGOS[claveDeTexto(nombre).replace(/^(el|la)\s+/, "").replace(/\s+de chile$/, "")];
   if (conocido) return Promise.resolve(conocido);
   return cacheNormasNombradas.recordar(claveDeTexto(nombre), async () => {
+    // "Ley 18.101 sobre arrendamiento": el buscador exige todas las palabras,
+    // así que para una ley con número se busca solo "Ley 18.101" y se toma
+    // exactamente esa ley (no una posterior que la modifica y la menciona).
+    const numero = (String(nombre).match(/ley\s*(?:n[°º.]?\s*)?(\d{1,2}\.?\d{3})/i) || [])[1];
+    if (numero) {
+      const limpio = numero.replace(/\./g, "");
+      const leyes = normalizarLeyes(await mcp.buscarLeyes(`Ley ${Number(limpio).toLocaleString("es-CL")}`));
+      return leyes.find((l) => l.tipo === "ley" && String(l.numero).replace(/\D/g, "") === limpio) || null;
+    }
+    // Por nombre: solo si el título coincide; el buscador libre devuelve a
+    // menudo normas sin relación (autos acordados, circulares).
     const leyes = normalizarLeyes(await mcp.buscarLeyes(nombre));
-    return leyes[0] || null;
+    const buscado = claveDeTexto(nombre);
+    return leyes.find((l) => claveDeTexto(l.titulo).includes(buscado)) || null;
   }, { guardarSi: (ley) => Boolean(ley) });
 }
 
@@ -216,47 +221,129 @@ async function buscarEnNormasNombradas(nombres, consulta, maxArticulos = 8) {
   }, { guardarSi: (docs) => docs.length > 0 });
 }
 
+const TIMEOUT_OFICIAL_MS = Number(process.env.TIMEOUT_OFICIAL_MS || 10000);
+// "700", "Artículo 700", "700 (DEL ART. 2)" → "700". En el DFL 1 que contiene
+// el Código Civil, la BCN numera sus artículos "700 (DEL ART. 2)".
+const DENTRO_DE_ART = /\(\s*del\s+art[íi]?c?u?l?o?\.?\s*\d+\s*\)/i;
+const claveArticulo = (n) => String(n || "").toLowerCase().replace(DENTRO_DE_ART, "").replace(/art[íi]culo/g, "").replace(/[°º.\-]/g, " ").replace(/\s+/g, " ").trim();
+
+// Copia local del texto oficial de los códigos grandes (data/codigos), que
+// actualiza cada semana scripts/actualizar-codigos.js: su XML en la BCN es
+// demasiado pesado para descargarlo en una consulta (54 MB el del CPC).
+const copiasLocales = new Map();
+function copiaLocal(idNorma) {
+  if (!copiasLocales.has(idNorma)) {
+    const archivo = path.join(__dirname, "data", "codigos", `${idNorma}.json`);
+    let copia = null;
+    try {
+      if (fs.existsSync(archivo)) copia = JSON.parse(fs.readFileSync(archivo, "utf8"));
+    } catch (err) {
+      console.warn(`Copia local del idNorma ${idNorma} ilegible:`, err.message);
+    }
+    copiasLocales.set(idNorma, copia);
+  }
+  return copiasLocales.get(idNorma);
+}
+
+/** Norma completa desde el texto oficial de la BCN (copia local o XML con caché de 6 horas), o null. */
+async function normaOficial(idNorma) {
+  const local = copiaLocal(Number(idNorma));
+  if (local) return local;
+  let temporizador;
+  try {
+    return await Promise.race([
+      leyChileOficial.obtenerNorma({ idNorma }),
+      new Promise((resolve) => { temporizador = setTimeout(() => resolve(null), TIMEOUT_OFICIAL_MS); }),
+    ]);
+  } catch (err) {
+    console.warn(`XML oficial de la BCN no disponible para idNorma=${idNorma}:`, err.message);
+    return null;
+  } finally {
+    clearTimeout(temporizador);
+  }
+}
+
+/**
+ * Texto íntegro de varios artículos de una norma: primero desde el XML
+ * oficial de la BCN (vigente, con fecha de versión y derogación); si la BCN no
+ * responde o no trae el artículo, desde el corpus alternativo.
+ */
+async function traerArticulos(ley, articulos) {
+  const oficial = await normaOficial(ley.idNorma);
+  // Si dos artículos comparten número (los del DFL y los del Código que
+  // contiene), manda el del Código: "700 (DEL ART. 2)".
+  const indice = new Map();
+  for (const a of (oficial?.articulos || []).filter((x) => !x.transitorio)) {
+    const clave = claveArticulo(a.numero);
+    const actual = indice.get(clave);
+    // Manda el primer artículo "de dentro" (el Código viene primero en el DFL).
+    if (!actual || (DENTRO_DE_ART.test(a.numero) && !DENTRO_DE_ART.test(actual.numero))) indice.set(clave, a);
+  }
+  const docs = await Promise.all(articulos.map(async (numero) => {
+    const art = indice.get(claveArticulo(numero));
+    if (art?.texto && art.texto.length >= 20) {
+      return {
+        ...documentoDeArticulo(ley, {
+          numero: claveArticulo(art.numero) || numero,
+          texto: leyChileOficial.limpiarNotasMargen(art.texto),
+          vigencia: art.fechaVersion || oficial.fechaVersion,
+          url: `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}${art.idParte ? `&idParte=${art.idParte}` : ""}`,
+        }),
+        fuente: "BCN (XML oficial)",
+        derogado: art.derogado || false,
+        nota: art.derogado ? "Artículo DEROGADO según la BCN." : null,
+      };
+    }
+    try {
+      const alt = await mcp.obtenerArticulo(ley.idNorma, numero);
+      if (!alt?.texto || alt.texto.length < 20) return null;
+      const fuenteUrl = alt.url || await enlaceOficial(ley.idNorma).catch(() => `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}`);
+      return { ...documentoDeArticulo(ley, { ...alt, numero: alt.numero || numero }, fuenteUrl), fuente: "leyes.pisanvs.cl" };
+    } catch (err) {
+      console.warn(`No se pudo traer ${ley.titulo}, artículo ${numero}:`, err.message);
+      return null;
+    }
+  }));
+  return docs.filter(Boolean);
+}
+
 /**
  * Trae artículos exactos que el plan identificó como centrales para la
  * pregunta (por ejemplo, la definición legal de un concepto: "Código Civil,
- * artículo 700" para la posesión). El texto viene de la fuente oficial, así
- * que la respuesta puede citarlo; si el artículo no existe, simplemente no
- * se agrega nada.
+ * artículo 700" para la posesión).
+ *
+ * Fuente principal: el XML OFICIAL de la BCN (texto vigente, fecha de versión
+ * y derogación de cada artículo). Respaldo: el corpus de leyes.pisanvs.cl,
+ * cuyo texto de algunos códigos está desactualizado (en el Código de
+ * Procedimiento Civil trae plazos derogados), por eso nunca va primero.
  * @param {{norma: string, articulos: string[]}[]} pedidos
  */
 async function buscarArticulosExactos(pedidos, maxTotal = 8) {
   if (process.env.USAR_CORPUS_REMOTO === "false" || !pedidos?.length) return [];
-  const tareas = [];
-  for (const { norma, articulos } of pedidos) {
-    for (const numero of articulos) tareas.push({ norma, numero });
-  }
-  const docs = await Promise.all(
-    tareas.slice(0, maxTotal).map(({ norma, numero }) =>
-      cacheBusquedas.recordar(`exacto|${claveDeTexto(norma)}|${numero}`, async () => {
-        const ley = await resolverNorma(norma);
-        if (!ley) return null;
-        const [art] = normalizarArticulos(await mcp.obtenerArticulo(ley.idNorma, numero));
-        if (!art?.texto || art.texto.length < 20) return null;
-        const fuenteUrl = await enlaceOficial(ley.idNorma).catch(() => `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}`);
-        return {
-          cuerpo_legal: ley.titulo,
-          articulo: `Artículo ${art.numero || numero}`,
-          tema: ley.titulo,
-          texto: art.texto,
-          completo: true,
-          nota: null,
-          fuente_url: fuenteUrl,
-          origen: "remoto",
-          idNorma: ley.idNorma,
-          numero: String(art.numero || numero),
-        };
-      }, { guardarSi: Boolean }).catch((err) => {
-        console.warn(`No se pudo traer ${norma}, artículo ${numero}:`, err.message);
-        return null;
-      })
-    )
-  );
-  return docs.filter(Boolean);
+  let restantes = maxTotal;
+  const porNorma = pedidos
+    .map((p) => {
+      const articulos = p.articulos.slice(0, Math.max(0, restantes));
+      restantes -= articulos.length;
+      return { ...p, articulos };
+    })
+    .filter((p) => p.articulos.length);
+
+  const grupos = await Promise.all(porNorma.map(async ({ norma, articulos }) => {
+    const clave = `exactos|${claveDeTexto(norma)}|${articulos.join(",")}`;
+    return cacheBusquedas.recordar(clave, async () => {
+      let ley;
+      try {
+        ley = await resolverNorma(norma);
+      } catch (err) {
+        console.warn(`No se pudo identificar "${norma}":`, err.message);
+        return [];
+      }
+      if (!ley) return [];
+      return traerArticulos(ley, articulos);
+    }, { guardarSi: (docs) => docs.length > 0 });
+  }));
+  return grupos.flat();
 }
 
-module.exports = { buscarContexto, buscarEnNormasNombradas, buscarArticulosExactos };
+module.exports = { buscarContexto, buscarEnNormasNombradas, buscarArticulosExactos, resolverNorma };

@@ -1287,6 +1287,10 @@
           } else if (evento === "texto") {
             turno.texto += datos.t;
             renderInforme(turno);
+          } else if (evento === "reemplazo") {
+            // El servidor revisó la respuesta completa y envía la versión corregida.
+            turno.texto = datos.t;
+            renderInforme(turno);
           } else if (evento === "fin") {
             terminado = true;
             const segundos = ((performance.now() - inicio) / 1000).toFixed(1);

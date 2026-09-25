@@ -126,6 +126,43 @@ function limpiar(valor) {
   return texto(valor).replace(/\u00a0/g, " ").trim();
 }
 
+// La BCN intercala en el texto las notas de margen que indican qué ley
+// modificó cada pasaje ("L. 19.010", "Art. 3", "D.O. 01.01.2003"), cada una
+// en su propia línea y a veces en medio de una oración: "en los\nL. 19.010\n
+// artículos precedentes". Se quitan esas líneas y se vuelven a unir las
+// oraciones cortadas, para que el texto se pueda leer y citar.
+const NOTA_MARGEN = /^\s*(?:L\.|LEY|Ley|D\.?\s?L\.?|DL|D\.?F\.?L\.?|DFL|DTO\.?|D\.?S\.?|Art(?:s|ículo)?\.?|ART\.?|N[°º]|D\.?O\.?|NOTA|Nota|INC\.?|Inc\.?|Inciso|INCISO|Letra|LETRA|Ley N[°º])\s*[\w.°º\-/]*(?:\s+[\w.°º\-/]+){0,3}\s*$/;
+// Nota de margen en medio de una línea: "tres años para L. 16.952 las
+// acciones". Solo las formas abreviadas en mayúsculas que usa la BCN para
+// esas notas ("L.", "LEY", "D.L.", "DFL"), seguidas de texto en minúscula;
+// una cita legítima se escribe "la ley N° 16.952".
+const NOTA_EN_LINEA = /\s(?:L\.|LEY|D\.\s?L\.|DL|D\.F\.L\.|DFL)\s?(?:N[°º]\s?)?\d{1,2}\.?\d{3}(?:\s*,?\s*(?:Art|ART)s?\.?\s*\d+[°º]?(?:\s*[a-z]\))?)?(?:\s*D\.O\.\s*\d{2}\.\d{2}\.\d{4})?(?=\s+[a-záéíóúñ(])/g;
+
+// La columna de notas viene separada del texto por una tira de espacios:
+// "tres años para         L. 16.952 las acciones ...             Art. 1º".
+const NOTA_EN_COLUMNA = /[ \t\u00a0]{3,}(?:(?:L\.|LEY|Ley|D\.\s?L\.|DL|D\.F\.L\.|DFL|DTO\.?)\s?(?:N[°º]\s?)?[\d.]+|(?:Art|ART)s?\.?\s*\d+[°º]?(?:\s*[a-z]\))?|D\.O\.\s*[\d.]+|NOTA\s*\d*)(?=[ \t\u00a0]|$|\n)/gm;
+
+function limpiarNotasMargen(textoArticulo) {
+  const lineas = String(textoArticulo || "")
+    .replace(NOTA_EN_COLUMNA, " ")
+    .replace(NOTA_EN_LINEA, "")
+    .replace(/[ \t\u00a0]{2,}(?=\S)/g, (m, i, t) => (i === 0 || t[i - 1] === "\n" ? m : " "))
+    .split("\n");
+  const quedan = lineas.filter((l) => !(l.trim().length <= 30 && /\d/.test(l) && NOTA_MARGEN.test(l)));
+  const unidas = [];
+  for (const linea of quedan) {
+    const anterior = unidas[unidas.length - 1];
+    // Oración cortada por una nota: la línea anterior no termina en puntuación
+    // y la siguiente empieza en minúscula.
+    if (anterior !== undefined && anterior.trim() && !/[.:;]\s*$/.test(anterior) && /^\s*[a-záéíóúñ]/.test(linea)) {
+      unidas[unidas.length - 1] = `${anterior.trimEnd()} ${linea.trimStart()}`;
+    } else {
+      unidas.push(linea);
+    }
+  }
+  return unidas.join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 // Se reconoce el tipo de parte con expresiones tolerantes: el punto acepta
 // tanto la tilde correcta como un carácter roto, por si la codificación
 // falla en algún caso. Más vale reconocer un artículo de más que perder
@@ -170,7 +207,7 @@ function extraerArticulos(nodo, jerarquia, acumulador) {
         fechaVersion: parte["@fechaVersion"] || null,
         jerarquia: [...jerarquia],
         materias: comoArray(parte?.Metadatos?.Materias?.Materia).map(limpiar).filter(Boolean),
-        texto: texto(parte.Texto).replace(/\r/g, "").trim(),
+        texto: limpiarNotasMargen(texto(parte.Texto).replace(/\r/g, "")),
       });
     }
 
@@ -325,4 +362,5 @@ module.exports = {
   // Exportados para poder probar el parser sin red.
   interpretarNorma,
   construirUrl,
+  limpiarNotasMargen,
 };
