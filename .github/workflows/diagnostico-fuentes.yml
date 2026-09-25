@@ -30,17 +30,25 @@ jobs:
             curl -sS -m 30 -o /tmp/c -w "Consulta sin cuenta: HTTP %{http_code}\n" -X POST "$base/api/consultar" -H 'Content-Type: application/json' -d '{"pregunta":"prueba de acceso"}'; head -c 200 /tmp/c; echo
             curl -sS -m 30 -o /tmp/c -w "Webhook (id inexistente): HTTP %{http_code}\n" -X POST "$base/api/pagos/webhook" -H 'Content-Type: application/json' -d '{"type":"subscription_preapproval","data":{"id":"diagnostico-inexistente"}}'; head -c 200 /tmp/c; echo
           done
+      - name: Flujo de ingreso con Google (hasta el canje del código)
+        continue-on-error: true
+        run: |
+          set +e
+          B=https://derechochileia.xyz
+          rm -f /tmp/jar
+          LOC=$(curl -sS -m 30 -c /tmp/jar -o /dev/null -w "%{redirect_url}" "$B/api/cuenta/google")
+          echo "1) Redirige a: ${LOC:0:120}..."
+          echo "   redirect_uri: $(echo "$LOC" | grep -o 'redirect_uri=[^&]*')"
+          echo "   cookies guardadas:"; grep -v '^#' /tmp/jar | awk '{print "   ", $1, $3, $4, $6}'
+          ESTADO=$(echo "$LOC" | grep -o 'state=[^&]*' | cut -d= -f2)
+          echo "2) Vuelta simulada con el mismo estado y un código falso (lo esperado es invalid_grant; invalid_client = secreto de Google incorrecto):"
+          curl -sS -m 30 -b /tmp/jar -o /dev/null -D - "$B/api/cuenta/google/callback?state=$ESTADO&code=codigo-falso" | grep -i -E "^(HTTP|location|set-cookie)"
+          echo "3) Vuelta simulada SIN la cookie de estado:"
+          curl -sS -m 30 -o /dev/null -D - "$B/api/cuenta/google/callback?state=$ESTADO&code=codigo-falso" | grep -i -E "^(HTTP|location)"
       - name: Peticiones crudas a cada sitio
         continue-on-error: true
         run: |
           for u in "https://juris.pjud.cl/busqueda?Corte_Suprema" "https://buscador-backend.tcchile.cl/api/extended/sentencias?page=1&filter=%7B%22search%22%3A%22debido%20proceso%22%2C%22state%22%3Anull%2C%22dateRange%22%3Anull%7D" "https://www.contraloria.cl/appinf/LegisJuri/DictamenesGeneralesMunicipales.nsf/FormConsultaWeb2k?OpenForm&TextoLibre=feriado&Materia=Cualquiera&desde=1&porPagina=2&Orden=1&hpbb=SI" "https://api.crossref.org/works?query=despido&rows=1"; do
             echo "== $u"; curl -sS -m 40 -o /tmp/r -w "HTTP %{http_code} en %{time_total}s\n" -A "Mozilla/5.0" "$u"; head -c 400 /tmp/r; echo; done
-      - name: Explorar datos abiertos de la BCN (¿hay sentencias?)
-        continue-on-error: true
-        run: |
-          Q='SELECT ?c (COUNT(?s) AS ?n) WHERE { ?s a ?c . FILTER(REGEX(STR(?c), "entenc|urisprud|allo|ribunal|udicial", "i")) } GROUP BY ?c ORDER BY DESC(?n) LIMIT 30'
-          curl -sS -m 60 -G "https://datos.bcn.cl/sparql" --data-urlencode "query=$Q" -H "Accept: application/sparql-results+json" | head -c 4000; echo
-          Q2='SELECT DISTINCT ?p WHERE { ?s ?p ?o . FILTER(REGEX(STR(?p), "urisprud|entenc|allo", "i")) } LIMIT 30'
-          curl -sS -m 60 -G "https://datos.bcn.cl/sparql" --data-urlencode "query=$Q2" -H "Accept: application/sparql-results+json" | head -c 3000; echo
       - name: Conectores de la app
         run: node scripts/probar-fuentes.js
