@@ -11,6 +11,7 @@ const cuentas = require("./cuentas");
 const planes = require("./planes");
 const mp = require("./mercadopago");
 const google = require("./google");
+const verificacion = require("./verificacion");
 
 const COBRO_ACTIVO =
   process.env.COBRO_ACTIVO !== "false" &&
@@ -25,6 +26,10 @@ const CONTACTO = process.env.CONTACTO_EMAIL || "";
 //     (una cuenta de correo y contraseña puede suscribirse, pero sin prueba);
 //   - como máximo PRUEBAS_POR_IP_DIA consultas de prueba al día por conexión.
 const PRUEBA_SOLO_GOOGLE = process.env.PRUEBA_SOLO_GOOGLE !== "false" && google.CONFIGURADO;
+// Con RESEND_API_KEY, las cuentas de correo pueden verificarse con un código
+// de 6 dígitos y acceder también a la prueba gratis.
+const VERIFICACION_ACTIVA = verificacion.CONFIGURADO;
+const cuentaVerificada = (u) => Boolean(u && (u.google || u.verificado));
 const PRUEBAS_POR_IP_DIA = Number(process.env.PRUEBAS_POR_IP_DIA ?? 3);
 
 function ofertaPro(usuario) {
@@ -46,6 +51,7 @@ async function estadoCuenta(usuario) {
   return {
     cobro_activo: COBRO_ACTIVO,
     google_activo: COBRO_ACTIVO && google.CONFIGURADO,
+    verificacion_activa: COBRO_ACTIVO && VERIFICACION_ACTIVA,
     usuario: cuentas.publico(usuario),
     plan: { id: plan.id, nombre: plan.nombre, admin: Boolean(plan.admin) },
     uso: usuario ? await planes.usoActual(usuario) : null,
@@ -161,7 +167,15 @@ function registrarRutas(app) {
     try {
       const usuario = await cuentas.registrar(req.body || {});
       cuentas.ponerSesion(res, usuario.id);
-      res.json(await estadoCuenta(usuario));
+      let aviso = null;
+      if (VERIFICACION_ACTIVA) {
+        try {
+          await verificacion.enviarCodigo(usuario);
+        } catch (err) {
+          aviso = err.message;
+        }
+      }
+      res.json({ ...(await estadoCuenta(usuario)), aviso_verificacion: aviso });
     } catch (err) {
       res.status(err.status || 500).json({ error: err.status ? err.message : "No se pudo crear la cuenta." });
     }
@@ -197,6 +211,33 @@ function registrarRutas(app) {
         errorGoogle: req.query.error || null,
       });
       res.redirect(`/?error_ingreso=${encodeURIComponent(err.message)}`);
+    }
+  });
+
+  // Verificación del correo (cuentas de correo y contraseña).
+  app.post("/api/cuenta/verificacion/enviar", limitadorCuentas, async (req, res) => {
+    if (!COBRO_ACTIVO || !VERIFICACION_ACTIVA) return res.status(404).json({ error: "La verificación por correo no está activa." });
+    const usuario = await cuentas.usuarioDeSolicitud(req);
+    if (!usuario) return res.status(401).json({ error: "Inicia sesión." });
+    if (cuentaVerificada(usuario)) return res.json(await estadoCuenta(usuario));
+    try {
+      await verificacion.enviarCodigo(usuario);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(err.status || 500).json({ error: err.status ? err.message : "No se pudo enviar el código." });
+    }
+  });
+
+  app.post("/api/cuenta/verificacion/confirmar", limitadorCuentas, async (req, res) => {
+    if (!COBRO_ACTIVO || !VERIFICACION_ACTIVA) return res.status(404).json({ error: "La verificación por correo no está activa." });
+    const usuario = await cuentas.usuarioDeSolicitud(req);
+    if (!usuario) return res.status(401).json({ error: "Inicia sesión." });
+    try {
+      if (!cuentaVerificada(usuario)) await verificacion.comprobarCodigo(usuario, req.body && req.body.codigo);
+      const actualizado = await cuentas.actualizarUsuario(usuario.id, { verificado: true });
+      res.json(await estadoCuenta(actualizado || usuario));
+    } catch (err) {
+      res.status(err.status || 500).json({ error: err.status ? err.message : "No se pudo verificar el código." });
     }
   });
 
@@ -297,7 +338,13 @@ async function exigirPlan(req, res, next) {
     if (!usuario) {
       return res.status(401).json({ error: "Crea una cuenta gratis o inicia sesión para consultar.", codigo: "REQUIERE_CUENTA" });
     }
-    if (PRUEBA_SOLO_GOOGLE && planes.planDe(usuario).periodo === "prueba" && !usuario.google) {
+    if (PRUEBA_SOLO_GOOGLE && planes.planDe(usuario).periodo === "prueba" && !cuentaVerificada(usuario)) {
+      if (VERIFICACION_ACTIVA) {
+        return res.status(403).json({
+          error: "Confirma tu correo para usar tu consulta de prueba gratis: ingresa el código de 6 dígitos que te enviamos.",
+          codigo: "VERIFICAR_CORREO",
+        });
+      }
       return res.status(402).json({
         error: `La consulta de prueba gratis es para cuentas que ingresan con Google. Cierra sesión y entra con «Continuar con Google» usando tu correo de Gmail, o suscríbete: ${ofertaPro(usuario)}`,
         codigo: "LIMITE_PLAN",
