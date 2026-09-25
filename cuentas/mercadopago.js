@@ -13,7 +13,8 @@ const crypto = require("node:crypto");
 
 const API = (process.env.MP_API_URL || "https://api.mercadopago.com").replace(/\/+$/, "");
 const TOKEN = process.env.MP_ACCESS_TOKEN || "";
-const SECRETO_WEBHOOK = process.env.MP_WEBHOOK_SECRET || "";
+// trim(): una clave pegada con un espacio o salto de línea al final no calzaría nunca.
+const SECRETO_WEBHOOK = (process.env.MP_WEBHOOK_SECRET || "").trim();
 
 async function llamar(metodo, ruta, cuerpo) {
   const res = await fetch(`${API}${ruta}`, {
@@ -89,10 +90,25 @@ function firmaValida(req, idDato) {
   const firma = String(req.headers["x-signature"] || "");
   const idSolicitud = String(req.headers["x-request-id"] || "");
   const partes = Object.fromEntries(firma.split(",").map((p) => p.trim().split("=")));
-  if (!partes.ts || !partes.v1) return false;
+  if (!partes.ts || !partes.v1) {
+    console.warn("Aviso de Mercado Pago sin firma (x-signature):", JSON.stringify({ tieneCabecera: Boolean(firma), idDato: String(idDato) }));
+    return false;
+  }
   const manifiesto = `id:${String(idDato).toLowerCase()};request-id:${idSolicitud};ts:${partes.ts};`;
   const esperado = crypto.createHmac("sha256", SECRETO_WEBHOOK).update(manifiesto).digest("hex");
-  return esperado.length === partes.v1.length && crypto.timingSafeEqual(Buffer.from(esperado), Buffer.from(partes.v1));
+  const valida = esperado.length === partes.v1.length && crypto.timingSafeEqual(Buffer.from(esperado), Buffer.from(partes.v1));
+  if (!valida) {
+    // Diagnóstico sin datos secretos: sirve para distinguir una clave mal
+    // copiada de un aviso sin firma.
+    console.warn("Firma de Mercado Pago no calza:", JSON.stringify({
+      largoClave: SECRETO_WEBHOOK.length,
+      tieneRequestId: Boolean(idSolicitud),
+      largoV1: partes.v1.length,
+      idDato: String(idDato),
+      idEnUrl: String(req.query["data.id"] || ""),
+    }));
+  }
+  return valida;
 }
 
 module.exports = {
