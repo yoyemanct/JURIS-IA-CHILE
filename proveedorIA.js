@@ -200,6 +200,17 @@ async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onT
       motivo = cuerpo.slice(0, 160);
     }
     console.error(`AI Gateway respondió ${respuesta.status} (${credencial.tipo}, ${modelo}):`, detalle);
+    // "Free tier users do not have access to this model": la credencial es
+    // válida, lo que falta es acceso a ESTE modelo. Se trata como un error del
+    // modelo (se prueba el de respaldo) y no como una clave inválida.
+    const sinAccesoAlModelo = /access to this model|upgrade to paid credits|model.*not (available|allowed)/i.test(motivo);
+    if (sinAccesoAlModelo) {
+      throw errorCon(
+        "VERCEL_MODELO_SIN_ACCESO",
+        `Tu cuenta de Vercel AI Gateway no tiene acceso al modelo ${modelo} en el plan gratuito. Carga créditos en Vercel → AI Gateway para usarlo.`,
+        { detalle, status: 402 }
+      );
+    }
     const mensaje = respuesta.status === 401 || respuesta.status === 403
       ? `Vercel AI Gateway rechazó la credencial${motivo ? `: ${motivo}` : ""}.`
       : `Vercel AI Gateway respondió ${respuesta.status} con el modelo ${modelo}${motivo ? `: ${motivo}` : ""}.`;
