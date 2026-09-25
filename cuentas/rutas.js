@@ -229,6 +229,12 @@ async function exigirPlan(req, res, next) {
       });
     }
     req.usuario = usuario;
+    // Si la consulta termina en error (validación, fuente o IA), no cuenta.
+    res.on("finish", () => {
+      if (res.statusCode >= 400 || res.locals.consultaFallida) {
+        planes.devolverConsulta(usuario).catch((e) => console.error("No se pudo devolver la consulta:", e.message));
+      }
+    });
     next();
   } catch (err) {
     console.error("Error verificando el plan:", err);
