@@ -20,6 +20,7 @@ const { buscarDictamenes } = require("./fuentes/jurisprudencia/contraloria");
 const { buscarDoctrina } = require("./fuentes/doctrina");
 const direccionTrabajo = require("./fuentes/jurisprudencia/direcciontrabajo");
 const { buscarTDLC } = require("./fuentes/jurisprudencia/tdlc");
+const { buscarOficiosSII } = require("./fuentes/jurisprudencia/sii");
 const { CacheTTL, claveDeTexto } = require("./cache");
 
 const PORT = process.env.PORT || 3000;
@@ -531,6 +532,7 @@ app.get("/api/jurisprudencia", limitadorBusqueda, async (req, res) => {
     else if (fuente === "doctrina") r = await buscarDoctrina({ consulta: q, limite });
     else if (fuente === "dt") r = await direccionTrabajo.buscarDictamenesDT({ consulta: q, limite });
     else if (fuente === "tdlc") r = await buscarTDLC({ consulta: q, limite });
+    else if (fuente === "sii") r = await buscarOficiosSII({ consulta: q, limite });
     else {
       if (!pjud.BUSCADORES[tribunal]) {
         return res.status(400).json({ error: `Tribunal desconocido. Opciones: ${Object.keys(pjud.BUSCADORES).join(", ")}` });
@@ -607,6 +609,10 @@ async function probarFuentes() {
     probar("tdlc", "Tribunal de Defensa de la Libre Competencia", async () => {
       const r = await buscarTDLC({ consulta: "colusión", limite: 1 });
       return `${r.total} sentencias en el catálogo`;
+    }),
+    probar("sii", "Servicio de Impuestos Internos (oficios)", async () => {
+      const r = await buscarOficiosSII({ consulta: "crédito fiscal IVA", limite: 1 });
+      return `${r.total} oficios (${r.anios.join(", ")})`;
     }),
     probar("doctrina", "Doctrina (Crossref + OpenAlex)", async () => {
       const r = await buscarDoctrina({ consulta: "despido injustificado indemnización", limite: 1 });

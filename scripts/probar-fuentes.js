@@ -26,6 +26,7 @@ async function probar(nombre, fn) {
   await probar("Tribunal Constitucional", () => buscarSentenciasTC({ consulta: "debido proceso", limite: 1 }));
   await probar("Contraloría", () => buscarDictamenes({ texto: "feriado legal", limite: 1 }));
   await probar("Dirección del Trabajo", () => dt.buscarDictamenesDT({ consulta: "feriado anual trabajadores", limite: 2 }));
+  await probar("SII", () => require("../fuentes/jurisprudencia/sii").buscarOficiosSII({ consulta: "crédito fiscal IVA", limite: 2 }));
   await probar("TDLC", () => buscarTDLC({ consulta: "colusión farmacias", limite: 2 }));
   await probar("Corte Suprema (cortacircuito, debe fallar rápido)", () => pjud.buscarSentencias({ tribunal: "corte_suprema", todas: "otra consulta", limite: 1 }));
   await probar("Doctrina", () => buscarDoctrina({ consulta: "despido injustificado indemnización", limite: 1 }));

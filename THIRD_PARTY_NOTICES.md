@@ -43,3 +43,10 @@ SOFTWARE.
 Como indica Responsa, esta licencia cubre el código, no el contenido obtenido: las sentencias,
 dictámenes, normas y artículos pertenecen a los organismos y revistas que los publican, y su
 uso se rige por las condiciones de cada uno.
+
+## k-LegalChile
+
+El servicio público del SII que usa `fuentes/jurisprudencia/sii.js`
+(`www3.sii.cl/getPublicacionesCTByMateria`) se identificó a partir de
+[k-LegalChile](https://github.com/zkak0/k-LegalChile) (licencia MIT). El conector se escribió
+aparte; no reproduce su código.
