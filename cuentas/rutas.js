@@ -116,7 +116,12 @@ function registrarRutas(app) {
       cuentas.ponerSesion(res, usuario.id);
       res.redirect("/?ingreso=google");
     } catch (err) {
-      console.error("Error en el ingreso con Google:", err.message);
+      console.error("Error en el ingreso con Google:", err.message, {
+        host: req.headers.host,
+        tieneEstado: /dci_google_estado=/.test(req.headers.cookie || ""),
+        tieneCodigo: Boolean(req.query.code),
+        errorGoogle: req.query.error || null,
+      });
       res.redirect(`/?error_ingreso=${encodeURIComponent(err.message)}`);
     }
   });
