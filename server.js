@@ -14,6 +14,7 @@ const multer = require("multer");
 const lectorDocumentos = require("./fuentes/documentos");
 const prompts = require("./prompts");
 const { investigar } = require("./investigacion");
+const cuentasRutas = require("./cuentas/rutas");
 const pjud = require("./fuentes/jurisprudencia/pjud");
 const { buscarSentenciasTC } = require("./fuentes/jurisprudencia/tconstitucional");
 const { buscarDictamenes } = require("./fuentes/jurisprudencia/contraloria");
@@ -66,6 +67,9 @@ const limitadorBusqueda = rateLimit({
   legacyHeaders: false,
   message: { error: "Demasiadas búsquedas seguidas. Espera un momento." },
 });
+
+// --- Cuentas, planes y pagos (Mercado Pago) ------------------------------
+cuentasRutas.registrarRutas(app);
 
 // --- Endpoint 0: qué proveedores de IA están disponibles (Claude / Qwen) --
 app.get("/api/proveedores", (req, res) => {
@@ -320,7 +324,7 @@ async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
 }
 
 // --- Endpoint 2: pregunta en lenguaje natural + informe de la IA --------
-app.post("/api/consultar", limitadorIA, async (req, res) => {
+app.post("/api/consultar", limitadorIA, cuentasRutas.exigirPlan, async (req, res) => {
   const pregunta = (req.body?.pregunta || "").toString().trim();
   if (!pregunta) {
     return res.status(400).json({ error: "Falta 'pregunta' en el cuerpo de la solicitud." });
@@ -382,7 +386,7 @@ app.post("/api/consultar", limitadorIA, async (req, res) => {
 // El archivo se lee en memoria, se extrae su texto, se buscan las normas
 // pertinentes y se le pide a la IA un análisis del documento a la luz de
 // esas normas. El archivo no se guarda en ninguna parte.
-app.post("/api/documento", limitadorIA, subida.single("archivo"), async (req, res) => {
+app.post("/api/documento", limitadorIA, cuentasRutas.exigirPlan, subida.single("archivo"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
       error: `Falta el archivo. Formatos aceptados: ${lectorDocumentos.formatosAceptados()}.`,

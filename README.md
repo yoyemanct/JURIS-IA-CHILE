@@ -61,6 +61,18 @@ superar ~4,5 MB (límite de la plataforma), y Qwen local no está disponible all
 - **Respaldo entre modelos:** si el modelo principal falla o no responde, el gateway pasa
   solo al siguiente (`AI_GATEWAY_MODELOS_RESPALDO`).
 
+### Cuentas y cobro (Mercado Pago)
+
+La app puede cobrar una suscripción mensual con Mercado Pago: plan **Gratis** (5 consultas al
+mes) y plan **Pro** ($19.990/mes, ilimitado), configurables con variables de entorno (ver
+`.env.example`). El usuario crea su cuenta con correo y contraseña o con Google, se suscribe en
+Mercado Pago y la app recibe los avisos de pago en `/api/pagos/webhook`.
+
+El cobro se activa solo cuando están configurados `MP_ACCESS_TOKEN`, `SESSION_SECRET` y la base
+de datos (Upstash Redis desde Vercel → Storage). Mientras falte alguno, la app sigue libre y
+sin cuentas. Los borradores de `/terminos.html` y `/privacidad.html` deben completarse antes de
+cobrar.
+
 ### Jurisprudencia y doctrina
 
 Cada consulta busca, en paralelo con la legislación:
