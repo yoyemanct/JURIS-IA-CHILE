@@ -30,6 +30,21 @@ jobs:
             curl -sS -m 30 -o /tmp/c -w "Consulta sin cuenta: HTTP %{http_code}\n" -X POST "$base/api/consultar" -H 'Content-Type: application/json' -d '{"pregunta":"prueba de acceso"}'; head -c 200 /tmp/c; echo
             curl -sS -m 30 -o /tmp/c -w "Webhook (id inexistente): HTTP %{http_code}\n" -X POST "$base/api/pagos/webhook" -H 'Content-Type: application/json' -d '{"type":"subscription_preapproval","data":{"id":"diagnostico-inexistente"}}'; head -c 200 /tmp/c; echo
           done
+      - name: Flujo de ingreso con Google (hasta el canje del código)
+        continue-on-error: true
+        run: |
+          set +e
+          B=https://derechochileia.xyz
+          rm -f /tmp/jar
+          LOC=$(curl -sS -m 30 -c /tmp/jar -o /dev/null -w "%{redirect_url}" "$B/api/cuenta/google")
+          echo "1) Redirige a: ${LOC:0:120}..."
+          echo "   redirect_uri: $(echo "$LOC" | grep -o 'redirect_uri=[^&]*')"
+          echo "   cookies guardadas:"; grep -v '^#' /tmp/jar | awk '{print "   ", $1, $3, $4, $6}'
+          ESTADO=$(echo "$LOC" | grep -o 'state=[^&]*' | cut -d= -f2)
+          echo "2) Vuelta simulada con el mismo estado y un código falso:"
+          curl -sS -m 30 -b /tmp/jar -o /dev/null -D - "$B/api/cuenta/google/callback?state=$ESTADO&code=codigo-falso" | grep -i -E "^(HTTP|location|set-cookie)"
+          echo "3) Vuelta simulada SIN la cookie de estado:"
+          curl -sS -m 30 -o /dev/null -D - "$B/api/cuenta/google/callback?state=$ESTADO&code=codigo-falso" | grep -i -E "^(HTTP|location)"
       - name: Peticiones crudas a cada sitio
         continue-on-error: true
         run: |
