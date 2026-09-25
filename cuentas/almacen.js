@@ -5,8 +5,15 @@
 // esas variables, guarda todo en memoria: sirve para probar en local, pero se
 // pierde al reiniciar, así que el cobro no se activa en ese modo.
 
-const URL_REDIS = (process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
-const TOKEN_REDIS = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
+// La integración de Vercel antepone un prefijo a elección (KV_, STORAGE_…),
+// así que se acepta cualquier variable que termine en _REST_API_URL/_TOKEN.
+function variable(sufijo, preferidas) {
+  for (const nombre of preferidas) if (process.env[nombre]) return process.env[nombre];
+  const encontrada = Object.keys(process.env).find((k) => k.endsWith(sufijo) && !k.includes("READ_ONLY"));
+  return encontrada ? process.env[encontrada] : "";
+}
+const URL_REDIS = variable("_REST_API_URL", ["KV_REST_API_URL", "UPSTASH_REDIS_REST_URL"]).replace(/\/+$/, "");
+const TOKEN_REDIS = variable("_REST_API_TOKEN", ["KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_TOKEN"]);
 const PERSISTENTE = Boolean(URL_REDIS && TOKEN_REDIS);
 
 const memoria = new Map();
