@@ -40,6 +40,12 @@ const app = express();
 // visitante y no la del proxy del hosting.
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "32kb" }));
+// Vercel entrega en cada petición un token OIDC que sirve para autenticarse
+// ante AI Gateway sin clave; se registra para usarlo como respaldo.
+app.use((req, res, next) => {
+  proveedorIA.registrarTokenOidc(req.headers["x-vercel-oidc-token"]);
+  next();
+});
 app.use(express.static(path.join(__dirname, "public")));
 
 const limitadorIA = rateLimit({

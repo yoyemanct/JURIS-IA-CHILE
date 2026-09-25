@@ -48,10 +48,26 @@ function claveReal(valor) {
   return v && !/tu-clave/i.test(v) ? v : null;
 }
 
-// En Vercel, la función recibe automáticamente un token OIDC que el
-// gateway acepta, así que la clave explícita es opcional allí.
+// En Vercel, cada petición trae un token OIDC (cabecera x-vercel-oidc-token)
+// que el gateway acepta como credencial. Se guarda el último recibido para
+// usarlo si no hay clave o si la clave es rechazada.
+let tokenOidcReciente = null;
+function registrarTokenOidc(token) {
+  if (token && typeof token === "string") tokenOidcReciente = token;
+}
+
+// Credenciales a probar, en orden: la clave explícita y luego el token OIDC.
+function credencialesVercel() {
+  const lista = [];
+  const clave = claveReal(process.env.AI_GATEWAY_API_KEY);
+  if (clave) lista.push({ tipo: "clave", valor: clave.replace(/\s+/g, "") });
+  const oidc = tokenOidcReciente || process.env.VERCEL_OIDC_TOKEN;
+  if (oidc) lista.push({ tipo: "oidc", valor: oidc });
+  return lista;
+}
+
 function claveVercel() {
-  return claveReal(process.env.AI_GATEWAY_API_KEY) || process.env.VERCEL_OIDC_TOKEN || null;
+  return credencialesVercel().length > 0 || EN_VERCEL;
 }
 
 // --- Claude directo -------------------------------------------------------
@@ -136,7 +152,7 @@ async function* leerLineas(cuerpo) {
 }
 
 // --- Vercel AI Gateway (API compatible con OpenAI, en streaming) -----------
-async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onTexto, maxTokens, temperatura }) {
+async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onTexto, maxTokens, temperatura, credencial }) {
   const controlador = new AbortController();
   // El temporizador cubre solo la espera del PRIMER byte: una vez que el
   // modelo empieza a escribir, se le deja terminar.
@@ -149,7 +165,7 @@ async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onT
       signal: controlador.signal,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${claveVercel()}`,
+        Authorization: `Bearer ${credencial.valor}`,
       },
       body: JSON.stringify({
         model: modelo,
@@ -176,9 +192,17 @@ async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onT
   if (!respuesta.ok) {
     const cuerpo = await respuesta.text().catch(() => "");
     const detalle = cuerpo.slice(0, 400);
+    let motivo = "";
+    try {
+      const j = JSON.parse(cuerpo);
+      motivo = (j.error && (j.error.message || j.error.type)) || j.message || "";
+    } catch {
+      motivo = cuerpo.slice(0, 160);
+    }
+    console.error(`AI Gateway respondió ${respuesta.status} (${credencial.tipo}, ${modelo}):`, detalle);
     const mensaje = respuesta.status === 401 || respuesta.status === 403
-      ? "Vercel AI Gateway rechazó la clave. Revisa AI_GATEWAY_API_KEY."
-      : `Vercel AI Gateway respondió ${respuesta.status} con el modelo ${modelo}.`;
+      ? `Vercel AI Gateway rechazó la credencial${motivo ? `: ${motivo}` : ""}.`
+      : `Vercel AI Gateway respondió ${respuesta.status} con el modelo ${modelo}${motivo ? `: ${motivo}` : ""}.`;
     throw errorCon("VERCEL_ERROR_HTTP", mensaje, { detalle, status: respuesta.status });
   }
 
@@ -209,9 +233,25 @@ async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onT
 }
 
 async function responderConVercel(opciones) {
-  if (!claveVercel()) {
+  const credenciales = credencialesVercel();
+  if (!credenciales.length) {
     throw errorCon("VERCEL_NO_CONFIGURADO", "No hay AI_GATEWAY_API_KEY configurada en el servidor.");
   }
+  let ultimoError;
+  for (const credencial of credenciales) {
+    try {
+      return await responderConVercelCredencial(opciones, credencial);
+    } catch (err) {
+      ultimoError = err;
+      // Solo se prueba la siguiente credencial si esta fue rechazada.
+      if (!(err.status === 401 || err.status === 403) || err.empezo) throw err;
+      console.warn(`La credencial ${credencial.tipo} fue rechazada; probando la siguiente.`);
+    }
+  }
+  throw ultimoError;
+}
+
+async function responderConVercelCredencial(opciones, credencial) {
   const modelos = [GATEWAY_MODELO, ...GATEWAY_RESPALDOS.filter((m) => m !== GATEWAY_MODELO)];
   let ultimoError;
   for (const modelo of modelos) {
@@ -219,6 +259,7 @@ async function responderConVercel(opciones) {
     try {
       return await responderConVercelModelo(modelo, {
         ...opciones,
+        credencial,
         onTexto: (t) => {
           empezo = true;
           opciones.onTexto?.(t);
@@ -229,6 +270,7 @@ async function responderConVercel(opciones) {
       // Si ya se le mostró texto a la persona, cambiar de modelo a mitad
       // de camino dejaría un informe mezclado: mejor informar el error.
       // Una clave inválida tampoco se arregla probando otro modelo.
+      if (empezo) err.empezo = true;
       if (empezo || err.status === 401 || err.status === 403) throw err;
       console.warn(`Modelo ${modelo} falló (${err.message}); probando el siguiente.`);
     }
@@ -419,6 +461,7 @@ async function completarJSON({ proveedor, systemPrompt, userMessage, maxTokens =
 }
 
 module.exports = {
+  registrarTokenOidc,
   responder,
   completarJSON,
   proveedoresDisponibles,
