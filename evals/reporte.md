@@ -1,12 +1,12 @@
 # Evaluación de respuestas — Derecho Chile IA
 
-Fecha: 2026-09-25T04:34:18.007Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
+Fecha: 2026-09-25T04:36:42.561Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
 
 ## Resumen
 
 | Indicador | Antes (main) | Después |
 |---|---|---|
-| Casos con todos los artículos clave en el material | 52 % | 68 % |
+| Casos con todos los artículos clave en el material | 52 % | 100 % |
 | Casos sin normas de una materia prohibida | 68 % | 100 % |
 | Respuestas que citan todos los artículos clave | — | — |
 | Respuestas sin frases prohibidas (lo que escribió el modelo) | — | — |
@@ -21,9 +21,9 @@ Fecha: 2026-09-25T04:34:18.007Z. Fuentes reales (LeyChile y buscadores oficiales
 
 | Caso | Artículos clave en el material (antes → después) | Normas de materia prohibida (antes → después) | Citados | Frases prohibidas | Secciones faltantes | Cortada |
 |---|---|---|---|---|---|---|
-| c01-vacaciones | 1/1 → 0/1 | 0 → 0 | — | — | — | — |
+| c01-vacaciones | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
 | c02-necesidades | 2/2 → 2/2 | 0 → 0 | — | — | — | — |
-| c03-garantia | 0/1 → 0/1 | 1 → 0 | — | — | — | — |
+| c03-garantia | 0/1 → 1/1 | 1 → 0 | — | — | — | — |
 | c04-defectuoso | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | c05-alimentos | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | c06-prescripcion | 1/1 → 1/1 | 2 → 0 | — | — | — | — |
@@ -33,16 +33,16 @@ Fecha: 2026-09-25T04:34:18.007Z. Fuentes reales (LeyChile y buscadores oficiales
 | c10-divorcio-argentina | 0/0 → 0/0 | 0 → 0 | — | — | — | — |
 | c11-legitima-defensa | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
 | c12-herencia | 1/1 → 1/1 | 2 → 0 | — | — | — | — |
-| g01-pagare | 2/2 → 0/2 | 1 → 0 | — | — | — | — |
-| g02-despido | 1/2 → 0/2 | 0 → 0 | — | — | — | — |
-| g03-monitorio | 0/1 → 0/1 | 0 → 0 | — | — | — | — |
+| g01-pagare | 2/2 → 2/2 | 1 → 0 | — | — | — | — |
+| g02-despido | 1/2 → 2/2 | 0 → 0 | — | — | — | — |
+| g03-monitorio | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | g04-alimentos | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | g05-desalojo | 0/1 → 1/1 | 1 → 0 | — | — | — | — |
-| g06-proteccion | 1/1 → 0/1 | 0 → 0 | — | — | — | — |
+| g06-proteccion | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
 | g07-posesion-efectiva | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
-| g08-jpl-consumidor | 0/1 → 0/1 | 0 → 0 | — | — | — | — |
+| g08-jpl-consumidor | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | g09-tutela | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
-| g10-estafa | 1/1 → 0/1 | 0 → 0 | — | — | — | — |
+| g10-estafa | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
 | d01-contrato-trabajo | 0/2 → 2/2 | 0 → 0 | — | — | — | — |
 | d02-contrato-arriendo | 0/1 → 1/1 | 5 → 0 | — | — | — | — |
 | d03-finiquito | 1/2 → 2/2 | 0 → 0 | — | — | — | — |
@@ -51,8 +51,17 @@ Fecha: 2026-09-25T04:34:18.007Z. Fuentes reales (LeyChile y buscadores oficiales
 
 ### c01-vacaciones — consulta: ¿Cuántos días de vacaciones me corresponden al año?
 
-<details><summary>Material enviado al modelo (1 normas, 2 fallos o dictámenes, 0 artículos de doctrina; 2 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (10 normas, 2 fallos o dictámenes, 0 artículos de doctrina; 2 normas descartadas por materia)</summary>
 
+- Código del Trabajo, Artículo 67
+- Código del Trabajo, Artículo 68
+- Código del Trabajo, Artículo 70
+- Código del Trabajo, Artículo 73
+- Código del Trabajo, Artículo 69
+- Código del Trabajo, Artículo 71
+- Código del Trabajo, Artículo 72
+- Código del Trabajo, Artículo 74
+- Código del Trabajo, Artículo 75
 - Ley 11.986, fija escala de sueldos para los miembros de los tribunales ordinarios de justicia y especiales del trabajo y de menores y sus respectivos oficiales subalternos, Artículo 19
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. Nº706/2, 2011-02-07
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. Nº3963/75, 2006-09-05
@@ -81,8 +90,20 @@ Versión anterior (main):
 
 ### c02-necesidades — consulta: Me despidieron por necesidades de la empresa, ¿qué indemnización me corresponde?
 
-<details><summary>Material enviado al modelo (3 normas, 2 fallos o dictámenes, 3 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (15 normas, 2 fallos o dictámenes, 3 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
+- Código del Trabajo, Artículo 161
+- Código del Trabajo, Artículo 162
+- Código del Trabajo, Artículo 163
+- Código del Trabajo, Artículo 168
+- Código del Trabajo, Artículo 169
+- Código del Trabajo, Artículo 172
+- Código del Trabajo, Artículo 177
+- Código del Trabajo, Artículo 160
+- Código del Trabajo, Artículo 446
+- Código del Trabajo, Artículo 159
+- Código del Trabajo, Artículo 170
+- Código del Trabajo, Artículo 171
 - Código del Trabajo, Artículo 161
 - Código del Trabajo, Artículo 163
 - Código del Trabajo, Artículo 67
@@ -113,8 +134,15 @@ Versión anterior (main):
 
 ### c03-garantia — consulta: ¿Qué plazo tiene el arrendador para devolver la garantía?
 
-<details><summary>Material enviado al modelo (9 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (16 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
+- Código Civil, Artículo 1915
+- Código Civil, Artículo 1947
+- Código Civil, Artículo 1924
+- Código Civil, Artículo 1977
+- Código Civil, Artículo 1945
+- Código Civil, Artículo 1946
+- Código Civil, Artículo 1948
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 1
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 3
 - Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 3
@@ -143,11 +171,19 @@ Versión anterior (main):
 
 ### c04-defectuoso — consulta: Compré un producto defectuoso, ¿puedo exigir la devolución del dinero?
 
-<details><summary>Material enviado al modelo (4 normas, 0 fallos o dictámenes, 1 artículos de doctrina; 1 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (12 normas, 0 fallos o dictámenes, 1 artículos de doctrina; 1 normas descartadas por materia)</summary>
 
 - Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 19
 - Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 20
 - Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 21
+- Código Civil, Artículo 1641
+- Código Civil, Artículo 1642
+- Código Civil, Artículo 1643
+- Código Civil, Artículo 1644
+- Código Civil, Artículo 1645
+- Código Civil, Artículo 1646
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 3
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 17
 - Decreto 71, modifica por razones de interés público, las características de las obras y servicios que indica del contrato de concesión de la obra pública fiscal denominada "autopista santiago - san antonio" y aprueba convenio ad - referéndum nº 5, Artículo 19-
 - Doctrina: De la Maza Gazmuri, Iñigo, "VICIOS REDHIBITORIOS, DEFECTOS JURÍDICOS Y PROTECCIÓN DEL COMPRADOR. LOS VICIOS REDHIBITORIOS QUE HABILITAN PARA SOLICITAR LA RESCISIÓN DE LA VENTA SON FÍSICOS (CORTE DE APELACIONES DE VALPARAÍSO, 6 DE AGOSTO DE 2002; CORTE SUPREMA, 1 DE OCTUBRE DE 2003).", Revista Chilena de Derecho Privado, N° 1, (2019), DOI: 10.32995/s0718-80722003383.
 - ~~CIR Bancos 2409, recopilacion actualizada de normas, Artículo 137 bis~~ (sin relación léxica (1 términos en común))
@@ -168,10 +204,16 @@ Versión anterior (main):
 
 ### c05-alimentos — consulta: ¿Cómo se calcula la pensión de alimentos para un hijo?
 
-<details><summary>Material enviado al modelo (5 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (11 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
 - Ley 14.908, fija el texto definitivo y refundido de la ley numero 5.750, con las modificaciones introducidas por la ley numero 14.550, Artículo 3
 - Ley 14.908, fija el texto definitivo y refundido de la ley numero 5.750, con las modificaciones introducidas por la ley numero 14.550, Artículo 7
+- Código Civil, Artículo 321
+- Código Civil, Artículo 323
+- Código Civil, Artículo 332
+- Código Civil, Artículo 322
+- Código Civil, Artículo 324
+- Código Civil, Artículo 330
 - Ley 19.968, crea los tribunales de familia, Artículo 106
 - Ley 19.968, crea los tribunales de familia, Artículo 3
 - Ley 19.968, crea los tribunales de familia, Artículo 60
@@ -279,7 +321,7 @@ Versión anterior (main):
 
 ### c08-me-deben — consulta: Me deben plata hace años, ¿todavía puedo cobrar?
 
-<details><summary>Material enviado al modelo (9 normas, 0 fallos o dictámenes, 3 artículos de doctrina; 5 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (12 normas, 0 fallos o dictámenes, 3 artículos de doctrina; 5 normas descartadas por materia)</summary>
 
 - Código Civil, Artículo 2492
 - Código Civil, Artículo 2514
@@ -290,6 +332,9 @@ Versión anterior (main):
 - Código Civil, Artículo 2519
 - Código Civil, Artículo 2520
 - Ley 18.092, dicta nuevas normas sobre letra de cambio y pagare y deroga disposiciones del codigo de comercio, Artículo 98
+- Código de Procedimiento Civil, Artículo 434
+- Código de Procedimiento Civil, Artículo 441
+- Código de Procedimiento Civil, Artículo 443
 - Doctrina: Barría, Manuel, "EL INICIO DEL CÓMPUTO DEL PLAZO DE PRESCRIPCIÓN EXTINTIVA EN EL DERECHO SUCESORIO", Revista Chilena de Derecho Privado, (2024), DOI: 10.32995/s0718-80722024728.
 - Doctrina: Munita Marambio, Renzo Esteban, "EL DIES A QUO DE LA PRESCRIPCIÓN EXTINTIVA EN EL CONTEXTO DE DAÑOS DERIVADOS DE PRODUCTOS SANITARIOS DEFECTUOSOS. UNA APROXIMACIÓN COMPARADA", Revista Chilena de Derecho Privado, (2024), DOI: 10.32995/s0718-80722024729.
 - Doctrina: Pizarro Wilson, Carlos, "ACERCA DEL CÓMPUTO DEL PLAZO DE LA PRESCRIPCIÓN EXTINTIVA DE LA ACCIÓN DE INDEMNIZACIÓN CONTRACTUAL", Revista Chilena de Derecho Privado, (2024), DOI: 10.32995/s0718-80722024714.
@@ -322,7 +367,7 @@ Versión anterior (main):
 
 ### c09-echar-arrendatario — consulta: ¿Puedo echar a mi arrendatario?
 
-<details><summary>Material enviado al modelo (8 normas, 0 fallos o dictámenes, 3 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (11 normas, 0 fallos o dictámenes, 2 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 1
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 3
@@ -331,9 +376,11 @@ Versión anterior (main):
 - Código Civil, Artículo 1915
 - Código Civil, Artículo 1924
 - Código Civil, Artículo 1947
+- Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 2
+- Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 4
+- Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 5
 - Ley N° 18.101 sobre Arrendamiento de Predios Urbanos, Artículo 3
 - Doctrina: López Díaz, Patricia, "TERMINACIÓN DEL CONTRATO DE ARRENDAMIENTO POR NO PAGO DE RENTAS. INCUMPLIMIENTO DE LA OBLIGACIÓN DE HABILITAR EL INMUEBLE ARRENDADO COMO LOCAL COMERCIAL. RECURSO A LOS ARTS. 1563, 1564 Y 1566 DEL CÓDIGO CIVIL. PROCEDENCIA DE UN EVENTUAL CONCURSO DE TUTELAS Y DE LA OPCIÓN DEL ACREEDOR. CORTE SUPREMA, 20 DE FEBRERO DE 2019, ROL 31.512-2018. CITA EN LÍNEA LEGALPUBLISHING CL/JUR/907/2019.", Revista Chilena de Derecho Privado, N° 32, (2019), DOI: 10.32995/s0718-80722019419.
-- Doctrina: Vidal Olivares, Álvaro; Peña Calderón, Natanael, "La protección del arrendatario ante el incumplimiento del arrendador en el contrato celebrado mediante una plataforma digital:  El caso de Airbnb", Revista Chilena de Derecho y Tecnología, vol. 12, (2023), DOI: 10.5354/0719-2584.2023.70963.
 - Doctrina: Vidal Olivares, Álvaro, "EL INCUMPLIMIENTO Y LOS REMEDIOS DEL ACREEDOR EN LA PROPUESTA DE MODERNIZACIÓN DEL DERECHO DE LAS OBLIGACIONES Y CONTRATOS ESPAÑOL", Revista Chilena de Derecho Privado, N° 16, (2019), DOI: 10.32995/s0718-80722011234.
 
 Versión anterior (main):
@@ -428,11 +475,19 @@ Versión anterior (main):
 
 ### g01-pagare — procedimiento: Juicio ejecutivo de cobro de pagaré
 
-<details><summary>Material enviado al modelo (7 normas, 0 fallos o dictámenes, 1 artículos de doctrina; 1 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (15 normas, 0 fallos o dictámenes, 1 artículos de doctrina; 1 normas descartadas por materia)</summary>
 
+- Código de Procedimiento Civil, Artículo 434
+- Código de Procedimiento Civil, Artículo 441
+- Código de Procedimiento Civil, Artículo 443
+- Código de Procedimiento Civil, Artículo 459
+- Código de Procedimiento Civil, Artículo 464
+- Código de Procedimiento Civil, Artículo 470
+- Código de Procedimiento Civil, Artículo 475
 - Ley 18.092, dicta nuevas normas sobre letra de cambio y pagare y deroga disposiciones del codigo de comercio, Artículo 102
 - Ley 18.092, dicta nuevas normas sobre letra de cambio y pagare y deroga disposiciones del codigo de comercio, Artículo 107
 - Ley 18.092, dicta nuevas normas sobre letra de cambio y pagare y deroga disposiciones del codigo de comercio, Artículo 108
+- Código de Procedimiento Civil, Artículo 173
 - DFL 197, Artículo 24
 - DFL 1, fija texto refundido, coordinado y sistematizado del decreto ley n° 1.349, de 1976, que crea la comision chilena del cobre, Artículo 14
 - DFL 15, establece el estatuto del fondo de fomento y desarrollo creado por el articulo 38° del decreto ley 3529, de 1980, Artículo 11
@@ -457,8 +512,20 @@ Versión anterior (main):
 
 ### g02-despido — procedimiento: Demanda por despido injustificado en procedimiento de aplicación general
 
-<details><summary>Material enviado al modelo (2 normas, 2 fallos o dictámenes, 1 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (14 normas, 2 fallos o dictámenes, 1 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
+- Código del Trabajo, Artículo 160
+- Código del Trabajo, Artículo 161
+- Código del Trabajo, Artículo 162
+- Código del Trabajo, Artículo 163
+- Código del Trabajo, Artículo 168
+- Código del Trabajo, Artículo 446
+- Código del Trabajo, Artículo 169
+- Código del Trabajo, Artículo 170
+- Código del Trabajo, Artículo 171
+- Código del Trabajo, Artículo 172
+- Código de Procedimiento Civil, Artículo 254
+- Código de Procedimiento Civil, Artículo 255
 - CIR Bancos 2409, recopilacion actualizada de normas, Artículo 102
 - Ley 20.260, modifica el libro v del código del trabajo y la ley n° 20.087, que establece un nuevo procedimiento laboral, Artículo 484
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. N°887, 2021-03-10
@@ -486,8 +553,20 @@ Versión anterior (main):
 
 ### g03-monitorio — procedimiento: Procedimiento monitorio laboral por cobro de prestaciones
 
-<details><summary>Material enviado al modelo (0 normas, 2 fallos o dictámenes, 3 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (12 normas, 2 fallos o dictámenes, 3 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
+- Código del Trabajo, Artículo 496
+- Código del Trabajo, Artículo 497
+- Código del Trabajo, Artículo 500
+- Código del Trabajo, Artículo 445
+- Código del Trabajo, Artículo 446
+- Código del Trabajo, Artículo 447
+- Código del Trabajo, Artículo 448
+- Código del Trabajo, Artículo 449
+- Código del Trabajo, Artículo 450
+- Código del Trabajo, Artículo 451
+- Código del Trabajo, Artículo 452
+- Código de Procedimiento Civil, Artículo 409
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. N°884, 2021-03-10
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. N°834, 2021-03-05
 - Doctrina: Palavecino Cáceres, Claudio; Ramírez Soto, Cristián Pablo, "Examen crítico de la sentencia anticipada en el Procedimiento Monitorio Laboral", Revista Chilena de Derecho del Trabajo y de la Seguridad Social, vol. 1, N° 2, (2016), DOI: 10.5354/0719-7551.2010.43052.
@@ -513,7 +592,7 @@ Versión anterior (main):
 
 ### g04-alimentos — procedimiento: Demanda de alimentos para un hijo menor de edad, con mediación previa
 
-<details><summary>Material enviado al modelo (6 normas, 0 fallos o dictámenes, 1 artículos de doctrina; 3 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (12 normas, 0 fallos o dictámenes, 1 artículos de doctrina; 3 normas descartadas por materia)</summary>
 
 - Ley 14.908, fija el texto definitivo y refundido de la ley numero 5.750, con las modificaciones introducidas por la ley numero 14.550, Artículo 3
 - Ley 14.908, fija el texto definitivo y refundido de la ley numero 5.750, con las modificaciones introducidas por la ley numero 14.550, Artículo 7
@@ -521,6 +600,12 @@ Versión anterior (main):
 - Código Civil, Artículo 323
 - Código Civil, Artículo 332
 - Ley 19.968, crea los tribunales de familia, Artículo 106
+- Ley 19.968, crea los tribunales de familia, Artículo 1
+- Ley 19.968, crea los tribunales de familia, Artículo 3
+- Ley 19.968, crea los tribunales de familia, Artículo 8
+- Ley 19.968, crea los tribunales de familia, Artículo 9
+- Ley 19.968, crea los tribunales de familia, Artículo 16
+- Ley 19.968, crea los tribunales de familia, Artículo 17
 - Doctrina: Palomo Vélez, Diego; Valenzuela Villalobos, Williams, "DESCARTE DE LA INCONSTITUCIONALIDAD DE LA OBLIGATORIEDAD DE LA MEDIACIÓN PREJUDICIAL QUE ESTABLECE LEY N19.966: LECTURA CRÍTICA DE LA SENTENCIA DEL TRIBUNAL CONSTITUCIONAL", Ius et Praxis, vol. 18, N° 2, (2012), pp. 387-426, DOI: 10.4067/s0718-00122012000200014.
 - ~~Resolución 3953 EXENTA, ordena publicación en el diario oficial de anexo de decreto supremo n° 239, de 2004, del ministerio de educación, que establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación, Artículo 2~~ (sin relación léxica (1 términos en común))
 - ~~Decreto 257, establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación y deroga decreto supremo nº 239, de 2004, del ministerio de educación y sus modificaciones en la forma que señala, Artículo 10~~ (sin relación léxica (1 términos en común))
@@ -553,8 +638,8 @@ Versión anterior (main):
 - CIR Filiales 37, sociedades filiales. modifica normas generales., Artículo 19
 - CIR Bancos 2409, recopilacion actualizada de normas, Artículo 102
 - Doctrina: López Díaz, Patricia, "TERMINACIÓN DEL CONTRATO DE ARRENDAMIENTO POR NO PAGO DE RENTAS. INCUMPLIMIENTO DE LA OBLIGACIÓN DE HABILITAR EL INMUEBLE ARRENDADO COMO LOCAL COMERCIAL. RECURSO A LOS ARTS. 1563, 1564 Y 1566 DEL CÓDIGO CIVIL. PROCEDENCIA DE UN EVENTUAL CONCURSO DE TUTELAS Y DE LA OPCIÓN DEL ACREEDOR. CORTE SUPREMA, 20 DE FEBRERO DE 2019, ROL 31.512-2018. CITA EN LÍNEA LEGALPUBLISHING CL/JUR/907/2019.", Revista Chilena de Derecho Privado, N° 32, (2019), DOI: 10.32995/s0718-80722019419.
-- Doctrina: Erbetta Mattig, Andrés, "Carga de la prueba, rebeldía del demandado e Incumplimiento parcial de la obligación de pagar las rentas de arrendamiento: ¿cómo se debe aplicar la regla del art. 1698 inciso primero del Código Civil? Reflexiones a partir de la sentencia de la Corte Supre", Revista Chilena de Derecho y Ciencia Política, vol. 13, N° 2, (2022), pp. 229-241, DOI: 10.7770/rchdcp-v13n2-art2709.
 - Doctrina: De la Maza Gazmuri, Iñigo, "COMENTARIO. TERMINACIÓN DE CONTRATO DE ARRENDAMIENTO POR MAL ESTADO O CALIDAD DE LA COSA. CORTE DE APELACIONES DE SANTIAGO, Nº LEGAL PUBLISHING 43257.", Revista Chilena de Derecho Privado, N° 15, (2019), DOI: 10.32995/s0718-80722010305.
+- Doctrina: Bofill Geenzch, Jorge, "Alcance de la obligación del fiscal de registrar sus actuaciones durante la investigación. Consecuencias de su incumplimiento en las diversas etapas del procedimiento", Revista de Estudios de la Justicia, vol. 0, N° 6, (2011), DOI: 10.5354/0718-4735.2005.15063.
 - ~~CIR Bancos 3521, recopilación actualizada de normas. capítulos 1-1, 2-1, 2-11, 3-1, 5-2, 7-1, 8-8, 8-37, 10-1, 11-7, 12-3, 18-11 y 19-2. actualiza instrucciones, Artículo 61~~ (sin relación léxica (0 términos en común))
 - ~~CIR Bancos 3444, recopilación actualizada de normas. capítulos 1-1, 1-7,1-8, 7-1, 7-3, 7-4, 7-7, 7-10, 8-3, 8-26, 8-29, 8-37, 8-40, 9-1, 10-1, 10-2, 11-6, 11-7, 12-9, 16-4, 8-1, 18-6,18-13 y 20-3. modifica, complementa y suprime instrucciones, Artículo 137~~ (sin relación léxica (1 términos en común))
 
@@ -580,8 +665,10 @@ Versión anterior (main):
 
 ### g06-proteccion — procedimiento: Recurso de protección ante la Corte de Apelaciones
 
-<details><summary>Material enviado al modelo (14 normas, 2 fallos o dictámenes, 3 artículos de doctrina; 2 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (18 normas, 2 fallos o dictámenes, 3 artículos de doctrina; 2 normas descartadas por materia)</summary>
 
+- Constitución Política de la República, Artículo 19
+- Constitución Política de la República, Artículo 20
 - Código de Procedimiento Civil, Artículo 10
 - Código de Procedimiento Civil, Artículo 2
 - Código de Procedimiento Civil, Artículo 3
@@ -591,6 +678,8 @@ Versión anterior (main):
 - Código de Procedimiento Civil, Artículo 7
 - Código de Procedimiento Civil, Artículo 8
 - Código de Procedimiento Civil, Artículo 9
+- Constitución Política de la República, Artículo 32
+- Constitución Política de la República, Artículo 161
 - Código de Procedimiento Civil, Artículo 189
 - Ley 18.168, ley general de telecomunicaciones, Artículo 15
 - Ley 18.168, ley general de telecomunicaciones, Artículo 39
@@ -659,11 +748,18 @@ Versión anterior (main):
 
 ### g08-jpl-consumidor — procedimiento: Demanda ante el Juzgado de Policía Local por infracción a la Ley del Consumidor
 
-<details><summary>Material enviado al modelo (10 normas, 0 fallos o dictámenes, 2 artículos de doctrina; 2 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (17 normas, 0 fallos o dictámenes, 2 artículos de doctrina; 2 normas descartadas por materia)</summary>
 
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 3
 - Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 26
 - Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 50
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 1
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 17
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 24
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 27
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 28
 - Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 51
+- Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 52
 - Ley 19.496, establece normas sobre proteccion de los derechos de los consumidores, Artículo 58
 - DFL 3, fija texto refundido, coordinado y sistematizado de la ley n° 19.496, que establece normas sobre protección de los derechos de los consumidores, Artículo 50
 - DFL 3, fija texto refundido, coordinado y sistematizado de la ley n° 19.496, que establece normas sobre protección de los derechos de los consumidores, Artículo 51
@@ -734,13 +830,20 @@ Versión anterior (main):
 
 ### g10-estafa — procedimiento: Querella por el delito de estafa
 
-<details><summary>Material enviado al modelo (5 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 2 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (12 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 2 normas descartadas por materia)</summary>
 
 - Código Penal, Artículo 467
 - Código Penal, Artículo 468
 - Código Penal, Artículo 473
 - Código Penal, Artículo 469
 - Código Penal, Artículo 470
+- Código Procesal Penal, Artículo 111
+- Código Procesal Penal, Artículo 113
+- Código Procesal Penal, Artículo 110
+- Código Procesal Penal, Artículo 112
+- Código Procesal Penal, Artículo 114
+- Código Procesal Penal, Artículo 259
+- Código Procesal Penal, Artículo 260
 - ~~Ley 7.760, modifica las disposiciones que se indican del codigo de procedimiento civil, Artículo 550~~ (materia procesal_civil ajena a penal/procesal_penal)
 - ~~DL 830, codigo tributario, Artículo 196~~ (materia tributario ajena a penal/procesal_penal)
 
