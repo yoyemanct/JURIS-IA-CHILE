@@ -1,7 +1,7 @@
 {
   "name": "juris-ia-chile",
-  "version": "0.1.0",
-  "description": "Juris IA Chile: buscador + chat con IA (Claude o Qwen local vía Ollama) para legislación chilena, con citas a la fuente.",
+  "version": "0.2.0",
+  "description": "Juris IA Chile: asistente de IA (Vercel AI Gateway, Claude o Qwen local) para legislación chilena, con citas a la fuente y verificación de vigencia.",
   "main": "server.js",
   "type": "commonjs",
   "engines": {

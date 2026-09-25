@@ -2,489 +2,1090 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Juris IA Chile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Juris IA Chile — Asistente de legislación chilena</title>
+<meta name="description" content="Consulta la legislación chilena con inteligencia artificial. Informes jurídicos con citas exactas a la ley y verificación de vigencia en la BCN." />
+<meta name="theme-color" content="#0f2238" />
 <link rel="icon" href="/juris.ico" type="image/x-icon" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --azul: #1c3d5a;
-    --azul-claro: #2f6690;
-    --fondo: #f5f6f8;
-    --texto: #1a1a1a;
-    --gris: #6b7280;
-    --borde: #d9dde3;
-    --blanco: #ffffff;
+    --bg: #f6f7f9;
+    --bg-elev: #ffffff;
+    --bg-sutil: #eef1f5;
+    --texto: #0f1b2a;
+    --texto-2: #475467;
+    --texto-3: #667085;
+    --borde: #e3e7ee;
+    --borde-fuerte: #cfd6e1;
+    --marca: #0f2238;
+    --marca-2: #1d4ed8;
+    --acento: #b8893b;
+    --acento-sutil: #f7efe0;
+    --ok: #067647;
+    --ok-sutil: #e7f6ee;
+    --alerta: #b54708;
+    --alerta-sutil: #fef4e6;
+    --error: #b42318;
+    --error-sutil: #fdecea;
+    --info-sutil: #eaf1fe;
+    --sombra: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .06);
+    --sombra-lg: 0 12px 32px -8px rgba(16, 24, 40, .14), 0 4px 8px -4px rgba(16, 24, 40, .06);
+    --radio: 14px;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1320; --bg-elev: #111b2b; --bg-sutil: #16233a;
+      --texto: #e8edf5; --texto-2: #b3bfd1; --texto-3: #8594ab;
+      --borde: #1f2e45; --borde-fuerte: #2b3d5a;
+      --marca: #e8edf5; --marca-2: #7aa2ff; --acento: #d9ae62; --acento-sutil: #2a2416;
+      --ok: #4ade80; --ok-sutil: #10291d; --alerta: #fbbf24; --alerta-sutil: #2b2210;
+      --error: #f87171; --error-sutil: #2e1515; --info-sutil: #13233f;
+      --sombra: 0 1px 2px rgba(0,0,0,.4); --sombra-lg: 0 12px 32px -8px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1320; --bg-elev: #111b2b; --bg-sutil: #16233a;
+    --texto: #e8edf5; --texto-2: #b3bfd1; --texto-3: #8594ab;
+    --borde: #1f2e45; --borde-fuerte: #2b3d5a;
+    --marca: #e8edf5; --marca-2: #7aa2ff; --acento: #d9ae62; --acento-sutil: #2a2416;
+    --ok: #4ade80; --ok-sutil: #10291d; --alerta: #fbbf24; --alerta-sutil: #2b2210;
+    --error: #f87171; --error-sutil: #2e1515; --info-sutil: #13233f;
+    --sombra: 0 1px 2px rgba(0,0,0,.4); --sombra-lg: 0 12px 32px -8px rgba(0,0,0,.6);
+  }
+
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--fondo);
-    color: var(--texto);
+    margin: 0; font-family: var(--sans); background: var(--bg); color: var(--texto);
+    font-size: 15px; line-height: 1.55; min-height: 100vh; display: flex; flex-direction: column;
   }
-  header {
-    background: var(--azul);
-    color: white;
-    padding: 20px 24px;
-  }
-  header h1 { margin: 0; font-size: 1.4rem; }
-  header p { margin: 4px 0 0; color: #cdd9e5; font-size: 0.9rem; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  a { color: var(--marca-2); }
+  .oculto { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-  main {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 24px 16px 80px;
-  }
-
-  .aviso {
-    background: #fff8e6;
-    border: 1px solid #f0d98c;
-    color: #6b5900;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    margin-bottom: 20px;
-  }
-
-  form {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-  }
-  input[type="text"] {
-    flex: 1;
-    padding: 12px 14px;
-    border: 1px solid var(--borde);
-    border-radius: 8px;
-    font-size: 1rem;
-  }
-  input[type="text"]:focus { outline: 2px solid var(--azul-claro); }
-  button {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    background: var(--azul-claro);
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  button:disabled { background: #9fb4c4; cursor: not-allowed; }
-  button:hover:not(:disabled) { background: var(--azul); }
-
-  .respuesta {
-    background: var(--blanco);
-    border: 1px solid var(--borde);
-    border-radius: 10px;
-    padding: 18px;
-    margin-bottom: 20px;
-    white-space: pre-wrap;
-    line-height: 1.5;
-  }
-  .respuesta h2 { margin-top: 0; font-size: 1rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.03em; }
-  .informe { white-space: normal; }
-  .informe h3 {
-    font-size: 1.02rem;
-    color: var(--azul);
-    margin: 22px 0 8px;
-    padding-bottom: 6px;
+  /* ---------- Barra superior ---------- */
+  .barra {
+    position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(1.4) blur(10px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
     border-bottom: 1px solid var(--borde);
   }
-  .informe h3:first-child { margin-top: 0; }
-  .informe p { margin: 0 0 10px; }
-  .informe ul { margin: 0 0 12px; padding-left: 22px; }
+  .barra-in {
+    max-width: 1040px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 14px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--texto); }
+  .logo-marca {
+    width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+    background: linear-gradient(145deg, #0f2238, #1e3a5f); color: #e9c98c; box-shadow: var(--sombra);
+  }
+  .logo-texto { font-family: var(--serif); font-weight: 700; font-size: 1.12rem; letter-spacing: -.01em; }
+  .logo-texto span { color: var(--acento); }
+  .barra-der { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .selector {
+    display: flex; align-items: center; gap: 6px; background: var(--bg-elev); border: 1px solid var(--borde);
+    border-radius: 999px; padding: 4px 6px 4px 10px; font-size: .82rem; color: var(--texto-2);
+  }
+  .selector select { border: 0; background: transparent; font-size: .82rem; font-weight: 600; color: var(--texto); max-width: 230px; cursor: pointer; }
+  .selector select:focus { outline: none; }
+  .punto { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-sutil); }
+  .btn-icono {
+    width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--borde);
+    background: var(--bg-elev); cursor: pointer; color: var(--texto-2);
+  }
+  .btn-icono:hover { color: var(--texto); border-color: var(--borde-fuerte); }
+
+  /* ---------- Contenido ---------- */
+  main { flex: 1; width: 100%; max-width: 860px; margin: 0 auto; padding: 28px 20px 40px; }
+
+  .hero { text-align: center; padding: 34px 0 22px; }
+  .sello {
+    display: inline-flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 600; color: var(--acento);
+    background: var(--acento-sutil); border: 1px solid color-mix(in srgb, var(--acento) 30%, transparent);
+    padding: 5px 12px; border-radius: 999px; letter-spacing: .02em;
+  }
+  .hero h1 {
+    font-family: var(--serif); font-weight: 700; font-size: clamp(1.9rem, 4.6vw, 2.75rem); line-height: 1.12;
+    letter-spacing: -.02em; margin: 16px 0 12px;
+  }
+  .hero p { color: var(--texto-2); font-size: 1.04rem; max-width: 600px; margin: 0 auto; }
+
+  .segmentos {
+    display: inline-flex; background: var(--bg-sutil); border: 1px solid var(--borde); border-radius: 12px; padding: 4px; gap: 4px;
+    margin: 22px auto 14px;
+  }
+  .segmentos button {
+    border: 0; background: transparent; padding: 8px 16px; border-radius: 9px; cursor: pointer; font-weight: 600;
+    font-size: .88rem; color: var(--texto-2); display: flex; align-items: center; gap: 8px;
+  }
+  .segmentos button[aria-selected="true"] { background: var(--bg-elev); color: var(--texto); box-shadow: var(--sombra); }
+  .centro { text-align: center; }
+
+  /* ---------- Compositor ---------- */
+  .compositor {
+    background: var(--bg-elev); border: 1px solid var(--borde-fuerte); border-radius: 18px; box-shadow: var(--sombra-lg);
+    padding: 12px 12px 10px 16px; transition: border-color .15s, box-shadow .15s;
+  }
+  .compositor:focus-within { border-color: var(--marca-2); box-shadow: var(--sombra-lg), 0 0 0 4px color-mix(in srgb, var(--marca-2) 14%, transparent); }
+  .compositor textarea {
+    width: 100%; border: 0; resize: none; background: transparent; font-size: 1rem; line-height: 1.5;
+    min-height: 26px; max-height: 220px; padding: 6px 0; outline: none;
+  }
+  .compositor textarea::placeholder { color: var(--texto-3); }
+  .compositor-pie { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+  .pista { font-size: .76rem; color: var(--texto-3); }
+  .pista kbd { font-family: var(--sans); font-size: .7rem; border: 1px solid var(--borde-fuerte); border-bottom-width: 2px; padding: 0 5px; border-radius: 4px; }
+  .contador { font-size: .74rem; color: var(--texto-3); margin-left: auto; }
+  .btn-primario {
+    display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 11px; padding: 9px 16px;
+    background: #0f2238; color: #fff; font-weight: 600; font-size: .9rem; cursor: pointer; transition: transform .05s, background .15s;
+  }
+  :root[data-theme="dark"] .btn-primario { background: #2c5fd6; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-primario { background: #2c5fd6; } }
+  .btn-primario:hover { filter: brightness(1.12); }
+  .btn-primario:active { transform: translateY(1px); }
+  .btn-primario:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+  .btn-primario.detener { background: var(--error); }
+  .btn-sec {
+    display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--borde); background: var(--bg-elev);
+    border-radius: 10px; padding: 7px 12px; font-size: .82rem; font-weight: 500; color: var(--texto-2); cursor: pointer;
+  }
+  .btn-sec:hover { color: var(--texto); border-color: var(--borde-fuerte); }
+
+  /* ---------- Ejemplos ---------- */
+  .ejemplos { margin-top: 26px; }
+  .ejemplos-titulo { font-size: .76rem; text-transform: uppercase; letter-spacing: .08em; color: var(--texto-3); font-weight: 600; margin-bottom: 10px; }
+  .rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .ejemplo {
+    text-align: left; background: var(--bg-elev); border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px;
+    cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s; display: flex; flex-direction: column; gap: 4px;
+  }
+  .ejemplo:hover { border-color: var(--borde-fuerte); transform: translateY(-1px); box-shadow: var(--sombra); }
+  .ejemplo .area { font-size: .72rem; font-weight: 700; color: var(--acento); text-transform: uppercase; letter-spacing: .06em; }
+  .ejemplo .preg { font-size: .9rem; color: var(--texto); }
+
+  .garantias { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-top: 34px; }
+  .garantia { display: flex; gap: 10px; align-items: flex-start; font-size: .84rem; color: var(--texto-2); }
+  .garantia svg { flex: none; color: var(--acento); margin-top: 2px; }
+  .garantia b { display: block; color: var(--texto); font-weight: 600; }
+
+  /* ---------- Hilo de conversación ---------- */
+  .hilo { display: flex; flex-direction: column; gap: 22px; }
+  .turno-pregunta { display: flex; justify-content: flex-end; }
+  .burbuja {
+    background: #0f2238; color: #f2f5fa; padding: 10px 16px; border-radius: 16px 16px 4px 16px; max-width: 80%;
+    font-size: .96rem; white-space: pre-wrap; box-shadow: var(--sombra);
+  }
+  :root[data-theme="dark"] .burbuja { background: #22407a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .burbuja { background: #22407a; } }
+  .burbuja .archivo { display: block; font-size: .78rem; opacity: .8; margin-bottom: 2px; }
+
+  .tarjeta {
+    background: var(--bg-elev); border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra);
+    overflow: hidden;
+  }
+  .tarjeta-cab {
+    display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--borde);
+    background: color-mix(in srgb, var(--bg-sutil) 55%, var(--bg-elev));
+  }
+  .tarjeta-cab .titulo { font-weight: 600; font-size: .88rem; display: flex; align-items: center; gap: 8px; }
+  .tarjeta-cab .meta { margin-left: auto; font-size: .76rem; color: var(--texto-3); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+
+  .pasos { display: flex; gap: 18px; padding: 14px 18px; font-size: .82rem; color: var(--texto-3); flex-wrap: wrap; }
+  .paso { display: flex; align-items: center; gap: 7px; }
+  .paso .ic { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--borde-fuerte); display: grid; place-items: center; }
+  .paso.activo { color: var(--texto); font-weight: 500; }
+  .paso.activo .ic { border-color: var(--marca-2); border-top-color: transparent; animation: girar .8s linear infinite; }
+  .paso.hecho { color: var(--ok); }
+  .paso.hecho .ic { border-color: var(--ok); background: var(--ok); }
+  .paso.hecho .ic::after { content: ""; width: 5px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+  @keyframes girar { to { transform: rotate(360deg); } }
+
+  .informe { padding: 6px 22px 20px; font-size: .97rem; }
+  .informe h3 {
+    font-family: var(--serif); font-size: 1.14rem; font-weight: 700; margin: 22px 0 8px; color: var(--texto);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .informe h3::before { content: ""; width: 4px; height: 1.05em; border-radius: 2px; background: var(--acento); }
+  .informe h4 { font-size: .98rem; margin: 16px 0 6px; }
+  .informe p { margin: 0 0 11px; }
+  .informe ul, .informe ol { margin: 0 0 12px; padding-left: 22px; }
   .informe li { margin-bottom: 6px; }
-  .informe strong { color: var(--azul); }
+  .informe li::marker { color: var(--texto-3); }
+  .informe blockquote {
+    margin: 0 0 12px; padding: 8px 14px; border-left: 3px solid var(--borde-fuerte); background: var(--bg-sutil);
+    border-radius: 0 8px 8px 0; color: var(--texto-2); font-family: var(--serif); font-size: 1rem;
+  }
+  .informe code { background: var(--bg-sutil); padding: 1px 5px; border-radius: 5px; font-size: .88em; }
+  .informe .cita { background: var(--acento-sutil); color: inherit; padding: 0 3px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
+  .informe hr { border: 0; border-top: 1px solid var(--borde); margin: 16px 0; }
+  .cursor::after { content: ""; display: inline-block; width: 8px; height: 1.05em; background: var(--marca-2); margin-left: 2px; vertical-align: text-bottom; animation: parpadeo 1s steps(2) infinite; }
+  @keyframes parpadeo { 50% { opacity: 0; } }
 
-  .doc-card {
-    background: var(--blanco);
-    border: 1px solid var(--borde);
-    border-left: 4px solid var(--azul-claro);
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
+  .acciones { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--borde); flex-wrap: wrap; }
+  .aviso {
+    display: flex; gap: 10px; align-items: flex-start; font-size: .84rem; padding: 10px 14px; border-radius: 10px; margin: 12px 18px 0;
+    background: var(--alerta-sutil); color: var(--alerta); border: 1px solid color-mix(in srgb, var(--alerta) 25%, transparent);
   }
-  .doc-card .fuente {
-    font-weight: 600;
-    color: var(--azul);
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .badge {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    padding: 2px 8px;
-    border-radius: 999px;
-  }
-  .badge.completo { background: #e3f5e9; color: #1e6b3c; }
-  .badge.extracto { background: #fdeecb; color: #8a5a00; }
-  .badge.remoto { background: #e2ecf7; color: #1c3d5a; }
-  .badge.local { background: #ececec; color: #55585c; }
-  .doc-card .tema {
-    color: var(--gris);
-    font-size: 0.85rem;
-    margin-bottom: 8px;
-  }
-  .doc-card .texto { font-size: 0.95rem; }
-  .doc-card .nota-extracto {
-    font-size: 0.82rem;
-    color: #8a5a00;
-    margin-top: 6px;
-    font-style: italic;
-  }
-  .doc-card a { color: var(--azul-claro); font-size: 0.85rem; }
+  .aviso.error { background: var(--error-sutil); color: var(--error); border-color: color-mix(in srgb, var(--error) 25%, transparent); }
+  .aviso.info { background: var(--info-sutil); color: var(--marca-2); border-color: color-mix(in srgb, var(--marca-2) 25%, transparent); }
+  .aviso.ok { background: var(--ok-sutil); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 25%, transparent); }
+  .aviso svg { flex: none; margin-top: 2px; }
 
-  .pestanas { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--borde); }
-  /* Las pestañas son <button>, así que hay que ganarle en especificidad a
-     los estilos generales de botón (incluido su :hover), o se ven como un
-     bloque azul sólido. */
-  .pestanas .pestana,
-  .pestanas .pestana:hover:not(:disabled) {
-    padding: 10px 18px; border: none; background: none; cursor: pointer;
-    font-size: 0.95rem; color: var(--gris); border-bottom: 3px solid transparent;
-    border-radius: 0;
+  /* ---------- Fuentes ---------- */
+  .fuentes { margin-top: 14px; }
+  .fuentes summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-weight: 600; font-size: .88rem;
+    border: 1px solid var(--borde); border-radius: 12px; background: var(--bg-elev);
   }
-  .pestanas .pestana:hover:not(:disabled) { color: var(--azul); }
-  .pestanas .pestana.activa,
-  .pestanas .pestana.activa:hover:not(:disabled) {
-    color: var(--azul); border-bottom-color: var(--azul-claro); font-weight: 600;
+  .fuentes summary::-webkit-details-marker { display: none; }
+  .fuentes summary .chev { margin-left: auto; transition: transform .2s; color: var(--texto-3); }
+  .fuentes[open] summary .chev { transform: rotate(180deg); }
+  .fuentes summary .cuenta { background: var(--bg-sutil); color: var(--texto-2); font-size: .74rem; padding: 2px 8px; border-radius: 999px; }
+  .lista-fuentes { display: grid; gap: 10px; margin-top: 10px; }
+  .fuente {
+    background: var(--bg-elev); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px;
+  }
+  .fuente-cab { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .fuente-num {
+    flex: none; width: 24px; height: 24px; border-radius: 7px; background: var(--bg-sutil); color: var(--texto-2);
+    font-size: .74rem; font-weight: 700; display: grid; place-items: center;
+  }
+  .fuente-titulo { flex: 1; min-width: 200px; }
+  .fuente-titulo b { display: block; font-size: .92rem; }
+  .fuente-titulo span { font-size: .8rem; color: var(--texto-3); }
+  .insignias { display: flex; gap: 6px; flex-wrap: wrap; }
+  .insignia { font-size: .7rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--bg-sutil); color: var(--texto-2); white-space: nowrap; }
+  .insignia.ok { background: var(--ok-sutil); color: var(--ok); }
+  .insignia.alerta { background: var(--alerta-sutil); color: var(--alerta); }
+  .insignia.error { background: var(--error-sutil); color: var(--error); }
+  .insignia.cargando { opacity: .75; }
+  .fuente-texto {
+    margin-top: 10px; font-family: var(--serif); font-size: .95rem; color: var(--texto-2); white-space: pre-wrap;
+    max-height: 7.5em; overflow: hidden; position: relative;
+  }
+  .fuente-texto.abierto { max-height: none; }
+  .fuente-texto:not(.abierto)::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2.4em;
+    background: linear-gradient(transparent, var(--bg-elev));
+  }
+  .fuente-pie { display: flex; gap: 14px; margin-top: 8px; font-size: .8rem; }
+  .fuente-pie button { border: 0; background: none; padding: 0; color: var(--texto-2); cursor: pointer; font-size: .8rem; font-weight: 500; }
+  .fuente-pie a { font-weight: 500; text-decoration: none; }
+  .fuente-pie a:hover, .fuente-pie button:hover { text-decoration: underline; }
+
+  /* ---------- Documento ---------- */
+  .zona {
+    border: 2px dashed var(--borde-fuerte); border-radius: 16px; padding: 28px 18px; text-align: center; background: var(--bg-elev);
+    cursor: pointer; transition: border-color .15s, background .15s; margin-bottom: 12px;
+  }
+  .zona:hover, .zona.encima { border-color: var(--marca-2); background: color-mix(in srgb, var(--marca-2) 5%, var(--bg-elev)); }
+  .zona .ic-grande { width: 46px; height: 46px; border-radius: 12px; background: var(--bg-sutil); display: grid; place-items: center; margin: 0 auto 10px; color: var(--marca-2); }
+  .zona b { display: block; font-size: .96rem; }
+  .zona span { color: var(--texto-3); font-size: .84rem; }
+  .archivo-elegido { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-sutil); padding: 6px 12px; border-radius: 999px; font-weight: 600; font-size: .88rem; }
+  .privacidad { margin: 0 0 12px; }
+
+  /* ---------- Compositor fijo (tras la primera pregunta) ---------- */
+  .dock {
+    position: sticky; bottom: 0; z-index: 10; padding: 14px 0 18px;
+    background: linear-gradient(transparent, var(--bg) 26%);
   }
 
-  .zona-archivo {
-    border: 2px dashed var(--borde); border-radius: 10px; padding: 26px 18px;
-    text-align: center; background: var(--blanco); cursor: pointer; margin-bottom: 12px;
+  footer {
+    border-top: 1px solid var(--borde); color: var(--texto-3); font-size: .78rem; padding: 18px 20px 26px; text-align: center;
   }
-  .zona-archivo:hover, .zona-archivo.encima { border-color: var(--azul-claro); background: #f0f6fb; }
-  .zona-archivo .principal { color: var(--azul); font-weight: 600; margin-bottom: 4px; }
-  .zona-archivo .secundario { color: var(--gris); font-size: 0.83rem; }
-  .archivo-elegido { color: var(--azul); font-weight: 600; }
+  footer p { max-width: 760px; margin: 4px auto; }
 
-  .privacidad {
-    font-size: 0.83rem; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px;
-    border: 1px solid;
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0;
+    background: #0f2238; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: .86rem; box-shadow: var(--sombra-lg);
+    transition: all .2s; pointer-events: none; z-index: 50;
   }
-  .privacidad.local { background: #e9f6ed; border-color: #b6ddc3; color: #1e6b3c; }
-  .privacidad.nube  { background: #fdeecb; border-color: #f0c86b; color: #8a5a00; }
+  .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .columna { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-  .columna input[type="text"] { width: 100%; }
-
-  .estado { color: var(--gris); font-style: italic; margin-bottom: 16px; }
-  .vacio { color: var(--gris); text-align: center; padding: 40px 0; }
+  @media (max-width: 640px) {
+    main { padding: 16px 14px 30px; }
+    .barra-in { padding: 10px 14px; }
+    .logo-texto { font-size: 1rem; }
+    .selector .etq { display: none; }
+    .selector select { max-width: 130px; }
+    .hero { padding: 18px 0 10px; }
+    .informe { padding: 4px 16px 16px; }
+    .burbuja { max-width: 92%; }
+    .pista { display: none; }
+    .tarjeta-cab .meta { display: none; }
+  }
+  @media print {
+    .barra, .dock, .acciones, footer, .segmentos, .fuente-pie button, #vista-inicio { display: none !important; }
+    body { background: #fff; }
+    .tarjeta, .fuente { box-shadow: none; }
+    .fuente-texto { max-height: none; }
+    .fuente-texto::after { display: none; }
+  }
 </style>
 </head>
 <body>
-  <header>
-    <h1>Juris IA Chile</h1>
-    <p>Buscador y asistente de IA para legislación chilena, con citas a la fuente.</p>
+  <header class="barra">
+    <div class="barra-in">
+      <a class="logo" href="/" aria-label="Juris IA Chile, inicio">
+        <span class="logo-marca" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 21h10"/><path d="M5 7h14"/><path d="M12 5l-7 2"/><path d="M12 5l7 2"/><path d="M5 7l-3 7a3.5 3.5 0 0 0 6 0z"/><path d="M19 7l-3 7a3.5 3.5 0 0 0 6 0z"/></svg>
+        </span>
+        <span class="logo-texto">Juris <span>IA</span> Chile</span>
+      </a>
+      <div class="barra-der">
+        <label class="selector oculto" id="selector-proveedor" title="Motor de IA que redacta el informe">
+          <span class="punto" aria-hidden="true"></span>
+          <span class="etq">Motor:</span>
+          <select id="input-proveedor" aria-label="Motor de IA"></select>
+        </label>
+        <button class="btn-icono" id="btn-tema" type="button" aria-label="Cambiar tema claro u oscuro" title="Tema claro / oscuro">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+    </div>
   </header>
 
   <main>
-    <div class="aviso">
-      Juris IA Chile busca primero en un corpus jurídico completo (leyes.pisanvs.cl, que reconstruye
-      prácticamente toda la legislación chilena desde la BCN) y usa un pequeño set de ejemplos
-      locales como respaldo si ese corpus no está disponible. En ningún caso reemplaza el consejo
-      de un abogado o abogada.
-    </div>
-    <div id="aviso-corpus" class="aviso" style="display:none; background:#fdeecb; border-color:#f0c86b; color:#8a5a00;"></div>
-
-    <div id="selector-proveedor" style="display:none; margin-bottom: 10px; font-size: 0.9rem; color: var(--gris);">
-      Responder con:
-      <select id="input-proveedor" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--borde);"></select>
-    </div>
-
-    <div class="pestanas">
-      <button type="button" class="pestana activa" data-panel="panel-consulta">Consulta legal</button>
-      <button type="button" class="pestana" data-panel="panel-documento">Analizar mi documento</button>
-    </div>
-
-    <form id="form-consulta">
-      <input
-        type="text"
-        id="input-pregunta"
-        placeholder="Ej: ¿Cuántos días de vacaciones me corresponden al año?"
-        autocomplete="off"
-      />
-      <button type="submit" id="btn-consultar">Preguntar</button>
-    </form>
-
-    <form id="form-documento" style="display:none;" class="columna">
-      <div id="privacidad" class="privacidad local"></div>
-
-      <div class="zona-archivo" id="zona-archivo">
-        <div class="principal" id="texto-zona">Arrastra aquí tu documento, o haz clic para elegirlo</div>
-        <div class="secundario">Contrato, demanda, escritura, sentencia — PDF, Word (.docx) o texto</div>
-        <input type="file" id="input-archivo" accept=".pdf,.docx,.txt,.md,.rtf" style="display:none;" />
+    <!-- Vista inicial -->
+    <section id="vista-inicio">
+      <div class="hero">
+        <span class="sello">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          Fuentes legales reales · citas verificables
+        </span>
+        <h1>Tu asistente de derecho chileno</h1>
+        <p>Pregunta en lenguaje simple y recibe un informe jurídico estructurado, con cada artículo citado y su vigencia verificada en la BCN.</p>
       </div>
+    </section>
 
-      <input type="text" id="input-pregunta-doc" autocomplete="off"
-             placeholder="¿Qué quieres saber? Ej: ¿qué riesgos tiene para el arrendatario?" />
-      <button type="submit" id="btn-documento">Analizar documento</button>
+    <div class="centro" id="contenedor-segmentos">
+      <div class="segmentos" role="tablist" aria-label="Modo">
+        <button type="button" role="tab" aria-selected="true" data-modo="consulta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Consulta legal
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-modo="documento">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+          Analizar documento
+        </button>
+      </div>
+    </div>
+
+    <div class="hilo" id="hilo"></div>
+
+    <!-- Panel de documento -->
+    <form id="form-documento" class="oculto" autocomplete="off">
+      <div id="privacidad" class="aviso privacidad"></div>
+      <div class="zona" id="zona-archivo" tabindex="0" role="button" aria-label="Elegir documento">
+        <div class="ic-grande">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+        </div>
+        <div id="texto-zona"><b>Arrastra tu documento o haz clic para elegirlo</b><span>Contrato, demanda, escritura o sentencia · PDF, Word (.docx) o texto</span></div>
+        <input type="file" id="input-archivo" accept=".pdf,.docx,.txt,.md,.rtf" class="oculto" />
+      </div>
+      <div class="compositor">
+        <label class="sr" for="input-pregunta-doc">Pregunta sobre el documento</label>
+        <textarea id="input-pregunta-doc" rows="1" maxlength="600" placeholder="¿Qué quieres saber? Ej: ¿qué riesgos tiene este contrato para el arrendatario?"></textarea>
+        <div class="compositor-pie">
+          <span class="pista">El archivo se procesa en memoria y no se guarda.</span>
+          <button type="submit" class="btn-primario" id="btn-documento" style="margin-left:auto">
+            Analizar
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
     </form>
+    <div class="hilo oculto" id="hilo-doc" style="margin-top:22px"></div>
 
-    <div id="estado" class="estado" style="display:none;"></div>
-    <div id="resultado"></div>
+    <!-- Compositor de consultas -->
+    <div id="dock-consulta">
+      <form id="form-consulta" class="compositor" autocomplete="off">
+        <label class="sr" for="input-pregunta">Tu pregunta legal</label>
+        <textarea id="input-pregunta" rows="1" maxlength="600" placeholder="Ej: ¿Cuántos días de vacaciones me corresponden al año?"></textarea>
+        <div class="compositor-pie">
+          <span class="pista"><kbd>Enter</kbd> para enviar · <kbd>Shift</kbd>+<kbd>Enter</kbd> nueva línea</span>
+          <span class="contador" id="contador"></span>
+          <button type="button" class="btn-sec oculto" id="btn-nueva" title="Empezar una consulta nueva">Nueva consulta</button>
+          <button type="submit" class="btn-primario" id="btn-consultar">
+            <span id="btn-consultar-texto">Consultar</span>
+            <svg id="btn-consultar-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <section id="ejemplos" class="ejemplos">
+      <div class="ejemplos-titulo">Consultas frecuentes</div>
+      <div class="rejilla" id="rejilla-ejemplos"></div>
+
+      <div class="garantias">
+        <div class="garantia">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <div><b>Legislación completa</b>Más de 300.000 normas chilenas, consultadas en vivo.</div>
+        </div>
+        <div class="garantia">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <div><b>Vigencia verificada</b>Cada artículo se contrasta con la fuente oficial de la BCN.</div>
+        </div>
+        <div class="garantia">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <div><b>Respuesta inmediata</b>El informe se escribe en pantalla mientras se genera.</div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <script>
-    const form = document.getElementById("form-consulta");
-    const input = document.getElementById("input-pregunta");
-    const boton = document.getElementById("btn-consultar");
-    const estado = document.getElementById("estado");
-    const resultado = document.getElementById("resultado");
-    const avisoCorpus = document.getElementById("aviso-corpus");
-    const selectorProveedor = document.getElementById("selector-proveedor");
-    const inputProveedor = document.getElementById("input-proveedor");
+  <footer>
+    <p><b>Juris IA Chile</b> entrega información general y no constituye asesoría legal. No reemplaza a un abogado o abogada.</p>
+    <p>Fuentes: <a href="https://leyes.pisanvs.cl" target="_blank" rel="noopener">leyes.pisanvs.cl</a> (proyecto ley-chile) y <a href="https://www.bcn.cl/leychile" target="_blank" rel="noopener">LeyChile — Biblioteca del Congreso Nacional</a>.</p>
+  </footer>
 
-    const NOMBRES_PROVEEDOR = { claude: "Claude", qwen: "Qwen (local)" };
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+  (() => {
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+
+    // ---------------- Tema ----------------
+    const raiz = document.documentElement;
+    const leerPref = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+    const guardarPref = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+    const temaGuardado = leerPref("juris-tema");
+    if (temaGuardado) raiz.dataset.theme = temaGuardado;
+    $("btn-tema").addEventListener("click", () => {
+      const oscuroAhora = raiz.dataset.theme
+        ? raiz.dataset.theme === "dark"
+        : matchMedia("(prefers-color-scheme: dark)").matches;
+      raiz.dataset.theme = oscuroAhora ? "light" : "dark";
+      guardarPref("juris-tema", raiz.dataset.theme);
+    });
+
+    // ---------------- Utilidades ----------------
+    function escapeHtml(texto) {
+      return String(texto ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    function urlSegura(url) {
+      return /^https?:\/\//i.test(url || "") ? url : "#";
+    }
+    let temporizadorToast;
+    function toast(msg) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("visible");
+      clearTimeout(temporizadorToast);
+      temporizadorToast = setTimeout(() => t.classList.remove("visible"), 2200);
+    }
+    function autoAjustar(ta) {
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 220) + "px";
+    }
+    function formatoFecha(iso) {
+      if (!iso) return "";
+      const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return m ? `${m[3]}-${m[2]}-${m[1]}` : iso;
+    }
+
+    // Markdown básico del informe -> HTML. Se aplica SOBRE texto ya
+    // escapado, así que el modelo no puede inyectar HTML.
+    function enLinea(t) {
+      return t
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+        .replace(/\b(art(?:[íi]culo|\.)s?\s+\d+(?:\s*°|º)?(?:\s+(?:bis|ter|qu[áa]ter))?)/gi, '<span class="cita">$1</span>');
+    }
+    function renderMarkdown(texto) {
+      const lineas = escapeHtml(texto).split("\n");
+      let html = "";
+      let lista = null;
+      let cita = [];
+      const cerrarLista = () => { if (lista) { html += `</${lista}>`; lista = null; } };
+      const cerrarCita = () => { if (cita.length) { html += `<blockquote>${cita.map(enLinea).join("<br>")}</blockquote>`; cita = []; } };
+
+      for (const cruda of lineas) {
+        const l = cruda.trim();
+        const ul = /^[-*•]\s+/.test(l);
+        const ol = /^\d+[.)]\s+/.test(l);
+        const bq = /^&gt;\s?/.test(l);
+        if (!bq) cerrarCita();
+        if (lista && !((lista === "ul" && ul) || (lista === "ol" && ol))) cerrarLista();
+        if (!l) continue;
+        if (/^#{1,2}\s+/.test(l) || /^#{3}\s+/.test(l)) {
+          html += `<h3>${enLinea(l.replace(/^#{1,3}\s+/, ""))}</h3>`;
+        } else if (/^#{4,6}\s+/.test(l)) {
+          html += `<h4>${enLinea(l.replace(/^#{4,6}\s+/, ""))}</h4>`;
+        } else if (/^(-{3,}|\*{3,})$/.test(l)) {
+          html += "<hr>";
+        } else if (bq) {
+          cita.push(l.replace(/^&gt;\s?/, ""));
+        } else if (ul || ol) {
+          const tipo = ul ? "ul" : "ol";
+          if (!lista) { lista = tipo; html += `<${tipo}>`; }
+          html += `<li>${enLinea(l.replace(/^([-*•]|\d+[.)])\s+/, ""))}</li>`;
+        } else {
+          html += `<p>${enLinea(l)}</p>`;
+        }
+      }
+      cerrarCita();
+      cerrarLista();
+      return html;
+    }
+
+    // ---------------- Proveedores ----------------
+    let proveedores = [];
+    const selectorProveedor = $("selector-proveedor");
+    const inputProveedor = $("input-proveedor");
+
+    function proveedorElegido() {
+      return proveedores.length > 1 ? inputProveedor.value : (proveedores[0]?.id || "");
+    }
+    function infoProveedor(id) {
+      return proveedores.find((p) => p.id === id) || null;
+    }
+    const NOMBRE_CORTO = { vercel: "Nube (Vercel)", claude: "Claude", qwen: "Qwen local" };
 
     async function cargarProveedores() {
       try {
         const res = await fetch("/api/proveedores");
         const data = await res.json();
-        const proveedores = data.proveedores || [];
-        if (proveedores.length <= 1) return; // nada que elegir
+        proveedores = data.proveedores || [];
+        if (proveedores.length === 0) {
+          mostrarAvisoGlobal("El servidor no tiene ningún motor de IA configurado. Revisa la variable AI_GATEWAY_API_KEY (ver README).");
+          return;
+        }
         inputProveedor.innerHTML = proveedores
-          .map((p) => `<option value="${p.id}" title="${escapeHtml(p.descripcion || "")}">${escapeHtml(p.nombre)}</option>`)
+          .map((p) => `<option value="${escapeHtml(p.id)}" title="${escapeHtml(p.descripcion || "")}">${escapeHtml(NOMBRE_CORTO[p.id] || p.nombre)}</option>`)
           .join("");
-        if (data.predeterminado) inputProveedor.value = data.predeterminado;
-        selectorProveedor.style.display = "block";
-        inputProveedor.addEventListener("change", actualizarPrivacidad);
-        actualizarPrivacidad();
-      } catch (err) {
-        // Si esto falla, simplemente no se muestra el selector; el backend
-        // igual usará su proveedor predeterminado.
+        const guardado = leerPref("juris-proveedor");
+        inputProveedor.value = proveedores.some((p) => p.id === guardado) ? guardado : data.predeterminado;
+        selectorProveedor.title = infoProveedor(inputProveedor.value)?.nombre || "";
+        if (proveedores.length > 1) selectorProveedor.classList.remove("oculto");
+        inputProveedor.addEventListener("change", () => {
+          guardarPref("juris-proveedor", inputProveedor.value);
+          selectorProveedor.title = infoProveedor(inputProveedor.value)?.nombre || "";
+          actualizarPrivacidad();
+        });
+      } catch {
+        // Sin lista, el servidor usa su proveedor predeterminado.
       }
+      actualizarPrivacidad();
     }
-    cargarProveedores();
 
-    function escapeHtml(texto) {
+    function mostrarAvisoGlobal(msg) {
       const div = document.createElement("div");
-      div.textContent = texto;
-      return div.innerHTML;
+      div.className = "aviso error";
+      div.style.margin = "0 0 16px";
+      div.textContent = msg;
+      $("hilo").before(div);
     }
 
-    // Convierte el markdown basico del informe (titulos ##, listas, negritas)
-    // a HTML. Se aplica SOBRE el texto ya escapado, asi que no puede inyectar
-    // HTML que venga del modelo.
-    function renderInforme(texto) {
-      const lineas = escapeHtml(texto).split("\n");
-      let html = "";
-      let enLista = false;
-      const linea = (t) => t
-        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-        .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
-
-      for (const cruda of lineas) {
-        const l = cruda.trim();
-        const esItem = /^[-*•]\s+/.test(l);
-        if (enLista && !esItem) { html += "</ul>"; enLista = false; }
-
-        if (!l) continue;
-        if (/^#{1,4}\s+/.test(l)) {
-          html += `<h3>${linea(l.replace(/^#{1,4}\s+/, ""))}</h3>`;
-        } else if (esItem) {
-          if (!enLista) { html += "<ul>"; enLista = true; }
-          html += `<li>${linea(l.replace(/^[-*•]\s+/, ""))}</li>`;
-        } else {
-          html += `<p>${linea(l)}</p>`;
-        }
-      }
-      if (enLista) html += "</ul>";
-      return html;
-    }
-
-    function renderDocs(docs) {
-      if (!docs || docs.length === 0) return "";
-      return docs
-        .map((d) => {
-          const esCompleto = d.completo !== false;
-          const badgeCompletitud = esCompleto
-            ? '<span class="badge completo">Texto completo</span>'
-            : '<span class="badge extracto">Extracto</span>';
-          const badgeOrigen = d.origen === "remoto"
-            ? '<span class="badge remoto">Corpus completo</span>'
-            : '<span class="badge local">Ejemplo local</span>';
-          const nota = !esCompleto && d.nota
-            ? `<div class="nota-extracto">⚠ ${escapeHtml(d.nota)}</div>`
-            : "";
-          return `
-        <div class="doc-card">
-          <div class="fuente">${escapeHtml(d.cuerpo_legal)} — ${escapeHtml(d.articulo)} ${badgeOrigen} ${badgeCompletitud}</div>
-          <div class="tema">${escapeHtml(d.tema)}</div>
-          <div class="texto">${escapeHtml(d.texto)}</div>
-          ${nota}
-          <a href="${d.fuente_url}" target="_blank" rel="noopener">Ver fuente oficial →</a>
-        </div>`;
-        })
-        .join("");
-    }
-
-    // --- Pestañas -------------------------------------------------------
-    const paneles = { "panel-consulta": form, "panel-documento": document.getElementById("form-documento") };
-    document.querySelectorAll(".pestana").forEach((boton) => {
-      boton.addEventListener("click", () => {
-        document.querySelectorAll(".pestana").forEach((b) => b.classList.remove("activa"));
-        boton.classList.add("activa");
-        for (const [id, panel] of Object.entries(paneles)) {
-          panel.style.display = id === boton.dataset.panel ? (id === "panel-documento" ? "flex" : "flex") : "none";
-        }
-        resultado.innerHTML = "";
-      });
+    // ---------------- Ejemplos ----------------
+    const EJEMPLOS = [
+      ["Laboral", "¿Cuántos días de vacaciones me corresponden al año?"],
+      ["Laboral", "Me despidieron por necesidades de la empresa, ¿qué indemnización me corresponde?"],
+      ["Arriendo", "¿Qué plazo tiene el arrendador para devolver la garantía?"],
+      ["Consumidor", "Compré un producto defectuoso, ¿puedo exigir la devolución del dinero?"],
+      ["Familia", "¿Cómo se calcula la pensión de alimentos para un hijo?"],
+      ["Civil", "¿En qué plazo prescribe una deuda en Chile?"],
+    ];
+    $("rejilla-ejemplos").innerHTML = EJEMPLOS.map(([area, preg]) =>
+      `<button type="button" class="ejemplo" data-preg="${escapeHtml(preg)}"><span class="area">${escapeHtml(area)}</span><span class="preg">${escapeHtml(preg)}</span></button>`
+    ).join("");
+    $("rejilla-ejemplos").addEventListener("click", (e) => {
+      const b = e.target.closest(".ejemplo");
+      if (!b) return;
+      inputPregunta.value = b.dataset.preg;
+      enviarConsulta();
     });
 
-    // --- Documentos -----------------------------------------------------
-    const formDoc = document.getElementById("form-documento");
-    const zona = document.getElementById("zona-archivo");
-    const textoZona = document.getElementById("texto-zona");
-    const inputArchivo = document.getElementById("input-archivo");
-    const inputPreguntaDoc = document.getElementById("input-pregunta-doc");
-    const botonDoc = document.getElementById("btn-documento");
-    const privacidad = document.getElementById("privacidad");
+    // ---------------- Modos ----------------
+    let modo = "consulta";
+    const formDoc = $("form-documento");
+    const dockConsulta = $("dock-consulta");
+    document.querySelectorAll(".segmentos button").forEach((b) => {
+      b.addEventListener("click", () => cambiarModo(b.dataset.modo));
+    });
+    function cambiarModo(nuevo) {
+      modo = nuevo;
+      document.querySelectorAll(".segmentos button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.modo === nuevo)));
+      formDoc.classList.toggle("oculto", nuevo !== "documento");
+      hiloDoc.classList.toggle("oculto", nuevo !== "documento");
+      hilo.classList.toggle("oculto", nuevo !== "consulta");
+      dockConsulta.classList.toggle("oculto", nuevo !== "consulta");
+      $("ejemplos").classList.toggle("oculto", nuevo !== "consulta" || historial.length > 0);
+      const vacio = (nuevo === "consulta" ? hilo : hiloDoc).children.length === 0;
+      $("vista-inicio").classList.toggle("oculto", !vacio);
+      if (nuevo === "documento") $("input-pregunta-doc").focus();
+      else inputPregunta.focus();
+    }
 
-    // Cuál proveedor va a procesar el archivo decide si el documento sale o
-    // no del computador. El usuario tiene que saberlo ANTES de subirlo, no
-    // después, así que se dice en grande y no en letra chica.
-    function actualizarPrivacidad() {
-      const elegido = selectorProveedor.style.display !== "none" ? inputProveedor.value : "qwen";
-      if (elegido === "claude") {
-        privacidad.className = "privacidad nube";
-        privacidad.textContent =
-          "Atención: está seleccionado Claude, que funciona en la nube. El texto de este documento se enviará a los servidores de Anthropic para ser analizado. Si el documento tiene información confidencial de un cliente, cambia a Qwen local antes de subirlo.";
-      } else {
-        privacidad.className = "privacidad local";
-        privacidad.textContent =
-          "Tu documento se procesa completamente en este computador, con Qwen local. No se envía a internet ni se guarda copia en disco.";
+    // ---------------- Streaming ----------------
+    // Lee la respuesta Server-Sent Events del servidor (vía fetch, porque
+    // EventSource no permite POST) y llama a onEvento por cada evento.
+    async function leerEventos(res, onEvento) {
+      const lector = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { value, done } = await lector.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let corte;
+        while ((corte = buf.indexOf("\n\n")) >= 0) {
+          const bloque = buf.slice(0, corte);
+          buf = buf.slice(corte + 2);
+          let evento = "message";
+          let datos = "";
+          for (const linea of bloque.split("\n")) {
+            if (linea.startsWith("event:")) evento = linea.slice(6).trim();
+            else if (linea.startsWith("data:")) datos += linea.slice(5).trim();
+          }
+          if (!datos) continue;
+          let objeto;
+          try { objeto = JSON.parse(datos); } catch { continue; }
+          onEvento(evento, objeto);
+        }
       }
     }
-    actualizarPrivacidad();
 
-    let archivoElegido = null;
-    function mostrarArchivo(archivo) {
-      archivoElegido = archivo || null;
-      textoZona.innerHTML = archivo
-        ? `<span class="archivo-elegido">${escapeHtml(archivo.name)}</span> — ${(archivo.size / 1024).toFixed(0)} KB`
-        : "Arrastra aquí tu documento, o haz clic para elegirlo";
+    // ---------------- Render de un turno ----------------
+    const hilo = $("hilo");
+    const hiloDoc = $("hilo-doc");
+    let historial = [];
+    let controlador = null;
+
+    function crearTurno({ pregunta, archivo }) {
+      const destino = archivo ? hiloDoc : hilo;
+      const q = document.createElement("div");
+      q.className = "turno-pregunta";
+      q.innerHTML = `<div class="burbuja">${archivo ? `<span class="archivo">📄 ${escapeHtml(archivo)}</span>` : ""}${escapeHtml(pregunta)}</div>`;
+      destino.appendChild(q);
+
+      const r = document.createElement("div");
+      r.innerHTML = `
+        <article class="tarjeta">
+          <div class="tarjeta-cab">
+            <div class="titulo">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+              ${archivo ? "Análisis del documento" : "Informe jurídico"}
+            </div>
+            <div class="meta" data-meta></div>
+          </div>
+          <div data-avisos></div>
+          <div class="pasos" data-pasos>
+            <div class="paso activo" data-paso="buscar"><span class="ic"></span>Buscando normas</div>
+            <div class="paso" data-paso="redactar"><span class="ic"></span>Redactando informe</div>
+          </div>
+          <div class="informe" data-informe></div>
+          <div class="acciones oculto" data-acciones>
+            <button type="button" class="btn-sec" data-accion="copiar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar
+            </button>
+            <button type="button" class="btn-sec" data-accion="descargar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+              Descargar
+            </button>
+            <button type="button" class="btn-sec" data-accion="imprimir">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Imprimir / PDF
+            </button>
+          </div>
+        </article>
+        <details class="fuentes oculto" data-fuentes>
+          <summary>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Normas consultadas <span class="cuenta" data-cuenta>0</span>
+            <span class="insignia cargando oculto" data-vig-resumen>Verificando vigencia…</span>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="lista-fuentes" data-lista></div>
+        </details>`;
+      destino.appendChild(r);
+      const sel = (a) => r.querySelector(`[data-${a}]`);
+      return {
+        raiz: r,
+        pregunta,
+        archivo,
+        texto: "",
+        documentos: [],
+        meta: sel("meta"),
+        avisos: sel("avisos"),
+        pasos: sel("pasos"),
+        informe: sel("informe"),
+        acciones: sel("acciones"),
+        fuentes: sel("fuentes"),
+        lista: sel("lista"),
+        cuenta: sel("cuenta"),
+        vigResumen: sel("vig-resumen"),
+      };
     }
 
+    function marcarPaso(turno, paso, estado) {
+      const el = turno.pasos.querySelector(`[data-paso="${paso}"]`);
+      if (!el) return;
+      el.classList.remove("activo", "hecho");
+      if (estado) el.classList.add(estado);
+    }
+
+    function agregarAviso(turno, tipo, html) {
+      const div = document.createElement("div");
+      div.className = `aviso ${tipo}`;
+      div.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><div>${html}</div>`;
+      turno.avisos.appendChild(div);
+    }
+
+    let pendienteRender = false;
+    function renderInforme(turno, final = false) {
+      if (final) {
+        turno.informe.innerHTML = renderMarkdown(turno.texto);
+        turno.informe.classList.remove("cursor");
+        return;
+      }
+      if (pendienteRender) return;
+      pendienteRender = true;
+      requestAnimationFrame(() => {
+        pendienteRender = false;
+        turno.informe.innerHTML = renderMarkdown(turno.texto);
+        turno.informe.classList.add("cursor");
+      });
+    }
+
+    function renderFuentes(turno, documentos) {
+      turno.documentos = documentos || [];
+      if (!turno.documentos.length) return;
+      turno.fuentes.classList.remove("oculto");
+      turno.cuenta.textContent = turno.documentos.length;
+      turno.lista.innerHTML = turno.documentos.map((d, i) => {
+        const origen = d.origen === "remoto"
+          ? '<span class="insignia">Corpus completo</span>'
+          : '<span class="insignia">Ejemplo local</span>';
+        const completitud = d.completo === false ? '<span class="insignia alerta">Extracto</span>' : "";
+        const vig = d.origen === "remoto" && d.idNorma && d.numero
+          ? `<span class="insignia cargando" data-vig="${escapeHtml(d.idNorma)}|${escapeHtml(d.numero)}">Verificando vigencia…</span>`
+          : "";
+        const nota = d.completo === false && d.nota ? `<div class="aviso" style="margin:10px 0 0">${escapeHtml(d.nota)}</div>` : "";
+        return `
+          <div class="fuente">
+            <div class="fuente-cab">
+              <span class="fuente-num">${i + 1}</span>
+              <div class="fuente-titulo"><b>${escapeHtml(d.articulo)}</b><span>${escapeHtml(d.cuerpo_legal)}</span></div>
+              <div class="insignias">${vig}${completitud}${origen}</div>
+            </div>
+            <div class="fuente-texto">${escapeHtml(d.texto)}</div>
+            ${nota}
+            <div class="fuente-pie">
+              <button type="button" data-expandir>Ver texto completo</button>
+              <a href="${escapeHtml(urlSegura(d.fuente_url))}" target="_blank" rel="noopener">Ver en fuente oficial ↗</a>
+            </div>
+          </div>`;
+      }).join("");
+      turno.lista.querySelectorAll("[data-expandir]").forEach((b) => {
+        const texto = b.closest(".fuente").querySelector(".fuente-texto");
+        if (texto.scrollHeight <= texto.clientHeight + 4) { b.remove(); texto.classList.add("abierto"); return; }
+        b.addEventListener("click", () => {
+          const abierto = texto.classList.toggle("abierto");
+          b.textContent = abierto ? "Ver menos" : "Ver texto completo";
+        });
+      });
+      verificarVigencia(turno);
+    }
+
+    // Consulta la vigencia en la BCN oficial en paralelo al informe.
+    async function verificarVigencia(turno) {
+      const articulos = [];
+      const vistos = new Set();
+      for (const d of turno.documentos) {
+        if (d.origen !== "remoto" || !d.idNorma || !d.numero) continue;
+        const clave = `${d.idNorma}|${d.numero}`;
+        if (vistos.has(clave)) continue;
+        vistos.add(clave);
+        articulos.push({ idNorma: d.idNorma, numero: d.numero });
+      }
+      if (!articulos.length) return;
+      turno.vigResumen.classList.remove("oculto");
+      const pintar = (clave, clase, texto, titulo) => {
+        turno.lista.querySelectorAll(`[data-vig="${CSS.escape(clave)}"]`).forEach((el) => {
+          el.className = `insignia ${clase}`;
+          el.textContent = texto;
+          if (titulo) el.title = titulo;
+        });
+      };
+      try {
+        const res = await fetch("/api/vigencia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ articulos }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error");
+        let vigentes = 0, derogados = 0;
+        for (const r of data.resultados || []) {
+          const clave = `${r.idNorma}|${r.numero}`;
+          if (r.estado === "vigente") {
+            vigentes++;
+            pintar(clave, "ok", `✓ Vigente${r.fechaVersion ? " · versión " + formatoFecha(r.fechaVersion) : ""}`, "Verificado en LeyChile / BCN (fuente oficial)");
+          } else if (r.estado === "derogado") {
+            derogados++;
+            pintar(clave, "error", "Derogado", "Según LeyChile / BCN (fuente oficial)");
+          } else {
+            pintar(clave, "", "Vigencia no verificada", r.error || "No se pudo confirmar en la fuente oficial");
+          }
+        }
+        turno.vigResumen.className = `insignia ${derogados ? "error" : vigentes ? "ok" : ""}`;
+        turno.vigResumen.textContent = derogados
+          ? `${derogados} derogado${derogados > 1 ? "s" : ""}`
+          : vigentes ? `${vigentes} vigente${vigentes > 1 ? "s" : ""} (BCN)` : "Vigencia no verificada";
+        if (derogados) {
+          agregarAviso(turno, "error", "<b>Atención:</b> al menos una de las normas consultadas figura como <b>derogada</b> en la fuente oficial. Revisa las fuentes antes de usar este informe.");
+        }
+      } catch {
+        turno.vigResumen.className = "insignia";
+        turno.vigResumen.textContent = "Vigencia no verificada";
+        for (const a of articulos) pintar(`${a.idNorma}|${a.numero}`, "", "Vigencia no verificada");
+      }
+    }
+
+    function activarAcciones(turno) {
+      turno.acciones.classList.remove("oculto");
+      turno.acciones.addEventListener("click", async (e) => {
+        const b = e.target.closest("[data-accion]");
+        if (!b) return;
+        const accion = b.dataset.accion;
+        const fuentes = turno.documentos.map((d, i) => `${i + 1}. ${d.cuerpo_legal}, ${d.articulo} — ${d.fuente_url}`).join("\n");
+        const completo = `# Consulta: ${turno.pregunta}\n\n${turno.texto}\n\n---\n\n## Normas consultadas\n\n${fuentes}\n\n_Generado con Juris IA Chile el ${new Date().toLocaleString("es-CL")}. Información general; no constituye asesoría legal._\n`;
+        if (accion === "copiar") {
+          try { await navigator.clipboard.writeText(completo); toast("Informe copiado"); }
+          catch { toast("No se pudo copiar"); }
+        } else if (accion === "descargar") {
+          const blob = new Blob([completo], { type: "text/markdown;charset=utf-8" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `informe-juris-ia-${new Date().toISOString().slice(0, 10)}.md`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        } else if (accion === "imprimir") {
+          window.print();
+        }
+      });
+    }
+
+    // Ejecuta una petición en streaming y pinta el turno.
+    async function ejecutar(turno, peticion) {
+      controlador = new AbortController();
+      modoOcupado(true);
+      const inicio = performance.now();
+      let terminado = false;
+      try {
+        const res = await fetch(peticion.url, { ...peticion.opciones, signal: controlador.signal });
+        const tipo = res.headers.get("content-type") || "";
+        if (!tipo.includes("text/event-stream")) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Error ${res.status}`);
+        }
+        await leerEventos(res, (evento, datos) => {
+          if (evento === "estado") {
+            if (datos.etapa === "redactando") { marcarPaso(turno, "buscar", "hecho"); marcarPaso(turno, "redactar", "activo"); }
+          } else if (evento === "documentos") {
+            marcarPaso(turno, "buscar", "hecho");
+            marcarPaso(turno, "redactar", "activo");
+            if (datos.corpus_completo_disponible === false) {
+              agregarAviso(turno, "", "El corpus jurídico completo no respondió a tiempo: el informe se basa solo en los ejemplos locales, que son limitados.");
+            }
+            const d = datos.documento;
+            if (d && d.recortado) {
+              agregarAviso(turno, "info", `El documento era extenso (${d.caracteres.toLocaleString("es-CL")} caracteres). Se analizaron las ${d.fragmentos_usados} secciones más relacionadas con tu pregunta, de ${d.fragmentos_totales}.`);
+            }
+            renderFuentes(turno, datos.documentos_usados || datos.normas_usadas);
+          } else if (evento === "texto") {
+            turno.texto += datos.t;
+            renderInforme(turno);
+          } else if (evento === "fin") {
+            terminado = true;
+            const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+            const nombre = NOMBRE_CORTO[datos.proveedor_usado] || datos.proveedor_usado;
+            turno.meta.innerHTML =
+              `<span>${escapeHtml(datos.modelo || nombre)}</span><span>· ${segundos} s</span>` +
+              (datos.desde_cache ? '<span class="insignia ok">Respuesta guardada</span>' : "");
+          } else if (evento === "error") {
+            throw new Error(datos.error || "Error al generar la respuesta");
+          }
+        });
+        if (!terminado && !turno.texto) throw new Error("La conexión se cortó antes de recibir la respuesta.");
+        turno.pasos.remove();
+        renderInforme(turno, true);
+        activarAcciones(turno);
+        return true;
+      } catch (err) {
+        turno.pasos.remove();
+        if (err.name === "AbortError") {
+          renderInforme(turno, true);
+          agregarAviso(turno, "", "Generación detenida.");
+          if (turno.texto) activarAcciones(turno);
+          return Boolean(turno.texto);
+        }
+        renderInforme(turno, true);
+        agregarAviso(turno, "error", escapeHtml(err.message));
+        return false;
+      } finally {
+        controlador = null;
+        modoOcupado(false);
+      }
+    }
+
+    // ---------------- Consulta ----------------
+    const inputPregunta = $("input-pregunta");
+    const formConsulta = $("form-consulta");
+    const botonConsultar = $("btn-consultar");
+
+    function modoOcupado(ocupado) {
+      botonConsultar.classList.toggle("detener", ocupado);
+      $("btn-consultar-texto").textContent = ocupado ? "Detener" : (historial.length ? "Preguntar" : "Consultar");
+      $("btn-consultar-ic").classList.toggle("oculto", ocupado);
+      $("btn-documento").disabled = ocupado;
+    }
+
+    function actualizarContador() {
+      const n = inputPregunta.value.length;
+      $("contador").textContent = n > 450 ? `${n}/600` : "";
+    }
+    inputPregunta.addEventListener("input", () => { autoAjustar(inputPregunta); actualizarContador(); });
+    inputPregunta.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        enviarConsulta();
+      }
+    });
+    formConsulta.addEventListener("submit", (e) => { e.preventDefault(); enviarConsulta(); });
+
+    function entrarEnConversacion() {
+      $("vista-inicio").classList.add("oculto");
+      $("ejemplos").classList.add("oculto");
+      dockConsulta.classList.add("dock");
+      $("btn-nueva").classList.remove("oculto");
+      inputPregunta.placeholder = "Haz una repregunta o una nueva consulta…";
+    }
+
+    async function enviarConsulta() {
+      if (controlador) { controlador.abort(); return; }
+      const pregunta = inputPregunta.value.trim();
+      if (!pregunta) { inputPregunta.focus(); return; }
+      entrarEnConversacion();
+      inputPregunta.value = "";
+      autoAjustar(inputPregunta);
+      actualizarContador();
+
+      const turno = crearTurno({ pregunta });
+      turno.raiz.previousElementSibling.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      const ok = await ejecutar(turno, {
+        url: "/api/consultar",
+        opciones: {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+          body: JSON.stringify({
+            pregunta,
+            proveedor: proveedorElegido() || undefined,
+            historial: historial.slice(-3),
+            stream: true,
+          }),
+        },
+      });
+      if (ok && turno.texto) {
+        // Para repreguntas se envía un resumen: la "Respuesta directa".
+        const directa = (turno.texto.split(/\n##\s/)[0] || turno.texto).replace(/^##[^\n]*\n/, "");
+        historial.push({ pregunta, respuesta: directa.slice(0, 1500) });
+      }
+      $("btn-consultar-texto").textContent = historial.length ? "Preguntar" : "Consultar";
+      inputPregunta.focus();
+    }
+
+    $("btn-nueva").addEventListener("click", () => {
+      if (controlador) controlador.abort();
+      historial = [];
+      hilo.innerHTML = "";
+      $("vista-inicio").classList.remove("oculto");
+      $("ejemplos").classList.toggle("oculto", modo !== "consulta");
+      dockConsulta.classList.remove("dock");
+      $("btn-nueva").classList.add("oculto");
+      inputPregunta.placeholder = "Ej: ¿Cuántos días de vacaciones me corresponden al año?";
+      $("btn-consultar-texto").textContent = "Consultar";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      inputPregunta.focus();
+    });
+
+    // ---------------- Documento ----------------
+    const zona = $("zona-archivo");
+    const inputArchivo = $("input-archivo");
+    const inputPreguntaDoc = $("input-pregunta-doc");
+    const privacidad = $("privacidad");
+    let archivoElegido = null;
+
+    // Qué proveedor procesará el archivo decide si el documento sale o no
+    // del computador. Se dice ANTES de subirlo, no después.
+    function actualizarPrivacidad() {
+      const p = infoProveedor(proveedorElegido());
+      const nube = p ? p.nube !== false : true;
+      privacidad.className = `aviso privacidad ${nube ? "" : "ok"}`;
+      privacidad.innerHTML = nube
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><b>El documento se enviará a un servicio de IA en la nube</b> para analizarlo. No se guarda copia en este servidor. Si contiene información confidencial de un cliente, considera anonimizarlo${proveedores.some((x) => x.nube === false) ? " o cambiar el motor a <b>Qwen local</b>" : ""}.</div>`
+        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><b>Procesamiento local:</b> tu documento se analiza en este computador con Qwen. No se envía a internet ni se guarda copia en disco.</div>`;
+    }
+
+    function mostrarArchivo(archivo) {
+      archivoElegido = archivo || null;
+      $("texto-zona").innerHTML = archivo
+        ? `<span class="archivo-elegido">📄 ${escapeHtml(archivo.name)} · ${Math.max(1, Math.round(archivo.size / 1024))} KB</span><span style="display:block;margin-top:6px">Haz clic para cambiarlo</span>`
+        : "<b>Arrastra tu documento o haz clic para elegirlo</b><span>Contrato, demanda, escritura o sentencia · PDF, Word (.docx) o texto</span>";
+    }
     zona.addEventListener("click", () => inputArchivo.click());
+    zona.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputArchivo.click(); } });
     inputArchivo.addEventListener("change", () => mostrarArchivo(inputArchivo.files[0]));
-    ["dragenter", "dragover"].forEach((ev) =>
-      zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.add("encima"); })
-    );
-    ["dragleave", "drop"].forEach((ev) =>
-      zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.remove("encima"); })
-    );
+    ["dragenter", "dragover"].forEach((ev) => zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.add("encima"); }));
+    ["dragleave", "drop"].forEach((ev) => zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.remove("encima"); }));
     zona.addEventListener("drop", (e) => {
       const archivo = e.dataTransfer?.files?.[0];
-      if (archivo) { inputArchivo.files = e.dataTransfer.files; mostrarArchivo(archivo); }
+      if (archivo) mostrarArchivo(archivo);
+    });
+    inputPreguntaDoc.addEventListener("input", () => autoAjustar(inputPreguntaDoc));
+    inputPreguntaDoc.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); formDoc.requestSubmit(); }
     });
 
     formDoc.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!archivoElegido) { alert("Primero elige un documento."); return; }
+      if (controlador) return;
+      if (!archivoElegido) { toast("Primero elige un documento"); zona.focus(); return; }
       const pregunta = inputPreguntaDoc.value.trim();
       if (!pregunta) { inputPreguntaDoc.focus(); return; }
 
       const datos = new FormData();
-      datos.append("archivo", archivoElegido);
       datos.append("pregunta", pregunta);
-      if (selectorProveedor.style.display !== "none") datos.append("proveedor", inputProveedor.value);
+      datos.append("stream", "true");
+      const prov = proveedorElegido();
+      if (prov) datos.append("proveedor", prov);
+      datos.append("archivo", archivoElegido);
 
-      botonDoc.disabled = true;
-      estado.style.display = "block";
-      estado.textContent = `Leyendo ${archivoElegido.name}, buscando las normas aplicables y analizando… esto puede tardar varios minutos con un modelo local.`;
-      resultado.innerHTML = "";
-
-      try {
-        const res = await fetch("/api/documento", { method: "POST", body: datos });
-        const data = await res.json();
-        if (!res.ok) {
-          resultado.innerHTML = `<div class="respuesta"><h2>Error</h2>${escapeHtml(data.error || "Error desconocido")}</div>`;
-          return;
-        }
-
-        const d = data.documento || {};
-        const avisoRecorte = d.recortado
-          ? `<div class="aviso" style="background:#fdeecb;border-color:#f0c86b;color:#8a5a00;">El documento era extenso (${d.caracteres.toLocaleString("es-CL")} caracteres). Se analizaron las ${d.fragmentos_usados} secciones más relacionadas con tu pregunta, de ${d.fragmentos_totales}. Hay partes que no se leyeron.</div>`
-          : "";
-
-        const nombreProveedor = NOMBRES_PROVEEDOR[data.proveedor_usado] || data.proveedor_usado || "la IA";
-        resultado.innerHTML = `
-          ${avisoRecorte}
-          <div class="respuesta informe">
-            <h2>Análisis de ${escapeHtml(data.archivo)} — por ${escapeHtml(nombreProveedor)}</h2>
-            ${renderInforme(data.respuesta)}
-          </div>
-          <div>
-            <h2 style="color:#6b7280; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.03em;">Normas usadas como base</h2>
-            ${renderDocs(data.normas_usadas) || '<div class="vacio">No se encontraron normas relacionadas.</div>'}
-          </div>
-        `;
-      } catch (err) {
-        resultado.innerHTML = `<div class="respuesta"><h2>Error de conexión</h2>${escapeHtml(err.message)}</div>`;
-      } finally {
-        botonDoc.disabled = false;
-        estado.style.display = "none";
-      }
+      $("vista-inicio").classList.add("oculto");
+      const turno = crearTurno({ pregunta, archivo: archivoElegido.name });
+      turno.raiz.previousElementSibling.scrollIntoView({ behavior: "smooth", block: "start" });
+      await ejecutar(turno, {
+        url: "/api/documento",
+        opciones: { method: "POST", headers: { Accept: "text/event-stream" }, body: datos },
+      });
     });
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const pregunta = input.value.trim();
-      if (!pregunta) return;
-
-      const proveedorElegido = selectorProveedor.style.display !== "none" ? inputProveedor.value : "";
-
-      boton.disabled = true;
-      estado.style.display = "block";
-      estado.textContent = proveedorElegido === "qwen"
-        ? "Buscando en el corpus y consultando al modelo local (Qwen)… puede tardar más que Claude."
-        : "Buscando en el corpus y consultando a la IA…";
-      resultado.innerHTML = "";
-
-      try {
-        const res = await fetch("/api/consultar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pregunta, proveedor: proveedorElegido || undefined }),
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-          resultado.innerHTML = `<div class="respuesta"><h2>Error</h2>${escapeHtml(data.error || "Error desconocido")}</div>`;
-          return;
-        }
-
-        if (!data.corpus_completo_disponible) {
-          avisoCorpus.style.display = "block";
-          avisoCorpus.textContent = "⚠ El corpus jurídico completo no estuvo disponible para esta consulta; se usaron solo los ejemplos locales limitados.";
-        } else {
-          avisoCorpus.style.display = "none";
-        }
-
-        const nombreProveedor = NOMBRES_PROVEEDOR[data.proveedor_usado] || data.proveedor_usado || "la IA";
-        resultado.innerHTML = `
-          <div class="respuesta informe">
-            <h2>Informe de ${escapeHtml(nombreProveedor)}</h2>
-            ${renderInforme(data.respuesta)}
-          </div>
-          <div>
-            <h2 style="color:#6b7280; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.03em;">Documentos usados como base</h2>
-            ${renderDocs(data.documentos_usados) || '<div class="vacio">No se encontraron artículos relacionados.</div>'}
-          </div>
-        `;
-      } catch (err) {
-        resultado.innerHTML = `<div class="respuesta"><h2>Error de conexión</h2>${escapeHtml(err.message)}</div>`;
-      } finally {
-        boton.disabled = false;
-        estado.style.display = "none";
-      }
-    });
+    // ---------------- Inicio ----------------
+    cargarProveedores();
+    inputPregunta.focus();
+  })();
   </script>
 </body>
 </html>

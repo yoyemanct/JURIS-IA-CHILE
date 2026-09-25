@@ -59,14 +59,22 @@ function conTimeout(promesa, ms, etiqueta) {
   ]);
 }
 
-async function llamarHerramienta(nombre, args) {
+async function llamarHerramienta(nombre, args, reintento = true) {
   const client = await conectar();
-  const resultado = await conTimeout(
-    client.callTool({ name: nombre, arguments: args }),
-    TIMEOUT_MS,
-    nombre
-  );
-  return resultado;
+  try {
+    return await conTimeout(
+      client.callTool({ name: nombre, arguments: args }),
+      TIMEOUT_MS,
+      nombre
+    );
+  } catch (err) {
+    // La sesión MCP puede expirar si la instancia estuvo inactiva (pasa en
+    // Vercel): se descarta la conexión y se reintenta una vez con una nueva.
+    if (!reintento || /Tiempo de espera/.test(err.message)) throw err;
+    clientPromise = null;
+    client.close?.().catch?.(() => {});
+    return llamarHerramienta(nombre, args, false);
+  }
 }
 
 /** Extrae texto plano del resultado de una tool call MCP (content: [{type:"text", text}]). */
