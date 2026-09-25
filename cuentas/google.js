@@ -11,8 +11,8 @@ const crypto = require("node:crypto");
 const almacen = require("./almacen");
 const cuentas = require("./cuentas");
 
-const CLIENTE = process.env.GOOGLE_CLIENT_ID || "";
-const SECRETO = process.env.GOOGLE_CLIENT_SECRET || "";
+const CLIENTE = (process.env.GOOGLE_CLIENT_ID || "").trim();
+const SECRETO = (process.env.GOOGLE_CLIENT_SECRET || "").trim();
 const COOKIE_ESTADO = "dci_google_estado";
 
 function redireccion(base) {
@@ -67,7 +67,10 @@ async function completar(req, base) {
     }),
   });
   const tokens = await respuesta.json().catch(() => ({}));
-  if (!respuesta.ok || !tokens.id_token) throw new Error("Google no confirmó el ingreso. Intenta de nuevo.");
+  if (!respuesta.ok || !tokens.id_token) {
+    console.error("Google rechazó el canje del código:", respuesta.status, tokens.error, tokens.error_description);
+    throw new Error(`Google no confirmó el ingreso (${tokens.error || respuesta.status}). Intenta de nuevo.`);
+  }
 
   // El id_token llegó directo de Google por HTTPS: basta revisar a quién va
   // dirigido, quién lo emitió, su vigencia y que el correo esté verificado.

@@ -1674,7 +1674,17 @@
       // De vuelta desde Mercado Pago: se confirma el pago de inmediato.
       const params = new URLSearchParams(location.search);
       if (params.get("ingreso") === "google") { history.replaceState(null, "", location.pathname); toast("Sesión iniciada con Google"); }
-      if (params.get("error_ingreso")) { history.replaceState(null, "", location.pathname); toast(params.get("error_ingreso")); }
+      if (params.get("error_ingreso")) {
+        history.replaceState(null, "", location.pathname);
+        // Queda fijo en pantalla para poder leerlo (y reportarlo).
+        const aviso = document.createElement("div");
+        aviso.className = "aviso error";
+        aviso.style.margin = "0 0 16px";
+        aviso.textContent = "No se pudo ingresar con Google: " + params.get("error_ingreso");
+        $("hilo").before(aviso);
+        abrirAcceso("ingreso");
+        $("acceso-error").textContent = params.get("error_ingreso");
+      }
       if (params.get("pago") === "retorno" && cuenta.usuario) {
         history.replaceState(null, "", location.pathname);
         try {
