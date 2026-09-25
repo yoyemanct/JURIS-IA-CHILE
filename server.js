@@ -42,6 +42,18 @@ const app = express();
 // Necesario en Render/Railway/Fly para que el rate limit vea la IP real del
 // visitante y no la del proxy del hosting.
 app.set("trust proxy", 1);
+// Dominio antiguo (.xyz): todo se redirige al dominio principal (APP_URL),
+// salvo los avisos de Mercado Pago, que no siguen redirecciones y se
+// procesan aquí mismo.
+const DOMINIOS_ANTIGUOS = (process.env.DOMINIOS_ANTIGUOS || "derechochileia.xyz,www.derechochileia.xyz")
+  .split(",").map((d) => d.trim().toLowerCase()).filter(Boolean);
+app.use((req, res, next) => {
+  const host = String(req.headers["x-forwarded-host"] || req.headers.host || "").split(":")[0].toLowerCase();
+  if (process.env.APP_URL && DOMINIOS_ANTIGUOS.includes(host) && req.path !== "/api/pagos/webhook") {
+    return res.redirect(308, process.env.APP_URL.replace(/\/+$/, "") + req.originalUrl);
+  }
+  next();
+});
 app.use(express.json({ limit: "32kb" }));
 // Vercel entrega en cada petición un token OIDC que sirve para autenticarse
 // ante AI Gateway sin clave; se registra para usarlo como respaldo.
