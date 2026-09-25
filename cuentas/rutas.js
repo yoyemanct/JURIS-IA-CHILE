@@ -102,10 +102,17 @@ async function sincronizarSuscripcion(idPreapproval, { trasCobro = false } = {})
 // aviso del primer cobro).
 async function revisarPrecioPendiente(usuario) {
   const s = usuario && usuario.suscripcion;
-  if (!s || s.estado !== "authorized" || s.precioNormalAplicado || !(s.monto < planes.PLANES.pro.precio)) return usuario;
+  if (!s || !s.id) return usuario;
   const hace = Date.now() - new Date(s.actualizado || 0).getTime();
   const faltan = new Date(s.proximoCobro || 0).getTime() - Date.now();
-  if (hace < 6 * 3600 * 1000 || faltan > 10 * 86400 * 1000) return usuario;
+  // Pago iniciado sin confirmar: puede que se haya perdido el aviso y que el
+  // usuario no haya vuelto desde Mercado Pago. Se consulta como máximo una vez
+  // por minuto y solo los primeros 3 días.
+  const pagoSinConfirmar = s.estado === "pending" && hace > 60 * 1000 && hace < 3 * 86400 * 1000;
+  const precioSinSubir =
+    s.estado === "authorized" && !s.precioNormalAplicado && s.monto < planes.PLANES.pro.precio &&
+    hace >= 6 * 3600 * 1000 && faltan <= 10 * 86400 * 1000;
+  if (!pagoSinConfirmar && !precioSinSubir) return usuario;
   try {
     return (await sincronizarSuscripcion(s.id)) || usuario;
   } catch (err) {
