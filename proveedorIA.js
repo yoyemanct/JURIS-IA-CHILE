@@ -28,27 +28,37 @@ const MAX_TOKENS_RESPUESTA = Number(process.env.MAX_TOKENS_RESPUESTA || 4000);
 const TEMPERATURA = Number(process.env.TEMPERATURA_IA || 0.2);
 
 // --- Vercel AI Gateway ---------------------------------------------------
-const VERCEL_AI_URL = (process.env.VERCEL_AI_GATEWAY_URL || "https://ai-gateway.vercel.sh/v1").replace(/\/+$/, "");
+// Ojo: Vercel no permite variables propias que empiecen con "VERCEL_",
+// por eso todas las de esta sección empiezan con "AI_GATEWAY_".
+const GATEWAY_URL = (process.env.AI_GATEWAY_URL || "https://ai-gateway.vercel.sh/v1").replace(/\/+$/, "");
 // Modelo principal y modelos de respaldo (si el principal falla antes de
 // empezar a responder, se prueba el siguiente). Formato "proveedor/modelo".
-const VERCEL_AI_MODEL = process.env.VERCEL_AI_MODEL || "anthropic/claude-haiku-4.5";
-const VERCEL_AI_RESPALDOS = (process.env.VERCEL_AI_MODELOS_RESPALDO || "google/gemini-2.5-flash")
+const GATEWAY_MODELO = process.env.AI_GATEWAY_MODEL || "anthropic/claude-haiku-4.5";
+const GATEWAY_RESPALDOS = (process.env.AI_GATEWAY_MODELOS_RESPALDO || "google/gemini-2.5-flash")
   .split(",")
   .map((m) => m.trim())
   .filter(Boolean);
-const VERCEL_AI_TIMEOUT_MS = Number(process.env.VERCEL_AI_TIMEOUT_MS || 30000);
+const GATEWAY_TIMEOUT_MS = Number(process.env.AI_GATEWAY_TIMEOUT_MS || 30000);
+
+// Los valores de ejemplo de .env.example ("sk-ant-tu-clave-aqui") no son
+// claves reales: se tratan como si la variable no existiera, para que un
+// .env copiado sin editar no active un proveedor que va a fallar.
+function claveReal(valor) {
+  const v = (valor || "").trim();
+  return v && !/tu-clave/i.test(v) ? v : null;
+}
 
 // En Vercel, la función recibe automáticamente un token OIDC que el
 // gateway acepta, así que la clave explícita es opcional allí.
 function claveVercel() {
-  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || null;
+  return claveReal(process.env.AI_GATEWAY_API_KEY) || process.env.VERCEL_OIDC_TOKEN || null;
 }
 
 // --- Claude directo -------------------------------------------------------
 const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5";
 let anthropic = null;
-if (process.env.ANTHROPIC_API_KEY) {
-  anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+if (claveReal(process.env.ANTHROPIC_API_KEY)) {
+  anthropic = new Anthropic({ apiKey: claveReal(process.env.ANTHROPIC_API_KEY) });
 }
 
 // --- Qwen local (Ollama) --------------------------------------------------
@@ -78,7 +88,7 @@ function proveedoresDisponibles() {
   if (claveVercel()) {
     disponibles.push({
       id: "vercel",
-      nombre: `IA en la nube vía Vercel (${VERCEL_AI_MODEL})`,
+      nombre: `IA en la nube vía Vercel (${GATEWAY_MODELO})`,
       descripcion: "Rápido y con respaldo automático entre modelos. El texto se envía a la nube.",
       nube: true,
     });
@@ -130,11 +140,11 @@ async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onT
   const controlador = new AbortController();
   // El temporizador cubre solo la espera del PRIMER byte: una vez que el
   // modelo empieza a escribir, se le deja terminar.
-  const temporizador = setTimeout(() => controlador.abort(), VERCEL_AI_TIMEOUT_MS);
+  const temporizador = setTimeout(() => controlador.abort(), GATEWAY_TIMEOUT_MS);
 
   let respuesta;
   try {
-    respuesta = await fetch(`${VERCEL_AI_URL}/chat/completions`, {
+    respuesta = await fetch(`${GATEWAY_URL}/chat/completions`, {
       method: "POST",
       signal: controlador.signal,
       headers: {
@@ -202,7 +212,7 @@ async function responderConVercel(opciones) {
   if (!claveVercel()) {
     throw errorCon("VERCEL_NO_CONFIGURADO", "No hay AI_GATEWAY_API_KEY configurada en el servidor.");
   }
-  const modelos = [VERCEL_AI_MODEL, ...VERCEL_AI_RESPALDOS.filter((m) => m !== VERCEL_AI_MODEL)];
+  const modelos = [GATEWAY_MODELO, ...GATEWAY_RESPALDOS.filter((m) => m !== GATEWAY_MODELO)];
   let ultimoError;
   for (const modelo of modelos) {
     let empezo = false;
