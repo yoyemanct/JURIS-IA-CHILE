@@ -63,9 +63,12 @@ superar ~4,5 MB (límite de la plataforma), y Qwen local no está disponible all
 
 ### Cuentas y cobro (Mercado Pago)
 
-La app puede cobrar una suscripción mensual con Mercado Pago: plan **Gratis** (5 consultas al
-mes) y plan **Pro** ($19.990/mes, ilimitado), configurables con variables de entorno (ver
-`.env.example`). El usuario crea su cuenta con correo y contraseña o con Google, se suscribe en
+La app puede cobrar una suscripción mensual con Mercado Pago: **una consulta de prueba gratis**
+por cuenta, respondida con el mismo modelo del plan Pro, y el plan **Pro** ($19.990/mes,
+ilimitado) con **50 % de descuento el primer mes** ($9.995). Mercado Pago no ofrece "primer cobro
+con descuento" en suscripciones: la suscripción se crea con el monto rebajado y, al registrarse el
+primer cobro, la app la sube sola al precio normal. Todo es configurable con variables de entorno
+(ver `.env.example`). El usuario crea su cuenta con correo y contraseña o con Google, se suscribe en
 Mercado Pago y la app recibe los avisos de pago en `/api/pagos/webhook`.
 
 El cobro se activa solo cuando están configurados `MP_ACCESS_TOKEN`, `SESSION_SECRET` y la base
