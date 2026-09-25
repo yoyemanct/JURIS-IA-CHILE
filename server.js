@@ -13,6 +13,11 @@ const mcp = require("./mcpLeyChile");
 const multer = require("multer");
 const lectorDocumentos = require("./fuentes/documentos");
 const prompts = require("./prompts");
+const { investigar } = require("./investigacion");
+const pjud = require("./fuentes/jurisprudencia/pjud");
+const { buscarSentenciasTC } = require("./fuentes/jurisprudencia/tconstitucional");
+const { buscarDictamenes } = require("./fuentes/jurisprudencia/contraloria");
+const { buscarDoctrina } = require("./fuentes/doctrina");
 const { CacheTTL, claveDeTexto } = require("./cache");
 
 const PORT = process.env.PORT || 3000;
@@ -270,7 +275,7 @@ async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
 
   try {
     canal?.enviar("estado", { etapa: "buscando", mensaje: mensajeBuscando });
-    const { meta, systemPrompt, userMessage, claveCache } = await preparar();
+    const { meta, systemPrompt, userMessage, claveCache, maxTokens } = await preparar();
     canal?.enviar("documentos", meta);
 
     const enCache = claveCache ? cacheRespuestas.obtener(claveCache) : undefined;
@@ -287,6 +292,7 @@ async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
       proveedor,
       systemPrompt,
       userMessage,
+      maxTokens,
       onTexto: canal ? (t) => canal.enviar("texto", { t }) : undefined,
     });
     if (claveCache) cacheRespuestas.guardar(claveCache, { texto, proveedor: usado, modelo });
@@ -324,27 +330,46 @@ app.post("/api/consultar", limitadorIA, async (req, res) => {
   const proveedor = validarProveedor(req, res);
   if (!proveedor) return;
   const historial = prompts.sanearHistorial(req.body?.historial);
+  // "consulta": informe jurídico. "procedimiento": guía de tramitación paso
+  // a paso para el abogado que litiga.
+  const modo = req.body?.modo === "procedimiento" ? "procedimiento" : "consulta";
 
   await generar(req, res, {
     proveedor,
-    mensajeBuscando: "Buscando normas aplicables en la legislación chilena…",
+    mensajeBuscando: "Buscando normas, jurisprudencia y doctrina…",
     preparar: async () => {
       // En una repregunta, la pregunta anterior aporta la materia
       // ("¿y si es a plazo fijo?" por sí sola no dice de qué se habla).
       const consultaBusqueda = historial.length
         ? `${pregunta} ${historial[historial.length - 1].pregunta}`
         : pregunta;
-      const { documentos, remotoDisponible, remotoError } = await buscarContexto(consultaBusqueda, 14);
+      const r = await investigar({ pregunta, consultaBusqueda, proveedor, modo });
       return {
         meta: {
           pregunta,
-          documentos_usados: documentos,
-          corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
-          aviso_corpus_completo: !remotoDisponible ? remotoError : null,
+          modo,
+          documentos_usados: r.documentos,
+          jurisprudencia: r.jurisprudencia,
+          doctrina: r.doctrina,
+          avisos_fuentes: r.avisos,
+          plan: { materia: r.plan.materia, sedes: r.plan.sedes, origen: r.plan.origen },
+          corpus_completo_disponible: USAR_CORPUS_REMOTO && r.remotoDisponible,
+          aviso_corpus_completo: !r.remotoDisponible ? r.remotoError : null,
         },
-        systemPrompt: prompts.PROMPT_CONSULTA,
-        userMessage: prompts.mensajeConsulta({ pregunta, documentos, remotoDisponible, remotoError, historial }),
-        claveCache: remotoDisponible && historial.length === 0 ? `${proveedor}|${claveDeTexto(pregunta)}` : null,
+        systemPrompt: modo === "procedimiento" ? prompts.PROMPT_PROCEDIMIENTO : prompts.PROMPT_CONSULTA,
+        userMessage: prompts.mensajeConsulta({
+          pregunta,
+          documentos: r.documentos,
+          remotoDisponible: r.remotoDisponible,
+          remotoError: r.remotoError,
+          historial,
+          jurisprudencia: r.jurisprudencia,
+          doctrina: r.doctrina,
+          modo,
+        }),
+        // Una guía de tramitación completa es bastante más larga que un informe.
+        maxTokens: modo === "procedimiento" ? Number(process.env.MAX_TOKENS_PROCEDIMIENTO || 8000) : undefined,
+        claveCache: r.remotoDisponible && historial.length === 0 ? `${proveedor}|${modo}|${claveDeTexto(pregunta)}` : null,
       };
     },
   });
@@ -486,6 +511,79 @@ app.post("/api/vigencia", limitadorBusqueda, async (req, res) => {
   );
   res.set("Cache-Control", "private, max-age=600");
   res.json({ verificado_en: new Date().toISOString(), fuente: "LeyChile / BCN (oficial)", resultados });
+});
+
+// --- Endpoint: búsqueda directa de jurisprudencia y doctrina -----------
+//   /api/jurisprudencia?q=nulidad del despido&tribunal=corte_suprema
+//   /api/jurisprudencia?q=...&fuente=tc | cgr | doctrina
+app.get("/api/jurisprudencia", limitadorBusqueda, async (req, res) => {
+  const q = (req.query.q || "").toString().trim().slice(0, 200);
+  if (!q) return res.status(400).json({ error: "Falta el parámetro 'q'." });
+  const fuente = (req.query.fuente || "pjud").toString();
+  const tribunal = (req.query.tribunal || "corte_suprema").toString();
+  const limite = Math.min(Math.max(Number(req.query.limite) || 5, 1), 10);
+  try {
+    let r;
+    if (fuente === "tc") r = await buscarSentenciasTC({ consulta: q, limite });
+    else if (fuente === "cgr") r = await buscarDictamenes({ texto: q, limite });
+    else if (fuente === "doctrina") r = await buscarDoctrina({ consulta: q, limite });
+    else {
+      if (!pjud.BUSCADORES[tribunal]) {
+        return res.status(400).json({ error: `Tribunal desconocido. Opciones: ${Object.keys(pjud.BUSCADORES).join(", ")}` });
+      }
+      r = await pjud.buscarSentencias({ tribunal, todas: q, limite });
+    }
+    res.json({ consulta: q, fuente, ...r });
+  } catch (err) {
+    console.error("Error en /api/jurisprudencia:", err);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// --- Diagnóstico de fuentes ----------------------------------------------
+// Prueba cada fuente externa con una consulta real y dice cuál responde.
+// Sirve para comprobar, ya publicada la app, que todo está conectado.
+app.get("/api/fuentes", limitadorBusqueda, async (req, res) => {
+  const probar = async (nombre, fn) => {
+    const inicio = Date.now();
+    try {
+      const detalle = await Promise.race([
+        fn(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("tiempo de espera agotado")), 25000)),
+      ]);
+      return { fuente: nombre, ok: true, ms: Date.now() - inicio, detalle };
+    } catch (err) {
+      return { fuente: nombre, ok: false, ms: Date.now() - inicio, error: err.message };
+    }
+  };
+  const resultados = await Promise.all([
+    probar("Legislación (leyes.pisanvs.cl)", async () => {
+      const r = await buscarContexto("feriado anual vacaciones", 3);
+      if (!r.remotoDisponible) throw new Error(r.remotoError || "sin respuesta");
+      return `${r.documentos.length} artículos`;
+    }),
+    probar("LeyChile oficial (BCN)", async () => {
+      const r = await leyChile.obtenerArticulo({ idNorma: "207436", numeroArticulo: "67" });
+      return r.encontrado ? "Código del Trabajo, art. 67 encontrado" : "respondió, pero sin el artículo";
+    }),
+    probar("Corte Suprema (juris.pjud.cl)", async () => {
+      const r = await pjud.buscarSentencias({ tribunal: "corte_suprema", todas: "nulidad despido", limite: 1 });
+      return `${r.total} fallos en el índice`;
+    }),
+    probar("Tribunal Constitucional", async () => {
+      const r = await buscarSentenciasTC({ consulta: "debido proceso", limite: 1 });
+      return `${r.total} sentencias en el índice`;
+    }),
+    probar("Contraloría (dictámenes)", async () => {
+      const r = await buscarDictamenes({ texto: "feriado legal", limite: 1 });
+      return `${r.total} dictámenes en el índice`;
+    }),
+    probar("Doctrina (Crossref + OpenAlex)", async () => {
+      const r = await buscarDoctrina({ consulta: "despido injustificado indemnización", limite: 1 });
+      return `${r.resultados.length} artículo(s) de acceso abierto verificados`;
+    }),
+  ]);
+  res.json({ comprobado_en: new Date().toISOString(), resultados });
 });
 
 // --- Salud del servicio -------------------------------------------------

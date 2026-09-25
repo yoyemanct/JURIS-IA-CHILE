@@ -68,6 +68,20 @@ La Historia de la Ley (la discusión legislativa completa) está en PDF, pero su
 derivable** del número de ley: vive en un repositorio con identificadores opacos. Hay que
 obtener el enlace desde las relaciones de la norma.
 
+### Jurisprudencia judicial — integrada (septiembre de 2026)
+
+Se incorporaron, adaptados de Responsa (MIT), los conectores al Buscador Unificado de
+Sentencias del Poder Judicial (Corte Suprema, Cortes de Apelaciones y juzgados), al buscador
+del Tribunal Constitucional y a la base de dictámenes de la Contraloría, más doctrina de acceso
+abierto vía Crossref y OpenAlex. Responsa los verificó contra los servicios reales en agosto de
+2026; en este repositorio se probaron contra servidores simulados, porque el entorno de
+desarrollo no tenía acceso a esos sitios. `/api/fuentes` comprueba en vivo cuál responde.
+
+Pendiente: dictámenes de la Dirección del Trabajo (su buscador oficial está caído; Responsa
+arma un índice propio a partir de las portadillas mensuales) y del SII.
+
+Lo que sigue es el análisis original, anterior a la integración:
+
 ### Jurisprudencia judicial — el problema difícil
 
 El buscador del Poder Judicial está detrás de un muro anti-bot: las peticiones

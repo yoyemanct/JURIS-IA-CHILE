@@ -136,7 +136,7 @@ async function* leerLineas(cuerpo) {
 }
 
 // --- Vercel AI Gateway (API compatible con OpenAI, en streaming) -----------
-async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onTexto }) {
+async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onTexto, maxTokens, temperatura }) {
   const controlador = new AbortController();
   // El temporizador cubre solo la espera del PRIMER byte: una vez que el
   // modelo empieza a escribir, se le deja terminar.
@@ -154,8 +154,8 @@ async function responderConVercelModelo(modelo, { systemPrompt, userMessage, onT
       body: JSON.stringify({
         model: modelo,
         stream: true,
-        max_tokens: MAX_TOKENS_RESPUESTA,
-        temperature: TEMPERATURA,
+        max_tokens: maxTokens || MAX_TOKENS_RESPUESTA,
+        temperature: temperatura ?? TEMPERATURA,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
@@ -237,13 +237,14 @@ async function responderConVercel(opciones) {
 }
 
 // --- Claude directo (streaming) ---------------------------------------------
-async function responderConClaude({ systemPrompt, userMessage, onTexto }) {
+async function responderConClaude({ systemPrompt, userMessage, onTexto, maxTokens, temperatura }) {
   if (!anthropic) {
     throw errorCon("CLAUDE_NO_CONFIGURADO", "No hay una ANTHROPIC_API_KEY configurada en el servidor.");
   }
   const stream = anthropic.messages.stream({
     model: CLAUDE_MODEL,
-    max_tokens: MAX_TOKENS_RESPUESTA,
+    max_tokens: maxTokens || MAX_TOKENS_RESPUESTA,
+    ...(temperatura !== undefined ? { temperature: temperatura } : {}),
     // El system prompt es idéntico en todas las consultas: cachearlo reduce
     // la latencia y el costo de cada pregunta.
     system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
@@ -307,7 +308,7 @@ function crearFiltroPensamiento(emitir) {
   };
 }
 
-async function responderConQwen({ systemPrompt, userMessage, onTexto }) {
+async function responderConQwen({ systemPrompt, userMessage, onTexto, maxTokens, temperatura }) {
   if (!USAR_QWEN) {
     throw errorCon("QWEN_DESACTIVADO", "El modelo local Qwen está desactivado en este servidor (USAR_QWEN=false).");
   }
@@ -325,9 +326,9 @@ async function responderConQwen({ systemPrompt, userMessage, onTexto }) {
         model: OLLAMA_MODEL,
         stream: true,
         options: {
-          temperature: OLLAMA_TEMPERATURA,
+          temperature: temperatura ?? OLLAMA_TEMPERATURA,
           num_ctx: OLLAMA_NUM_CTX,
-          num_predict: MAX_TOKENS_RESPUESTA,
+          num_predict: maxTokens || MAX_TOKENS_RESPUESTA,
           top_p: 0.9,
         },
         messages: [
@@ -392,13 +393,34 @@ const PROVEEDORES = { vercel: responderConVercel, claude: responderConClaude, qw
  * ninguno / se pidió uno que no existe). onTexto recibe cada fragmento de
  * texto a medida que el modelo lo escribe.
  */
-async function responder({ proveedor, systemPrompt, userMessage, onTexto }) {
+async function responder({ proveedor, systemPrompt, userMessage, onTexto, maxTokens, temperatura }) {
   const elegido = PROVEEDORES[proveedor] ? proveedor : proveedorPredeterminado();
-  return PROVEEDORES[elegido]({ systemPrompt, userMessage, onTexto });
+  return PROVEEDORES[elegido]({ systemPrompt, userMessage, onTexto, maxTokens, temperatura });
+}
+
+/**
+ * Pide al modelo una respuesta corta en JSON (para planificar búsquedas).
+ * Solo usa proveedores en la nube: un modelo local tardaría más de lo que
+ * ahorra. Devuelve null si no hay proveedor adecuado o si la respuesta no es
+ * JSON válido; quien llama debe tener un plan de respaldo.
+ */
+async function completarJSON({ proveedor, systemPrompt, userMessage, maxTokens = 400 }) {
+  const nube = ["vercel", "claude"].filter((id) => proveedoresDisponibles().some((p) => p.id === id));
+  const elegido = nube.includes(proveedor) ? proveedor : nube[0];
+  if (!elegido) return null;
+  const { texto } = await PROVEEDORES[elegido]({ systemPrompt, userMessage, maxTokens, temperatura: 0 });
+  const m = texto.match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try {
+    return JSON.parse(m[0]);
+  } catch {
+    return null;
+  }
 }
 
 module.exports = {
   responder,
+  completarJSON,
   proveedoresDisponibles,
   proveedorPredeterminado,
   crearFiltroPensamiento,

@@ -39,12 +39,12 @@ function enlaceOficial(idNorma) {
   });
 }
 
-async function documentosDeNorma(ley, pregunta) {
+async function documentosDeNorma(ley, pregunta, maxArticulos = MAX_ARTICULOS_POR_NORMA) {
   const [articulosCrudo, fuenteUrl] = await Promise.all([
     mcp.buscarArticulos(ley.idNorma, pregunta),
     enlaceOficial(ley.idNorma).catch(() => `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}`),
   ]);
-  const articulos = normalizarArticulos(articulosCrudo).slice(0, MAX_ARTICULOS_POR_NORMA);
+  const articulos = normalizarArticulos(articulosCrudo).slice(0, maxArticulos);
 
   const completos = await Promise.all(
     articulos.map(async (art) => {
@@ -162,4 +162,39 @@ async function buscarContexto(pregunta, limite = 6) {
   return { ...resultado, documentos: resultado.documentos.map((d) => ({ ...d })) };
 }
 
-module.exports = { buscarContexto };
+// idNorma de una norma nombrada ("Código de Procedimiento Civil"), según el
+// primer resultado de search_laws. Se cachea: el nombre no cambia de norma.
+const cacheNormasNombradas = new CacheTTL({ maximo: 200, ttlMs: 7 * 24 * 60 * 60 * 1000 });
+function resolverNorma(nombre) {
+  return cacheNormasNombradas.recordar(claveDeTexto(nombre), async () => {
+    const leyes = normalizarLeyes(await mcp.buscarLeyes(nombre));
+    return leyes[0] || null;
+  }, { guardarSi: (ley) => Boolean(ley) });
+}
+
+/**
+ * Busca artículos pertinentes DENTRO de normas indicadas por nombre (por
+ * ejemplo, los códigos procesales que rigen un procedimiento). A diferencia
+ * de buscarContexto, que deja al buscador elegir las normas, aquí se sabe de
+ * antemano en qué cuerpo legal está la respuesta y se va directo a él.
+ */
+async function buscarEnNormasNombradas(nombres, consulta, maxArticulos = 8) {
+  if (process.env.USAR_CORPUS_REMOTO === "false" || !nombres?.length) return [];
+  const clave = `nombradas|${nombres.map(claveDeTexto).join(",")}|${maxArticulos}|${claveDeTexto(consulta)}`;
+  return cacheBusquedas.recordar(clave, async () => {
+    const porNorma = await Promise.all(
+      nombres.slice(0, 3).map(async (nombre) => {
+        try {
+          const ley = await resolverNorma(nombre);
+          return ley ? await documentosDeNorma(ley, consulta, maxArticulos) : [];
+        } catch (err) {
+          console.warn(`No se pudo consultar "${nombre}":`, err.message);
+          return [];
+        }
+      })
+    );
+    return porNorma.flat();
+  }, { guardarSi: (docs) => docs.length > 0 });
+}
+
+module.exports = { buscarContexto, buscarEnNormasNombradas };

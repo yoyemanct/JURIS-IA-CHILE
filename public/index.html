@@ -127,6 +127,7 @@
   }
   .segmentos button[aria-selected="true"] { background: var(--bg-elev); color: var(--texto); box-shadow: var(--sombra); }
   .centro { text-align: center; }
+  .etq-corta { display: none; }
 
   /* ---------- Compositor ---------- */
   .compositor {
@@ -226,6 +227,16 @@
   .informe code { background: var(--bg-sutil); padding: 1px 5px; border-radius: 5px; font-size: .88em; }
   .informe .cita { background: var(--acento-sutil); color: inherit; padding: 0 3px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
   .informe hr { border: 0; border-top: 1px solid var(--borde); margin: 16px 0; }
+  .informe .tabla { overflow-x: auto; margin: 0 0 14px; border: 1px solid var(--borde); border-radius: 10px; }
+  .informe table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  .informe th, .informe td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+  .informe th { background: var(--bg-sutil); font-weight: 600; font-size: .82rem; color: var(--texto-2); }
+  .informe tr:last-child td { border-bottom: 0; }
+  .informe li.casilla { list-style: none; margin-left: -20px; display: flex; gap: 9px; align-items: flex-start; }
+  .informe li.casilla::before {
+    content: ""; flex: none; width: 16px; height: 16px; margin-top: 3px; border: 2px solid var(--borde-fuerte); border-radius: 4px;
+  }
+  .informe li.casilla.hecha::before { background: var(--ok); border-color: var(--ok); }
   .cursor::after { content: ""; display: inline-block; width: 8px; height: 1.05em; background: var(--marca-2); margin-left: 2px; vertical-align: text-bottom; animation: parpadeo 1s steps(2) infinite; }
   @keyframes parpadeo { 50% { opacity: 0; } }
 
@@ -281,6 +292,16 @@
   .fuente-pie a { font-weight: 500; text-decoration: none; }
   .fuente-pie a:hover, .fuente-pie button:hover { text-decoration: underline; }
 
+  .fuente.fallo { border-left: 3px solid var(--acento); }
+  .pasaje {
+    margin: 10px 0 0; padding: 8px 12px; border-left: 3px solid var(--borde-fuerte); background: var(--bg-sutil);
+    border-radius: 0 8px 8px 0; font-family: var(--serif); font-size: .93rem; color: var(--texto-2);
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { font-size: .74rem; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--borde); color: var(--texto-2); text-decoration: none; }
+  a.chip:hover { border-color: var(--marca-2); color: var(--marca-2); }
+  .fuente-meta { font-size: .8rem; color: var(--texto-3); margin-top: 6px; }
+
   /* ---------- Documento ---------- */
   .zona {
     border: 2px dashed var(--borde-fuerte); border-radius: 16px; padding: 28px 18px; text-align: center; background: var(--bg-elev);
@@ -329,6 +350,11 @@
     .informe { padding: 4px 16px 16px; }
     .burbuja { max-width: 92%; }
     .pista { display: none; }
+    .segmentos { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
+    .segmentos button { justify-content: center; padding: 8px 4px; font-size: .82rem; gap: 5px; }
+    .etq-larga { display: none; }
+    .etq-corta { display: inline; }
+    .sello { font-size: .72rem; }
     .tarjeta-cab .meta { display: none; }
   }
   @media print {
@@ -370,10 +396,10 @@
       <div class="hero">
         <span class="sello">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-          Fuentes legales reales · citas verificables
+          Leyes, fallos y doctrina reales · citas verificables
         </span>
-        <h1>Tu asistente de derecho chileno</h1>
-        <p>Pregunta en lenguaje simple y recibe un informe jurídico estructurado, con cada artículo citado y su vigencia verificada en la BCN.</p>
+        <h1 id="hero-titulo">Tu asistente de derecho chileno</h1>
+        <p id="hero-texto">Pregunta en lenguaje simple y recibe un informe jurídico con la ley aplicable, jurisprudencia real de los tribunales y doctrina verificable.</p>
         <div class="autoria"><span class="linea" aria-hidden="true"></span><span>Creado por <b>Jorge Muñoz Yeber</b>, Abogado</span><span class="linea" aria-hidden="true"></span></div>
       </div>
     </section>
@@ -382,16 +408,21 @@
       <div class="segmentos" role="tablist" aria-label="Modo">
         <button type="button" role="tab" aria-selected="true" data-modo="consulta">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Consulta legal
+          <span class="etq-larga">Consulta legal</span><span class="etq-corta">Consulta</span>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-modo="procedimiento">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="etq-larga">Guía de procedimiento</span><span class="etq-corta">Procedimiento</span>
         </button>
         <button type="button" role="tab" aria-selected="false" data-modo="documento">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
-          Analizar documento
+          <span class="etq-larga">Analizar documento</span><span class="etq-corta">Documento</span>
         </button>
       </div>
     </div>
 
     <div class="hilo" id="hilo"></div>
+    <div class="hilo oculto" id="hilo-proc"></div>
 
     <!-- Panel de documento -->
     <form id="form-documento" class="oculto" autocomplete="off">
@@ -435,13 +466,13 @@
     </div>
 
     <section id="ejemplos" class="ejemplos">
-      <div class="ejemplos-titulo">Consultas frecuentes</div>
+      <div class="ejemplos-titulo" id="ejemplos-titulo">Consultas frecuentes</div>
       <div class="rejilla" id="rejilla-ejemplos"></div>
 
       <div class="garantias">
         <div class="garantia">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          <div><b>Legislación completa</b>Más de 300.000 normas chilenas, consultadas en vivo.</div>
+          <div><b>Ley, jurisprudencia y doctrina</b>Normas en vivo, fallos de la Corte Suprema, el TC y dictámenes de Contraloría, y revistas jurídicas chilenas.</div>
         </div>
         <div class="garantia">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -449,7 +480,7 @@
         </div>
         <div class="garantia">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <div><b>Respuesta inmediata</b>El informe se escribe en pantalla mientras se genera.</div>
+          <div><b>Para el que litiga</b>Guías de tramitación paso a paso: plazos con su artículo, escritos, recursos y errores frecuentes.</div>
         </div>
       </div>
     </section>
@@ -458,7 +489,8 @@
   <footer>
     <p class="credito">Juris IA Chile · Creado por <b>Jorge Muñoz Yeber</b>, Abogado · © <span id="anio">2026</span></p>
     <p><b>Juris IA Chile</b> entrega información general y no constituye asesoría legal. No reemplaza a un abogado o abogada.</p>
-    <p>Fuentes: <a href="https://leyes.pisanvs.cl" target="_blank" rel="noopener">leyes.pisanvs.cl</a> (proyecto ley-chile) y <a href="https://www.bcn.cl/leychile" target="_blank" rel="noopener">LeyChile — Biblioteca del Congreso Nacional</a>.</p>
+    <p>Fuentes: <a href="https://leyes.pisanvs.cl" target="_blank" rel="noopener">leyes.pisanvs.cl</a> (proyecto ley-chile), <a href="https://www.bcn.cl/leychile" target="_blank" rel="noopener">LeyChile — BCN</a>, <a href="https://juris.pjud.cl" target="_blank" rel="noopener">Buscador de jurisprudencia del Poder Judicial</a>, <a href="https://buscador.tcchile.cl" target="_blank" rel="noopener">Tribunal Constitucional</a>, <a href="https://www.contraloria.cl/web/cgr/buscar-jurisprudencia" target="_blank" rel="noopener">Contraloría General de la República</a> y revistas jurídicas chilenas de acceso abierto (Crossref y OpenAlex).</p>
+    <p>Conectores de jurisprudencia y doctrina adaptados de <a href="https://github.com/djlarrix/Responsa" target="_blank" rel="noopener">Responsa</a> (Joaquín Larraín Guimoye, licencia MIT).</p>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -524,8 +556,23 @@
       const cerrarLista = () => { if (lista) { html += `</${lista}>`; lista = null; } };
       const cerrarCita = () => { if (cita.length) { html += `<blockquote>${cita.map(enLinea).join("<br>")}</blockquote>`; cita = []; } };
 
+      let tabla = [];
+      const cerrarTabla = () => {
+        if (!tabla.length) return;
+        const filas = tabla
+          .filter((f) => !/^\|?\s*:?-{2,}/.test(f.replace(/\s/g, "").replace(/^\|/, "")))
+          .map((f) => f.replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => enLinea(c.trim())));
+        tabla = [];
+        if (!filas.length) return;
+        const [cab, ...cuerpo] = filas;
+        html += `<div class="tabla"><table><thead><tr>${cab.map((c) => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
+          cuerpo.map((f) => `<tr>${f.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table></div>";
+      };
+
       for (const cruda of lineas) {
         const l = cruda.trim();
+        if (/^\|.*\|$/.test(l)) { cerrarCita(); cerrarLista(); tabla.push(l); continue; }
+        cerrarTabla();
         const ul = /^[-*•]\s+/.test(l);
         const ol = /^\d+[.)]\s+/.test(l);
         const bq = /^&gt;\s?/.test(l);
@@ -543,11 +590,16 @@
         } else if (ul || ol) {
           const tipo = ul ? "ul" : "ol";
           if (!lista) { lista = tipo; html += `<${tipo}>`; }
-          html += `<li>${enLinea(l.replace(/^([-*•]|\d+[.)])\s+/, ""))}</li>`;
+          const item = l.replace(/^([-*•]|\d+[.)])\s+/, "");
+          const casilla = item.match(/^\[( |x|X)\]\s+(.*)$/);
+          html += casilla
+            ? `<li class="casilla${casilla[1].trim() ? " hecha" : ""}">${enLinea(casilla[2])}</li>`
+            : `<li>${enLinea(item)}</li>`;
         } else {
           html += `<p>${enLinea(l)}</p>`;
         }
       }
+      cerrarTabla();
       cerrarCita();
       cerrarLista();
       return html;
@@ -602,17 +654,52 @@
     }
 
     // ---------------- Ejemplos ----------------
-    const EJEMPLOS = [
-      ["Laboral", "¿Cuántos días de vacaciones me corresponden al año?"],
-      ["Laboral", "Me despidieron por necesidades de la empresa, ¿qué indemnización me corresponde?"],
-      ["Arriendo", "¿Qué plazo tiene el arrendador para devolver la garantía?"],
-      ["Consumidor", "Compré un producto defectuoso, ¿puedo exigir la devolución del dinero?"],
-      ["Familia", "¿Cómo se calcula la pensión de alimentos para un hijo?"],
-      ["Civil", "¿En qué plazo prescribe una deuda en Chile?"],
-    ];
-    $("rejilla-ejemplos").innerHTML = EJEMPLOS.map(([area, preg]) =>
-      `<button type="button" class="ejemplo" data-preg="${escapeHtml(preg)}"><span class="area">${escapeHtml(area)}</span><span class="preg">${escapeHtml(preg)}</span></button>`
-    ).join("");
+    const EJEMPLOS = {
+      consulta: [
+        ["Laboral", "¿Cuántos días de vacaciones me corresponden al año?"],
+        ["Laboral", "Me despidieron por necesidades de la empresa, ¿qué indemnización me corresponde?"],
+        ["Arriendo", "¿Qué plazo tiene el arrendador para devolver la garantía?"],
+        ["Consumidor", "Compré un producto defectuoso, ¿puedo exigir la devolución del dinero?"],
+        ["Familia", "¿Cómo se calcula la pensión de alimentos para un hijo?"],
+        ["Civil", "¿En qué plazo prescribe una deuda en Chile?"],
+      ],
+      procedimiento: [
+        ["Laboral", "Demanda por despido injustificado en procedimiento de aplicación general"],
+        ["Laboral", "Denuncia de tutela laboral por vulneración de derechos fundamentales"],
+        ["Arriendo", "Juicio de terminación de arrendamiento por no pago de rentas"],
+        ["Civil", "Juicio ejecutivo para cobrar un pagaré"],
+        ["Familia", "Demanda de alimentos para un hijo menor de edad"],
+        ["Constitucional", "Recurso de protección ante la Corte de Apelaciones"],
+        ["Penal", "Querella por el delito de estafa"],
+        ["Civil", "Juicio ordinario de mayor cuantía por indemnización de perjuicios"],
+      ],
+    };
+    const TEXTOS_MODO = {
+      consulta: {
+        titulo: "Tu asistente de derecho chileno",
+        texto: "Pregunta en lenguaje simple y recibe un informe jurídico con la ley aplicable, jurisprudencia real de los tribunales y doctrina verificable.",
+        ejemplos: "Consultas frecuentes",
+        placeholder: "Ej: ¿Cuántos días de vacaciones me corresponden al año?",
+        corto: "Escribe tu pregunta legal…",
+        seguir: "Haz una repregunta o una nueva consulta…",
+      },
+      procedimiento: {
+        titulo: "Guía de tramitación paso a paso",
+        texto: "Indica el procedimiento que vas a litigar y recibe cada etapa de inicio a fin: tribunal competente, escritos, plazos con su artículo, recursos, errores frecuentes y lista de verificación.",
+        ejemplos: "Procedimientos frecuentes",
+        placeholder: "Ej: Juicio ejecutivo para cobrar un pagaré",
+        corto: "¿Qué procedimiento vas a tramitar?",
+        seguir: "Pregunta por una etapa, un plazo o un escrito…",
+      },
+    };
+    const esAngosto = () => matchMedia("(max-width: 640px)").matches;
+    function renderEjemplos(m) {
+      $("rejilla-ejemplos").innerHTML = (EJEMPLOS[m] || []).map(([area, preg]) =>
+        `<button type="button" class="ejemplo" data-preg="${escapeHtml(preg)}"><span class="area">${escapeHtml(area)}</span><span class="preg">${escapeHtml(preg)}</span></button>`
+      ).join("");
+      $("ejemplos-titulo").textContent = TEXTOS_MODO[m]?.ejemplos || "";
+    }
+    renderEjemplos("consulta");
     $("rejilla-ejemplos").addEventListener("click", (e) => {
       const b = e.target.closest(".ejemplo");
       if (!b) return;
@@ -628,17 +715,33 @@
       b.addEventListener("click", () => cambiarModo(b.dataset.modo));
     });
     function cambiarModo(nuevo) {
+      if (controlador) controlador.abort();
       modo = nuevo;
+      const conversacional = nuevo !== "documento";
       document.querySelectorAll(".segmentos button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.modo === nuevo)));
       formDoc.classList.toggle("oculto", nuevo !== "documento");
       hiloDoc.classList.toggle("oculto", nuevo !== "documento");
-      hilo.classList.toggle("oculto", nuevo !== "consulta");
-      dockConsulta.classList.toggle("oculto", nuevo !== "consulta");
-      $("ejemplos").classList.toggle("oculto", nuevo !== "consulta" || historial.length > 0);
-      const vacio = (nuevo === "consulta" ? hilo : hiloDoc).children.length === 0;
+      for (const [m, ses] of Object.entries(sesiones)) ses.hilo.classList.toggle("oculto", m !== nuevo);
+      dockConsulta.classList.toggle("oculto", !conversacional);
+
+      const vacio = (conversacional ? sesiones[nuevo].hilo : hiloDoc).children.length === 0;
       $("vista-inicio").classList.toggle("oculto", !vacio);
-      if (nuevo === "documento") $("input-pregunta-doc").focus();
-      else inputPregunta.focus();
+      $("ejemplos").classList.toggle("oculto", !conversacional || !vacio);
+      if (conversacional) {
+        const t = TEXTOS_MODO[nuevo];
+        $("hero-titulo").textContent = t.titulo;
+        $("hero-texto").textContent = t.texto;
+        renderEjemplos(nuevo);
+        dockConsulta.classList.toggle("dock", !vacio);
+        $("btn-nueva").classList.toggle("oculto", vacio);
+        inputPregunta.placeholder = vacio ? (esAngosto() ? t.corto : t.placeholder) : t.seguir;
+        $("btn-consultar-texto").textContent = sesiones[nuevo].historial.length ? "Preguntar" : "Consultar";
+        inputPregunta.focus();
+      } else {
+        $("hero-titulo").textContent = "Analiza tu documento";
+        $("hero-texto").textContent = "Sube un contrato, demanda, escritura o sentencia y pregunta sobre él: se contrasta con las normas chilenas aplicables.";
+        $("input-pregunta-doc").focus();
+      }
     }
 
     // ---------------- Streaming ----------------
@@ -673,11 +776,17 @@
     // ---------------- Render de un turno ----------------
     const hilo = $("hilo");
     const hiloDoc = $("hilo-doc");
-    let historial = [];
+    // Cada modo conversacional lleva su propio hilo e historial de repreguntas.
+    const sesiones = {
+      consulta: { hilo, historial: [] },
+      procedimiento: { hilo: $("hilo-proc"), historial: [] },
+    };
+    const sesionActual = () => sesiones[modo] || sesiones.consulta;
     let controlador = null;
 
-    function crearTurno({ pregunta, archivo }) {
-      const destino = archivo ? hiloDoc : hilo;
+    function crearTurno({ pregunta, archivo, modoTurno }) {
+      const destino = archivo ? hiloDoc : sesiones[modoTurno].hilo;
+      const titulo = archivo ? "Análisis del documento" : modoTurno === "procedimiento" ? "Guía de procedimiento" : "Informe jurídico";
       const q = document.createElement("div");
       q.className = "turno-pregunta";
       q.innerHTML = `<div class="burbuja">${archivo ? `<span class="archivo">📄 ${escapeHtml(archivo)}</span>` : ""}${escapeHtml(pregunta)}</div>`;
@@ -689,7 +798,7 @@
           <div class="tarjeta-cab">
             <div class="titulo">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
-              ${archivo ? "Análisis del documento" : "Informe jurídico"}
+              ${titulo}
             </div>
             <div class="meta" data-meta></div>
           </div>
@@ -722,6 +831,22 @@
             <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </summary>
           <div class="lista-fuentes" data-lista></div>
+        </details>
+        <details class="fuentes oculto" data-juris>
+          <summary>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 13-7.5 7.5a2.12 2.12 0 0 1-3-3L11 10"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/></svg>
+            Jurisprudencia <span class="cuenta" data-cuenta-juris>0</span>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="lista-fuentes" data-lista-juris></div>
+        </details>
+        <details class="fuentes oculto" data-doct>
+          <summary>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Doctrina <span class="cuenta" data-cuenta-doct>0</span>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="lista-fuentes" data-lista-doct></div>
         </details>`;
       destino.appendChild(r);
       const sel = (a) => r.querySelector(`[data-${a}]`);
@@ -738,6 +863,14 @@
         acciones: sel("acciones"),
         fuentes: sel("fuentes"),
         lista: sel("lista"),
+        juris: sel("juris"),
+        listaJuris: sel("lista-juris"),
+        cuentaJuris: sel("cuenta-juris"),
+        doct: sel("doct"),
+        listaDoct: sel("lista-doct"),
+        cuentaDoct: sel("cuenta-doct"),
+        jurisprudencia: [],
+        doctrina: [],
         cuenta: sel("cuenta"),
         vigResumen: sel("vig-resumen"),
       };
@@ -760,6 +893,9 @@
     let pendienteRender = false;
     function renderInforme(turno, final = false) {
       if (final) {
+        // Marca el turno como terminado: un repintado pendiente del streaming
+        // no debe volver a poner el cursor después del texto final.
+        turno.terminado = true;
         turno.informe.innerHTML = renderMarkdown(turno.texto);
         turno.informe.classList.remove("cursor");
         return;
@@ -768,6 +904,7 @@
       pendienteRender = true;
       requestAnimationFrame(() => {
         pendienteRender = false;
+        if (turno.terminado) return;
         turno.informe.innerHTML = renderMarkdown(turno.texto);
         turno.informe.classList.add("cursor");
       });
@@ -811,6 +948,70 @@
         });
       });
       verificarVigencia(turno);
+    }
+
+    const NOMBRE_FUENTE = { pjud: "Poder Judicial", tc: "Tribunal Constitucional", cgr: "Contraloría" };
+    const CLASE_APORTE = { "fija doctrina": "ok", "resuelve el fondo": "", "no entra al fondo": "alerta" };
+
+    function renderJurisprudencia(turno, fallos) {
+      turno.jurisprudencia = fallos || [];
+      if (!turno.jurisprudencia.length) return;
+      turno.juris.classList.remove("oculto");
+      turno.cuentaJuris.textContent = turno.jurisprudencia.length;
+      turno.listaJuris.innerHTML = turno.jurisprudencia.map((f, i) => {
+        const titulo = [f.rol && (f.fuente === "cgr" ? f.rol : `Rol ${f.rol}`), f.fecha].filter(Boolean).join(" · ");
+        const aporte = f.aporte ? `<span class="insignia ${CLASE_APORTE[f.aporte] || ""}">${escapeHtml(f.aporte[0].toUpperCase() + f.aporte.slice(1))}</span>` : "";
+        const pasajes = (f.pasajes || []).map((p) => `<div class="pasaje">“${escapeHtml(p)}”</div>`).join("");
+        const extracto = !pasajes && f.texto ? `<div class="fuente-texto abierto">${escapeHtml(f.texto)}</div>` : "";
+        const normas = (f.normas_aplicadas || []).map((n) => {
+          const etiqueta = `${n.norma}${n.articulos?.length ? ` · art. ${n.articulos.slice(0, 4).join(", ")}` : ""}`;
+          return n.url
+            ? `<a class="chip" href="${escapeHtml(urlSegura(n.url))}" target="_blank" rel="noopener">${escapeHtml(etiqueta)}</a>`
+            : `<span class="chip">${escapeHtml(etiqueta)}</span>`;
+        }).join("");
+        const descriptores = !normas && f.descriptores?.length
+          ? f.descriptores.slice(0, 5).map((d) => `<span class="chip">${escapeHtml(d)}</span>`).join("")
+          : "";
+        const meta = [f.caratulado && f.caratulado !== "ANONIMIZADO" ? f.caratulado : "", f.tipo_recurso, f.resultado]
+          .filter(Boolean).map(escapeHtml).join(" · ");
+        const nota = f.fuente === "pjud" ? '<span style="color:var(--texto-3)">(requiere cuenta gratuita en juris.pjud.cl)</span>' : "";
+        return `
+          <div class="fuente fallo">
+            <div class="fuente-cab">
+              <span class="fuente-num">${i + 1}</span>
+              <div class="fuente-titulo"><b>${escapeHtml(f.tribunal)}</b><span>${escapeHtml(titulo)}</span></div>
+              <div class="insignias">${aporte}<span class="insignia">${escapeHtml(NOMBRE_FUENTE[f.fuente] || "")}</span></div>
+            </div>
+            ${meta ? `<div class="fuente-meta">${meta}</div>` : ""}
+            ${pasajes}${extracto}
+            ${normas || descriptores ? `<div class="chips">${normas}${descriptores}</div>` : ""}
+            <div class="fuente-pie">
+              <a href="${escapeHtml(urlSegura(f.url))}" target="_blank" rel="noopener">Ver ${f.fuente === "cgr" ? "dictamen" : "fallo"} ↗</a>
+              ${f.pdf ? `<a href="${escapeHtml(urlSegura(f.pdf))}" target="_blank" rel="noopener">PDF ↗</a>` : ""}
+              ${nota}
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    function renderDoctrina(turno, articulos) {
+      turno.doctrina = articulos || [];
+      if (!turno.doctrina.length) return;
+      turno.doct.classList.remove("oculto");
+      turno.cuentaDoct.textContent = turno.doctrina.length;
+      turno.listaDoct.innerHTML = turno.doctrina.map((d, i) => `
+        <div class="fuente">
+          <div class="fuente-cab">
+            <span class="fuente-num">${i + 1}</span>
+            <div class="fuente-titulo"><b>${escapeHtml(d.titulo)}</b><span>${escapeHtml([d.autores?.join("; "), d.revista, d.anio].filter(Boolean).join(" · "))}</span></div>
+            <div class="insignias"><span class="insignia ok">Acceso abierto</span></div>
+          </div>
+          ${d.resumen ? `<div class="fuente-meta">${escapeHtml(d.resumen)}</div>` : ""}
+          <div class="fuente-pie">
+            <a href="${escapeHtml(urlSegura(d.enlace_libre))}" target="_blank" rel="noopener">Leer texto completo ↗</a>
+            <a href="${escapeHtml(urlSegura(d.url))}" target="_blank" rel="noopener">DOI ${escapeHtml(d.doi)}</a>
+          </div>
+        </div>`).join("");
     }
 
     // Consulta la vigencia en la BCN oficial en paralelo al informe.
@@ -875,7 +1076,12 @@
         if (!b) return;
         const accion = b.dataset.accion;
         const fuentes = turno.documentos.map((d, i) => `${i + 1}. ${d.cuerpo_legal}, ${d.articulo} — ${d.fuente_url}`).join("\n");
-        const completo = `# Consulta: ${turno.pregunta}\n\n${turno.texto}\n\n---\n\n## Normas consultadas\n\n${fuentes}\n\n_Generado con Juris IA Chile (creado por Jorge Muñoz Yeber, Abogado) el ${new Date().toLocaleString("es-CL")}. Información general; no constituye asesoría legal._\n`;
+        const fallos = turno.jurisprudencia.map((f, i) => `${i + 1}. ${[f.tribunal, f.rol, f.fecha].filter(Boolean).join(", ")} — ${f.url}`).join("\n");
+        const doct = turno.doctrina.map((d, i) => `${i + 1}. ${d.cita} — ${d.enlace_libre}`).join("\n");
+        const completo = `# Consulta: ${turno.pregunta}\n\n${turno.texto}\n\n---\n\n## Normas consultadas\n\n${fuentes}\n\n` +
+          (fallos ? `## Jurisprudencia consultada\n\n${fallos}\n\n` : "") +
+          (doct ? `## Doctrina consultada\n\n${doct}\n\n` : "") +
+          `_Generado con Juris IA Chile (creado por Jorge Muñoz Yeber, Abogado) el ${new Date().toLocaleString("es-CL")}. Información general; no constituye asesoría legal._\n`;
         if (accion === "copiar") {
           try { await navigator.clipboard.writeText(completo); toast("Informe copiado"); }
           catch { toast("No se pudo copiar"); }
@@ -919,6 +1125,11 @@
               agregarAviso(turno, "info", `El documento era extenso (${d.caracteres.toLocaleString("es-CL")} caracteres). Se analizaron las ${d.fragmentos_usados} secciones más relacionadas con tu pregunta, de ${d.fragmentos_totales}.`);
             }
             renderFuentes(turno, datos.documentos_usados || datos.normas_usadas);
+            renderJurisprudencia(turno, datos.jurisprudencia);
+            renderDoctrina(turno, datos.doctrina);
+            if (datos.avisos_fuentes?.length) {
+              agregarAviso(turno, "info", `Algunas fuentes no respondieron a tiempo y el informe se hizo sin ellas: ${escapeHtml(datos.avisos_fuentes.map((a) => a.split(":")[0]).join(", "))}.`);
+            }
           } else if (evento === "texto") {
             turno.texto += datos.t;
             renderInforme(turno);
@@ -962,7 +1173,7 @@
 
     function modoOcupado(ocupado) {
       botonConsultar.classList.toggle("detener", ocupado);
-      $("btn-consultar-texto").textContent = ocupado ? "Detener" : (historial.length ? "Preguntar" : "Consultar");
+      $("btn-consultar-texto").textContent = ocupado ? "Detener" : (sesionActual().historial.length ? "Preguntar" : "Consultar");
       $("btn-consultar-ic").classList.toggle("oculto", ocupado);
       $("btn-documento").disabled = ocupado;
     }
@@ -985,7 +1196,7 @@
       $("ejemplos").classList.add("oculto");
       dockConsulta.classList.add("dock");
       $("btn-nueva").classList.remove("oculto");
-      inputPregunta.placeholder = "Haz una repregunta o una nueva consulta…";
+      inputPregunta.placeholder = (TEXTOS_MODO[modo] || TEXTOS_MODO.consulta).seguir;
     }
 
     async function enviarConsulta() {
@@ -997,7 +1208,9 @@
       autoAjustar(inputPregunta);
       actualizarContador();
 
-      const turno = crearTurno({ pregunta });
+      const modoTurno = modo === "procedimiento" ? "procedimiento" : "consulta";
+      const sesion = sesiones[modoTurno];
+      const turno = crearTurno({ pregunta, modoTurno });
       turno.raiz.previousElementSibling.scrollIntoView({ behavior: "smooth", block: "start" });
 
       const ok = await ejecutar(turno, {
@@ -1008,7 +1221,8 @@
           body: JSON.stringify({
             pregunta,
             proveedor: proveedorElegido() || undefined,
-            historial: historial.slice(-3),
+            historial: sesion.historial.slice(-3),
+            modo: modoTurno,
             stream: true,
           }),
         },
@@ -1016,26 +1230,19 @@
       if (ok && turno.texto) {
         // Para repreguntas se envía un resumen: la "Respuesta directa".
         const directa = (turno.texto.split(/\n##\s/)[0] || turno.texto).replace(/^##[^\n]*\n/, "");
-        historial.push({ pregunta, respuesta: directa.slice(0, 1500) });
+        sesion.historial.push({ pregunta, respuesta: directa.slice(0, 1500) });
       }
-      $("btn-consultar-texto").textContent = historial.length ? "Preguntar" : "Consultar";
+      $("btn-consultar-texto").textContent = sesionActual().historial.length ? "Preguntar" : "Consultar";
       inputPregunta.focus();
     }
 
     $("btn-nueva").addEventListener("click", () => {
       if (controlador) controlador.abort();
-      historial = [];
-      hilo.innerHTML = "";
-      $("vista-inicio").classList.remove("oculto");
-      $("ejemplos").classList.toggle("oculto", modo !== "consulta");
-      dockConsulta.classList.remove("dock");
-      $("btn-nueva").classList.add("oculto");
-      inputPregunta.placeholder = matchMedia("(max-width: 640px)").matches
-        ? "Escribe tu pregunta legal…"
-        : "Ej: ¿Cuántos días de vacaciones me corresponden al año?";
-      $("btn-consultar-texto").textContent = "Consultar";
+      const sesion = sesionActual();
+      sesion.historial = [];
+      sesion.hilo.innerHTML = "";
+      cambiarModo(modo);
       window.scrollTo({ top: 0, behavior: "smooth" });
-      inputPregunta.focus();
     });
 
     // ---------------- Documento ----------------
@@ -1102,7 +1309,7 @@
     // ---------------- Inicio ----------------
     $("anio").textContent = new Date().getFullYear();
     // En pantallas angostas el ejemplo largo no cabe en una línea.
-    if (matchMedia("(max-width: 640px)").matches) inputPregunta.placeholder = "Escribe tu pregunta legal…";
+    if (esAngosto()) inputPregunta.placeholder = TEXTOS_MODO.consulta.corto;
     cargarProveedores();
     inputPregunta.focus();
   })();
