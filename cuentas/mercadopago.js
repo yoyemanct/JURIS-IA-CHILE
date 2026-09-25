@@ -45,10 +45,12 @@ async function llamar(metodo, ruta, cuerpo) {
 async function crearSuscripcion({ usuario, plan, urlRetorno, montoInicial }) {
   const conDescuento = montoInicial && montoInicial < plan.precio;
   const clp = (n) => `$${Number(n).toLocaleString("es-CL")}`;
+  // Mercado Pago rechaza un reason de más de 60 caracteres.
+  const motivo = conDescuento
+    ? `Derecho Chile IA ${plan.nombre}: 1er mes ${clp(montoInicial)}, luego ${clp(plan.precio)}/mes`
+    : `Derecho Chile IA — Plan ${plan.nombre}`;
   return llamar("POST", "/preapproval", {
-    reason: conDescuento
-      ? `Derecho Chile IA — Plan ${plan.nombre}: primer mes ${clp(montoInicial)} (${plan.descuentoPrimerMes}% dcto.), luego ${clp(plan.precio)}/mes`
-      : `Derecho Chile IA — Plan ${plan.nombre}`,
+    reason: motivo.length > 60 ? `Derecho Chile IA — Plan ${plan.nombre}`.slice(0, 60) : motivo,
     external_reference: usuario.id,
     payer_email: usuario.correo,
     back_url: urlRetorno,
