@@ -36,7 +36,7 @@ const SEDES = Object.keys(pjud.BUSCADORES);
 // corpus. El plan de IA elige de aquí (o nombra otros); el heurístico los
 // asigna por palabras clave.
 const NORMAS_PROCESALES = {
-  civil: ["Código de Procedimiento Civil", "Código Orgánico de Tribunales"],
+  civil: ["Código de Procedimiento Civil", "Código Civil"],
   laboral: ["Código del Trabajo"],
   familia: ["Ley 19.968 crea los Tribunales de Familia"],
   alimentos: ["Ley 14.908 sobre abandono de familia y pago de pensiones alimenticias", "Ley 19.968 crea los Tribunales de Familia"],

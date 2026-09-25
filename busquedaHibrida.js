@@ -169,16 +169,17 @@ async function buscarContexto(pregunta, limite = 6) {
 // Códigos principales, con su idNorma de LeyChile: el buscador por nombre a
 // veces devuelve primero una ley modificatoria en vez del código mismo.
 const CODIGOS = {
-  "codigo civil": { idNorma: "172986", titulo: "Código Civil" },
-  "codigo de procedimiento civil": { idNorma: "22740", titulo: "Código de Procedimiento Civil" },
-  "codigo del trabajo": { idNorma: "207436", titulo: "Código del Trabajo" },
-  "codigo penal": { idNorma: "1984", titulo: "Código Penal" },
-  "codigo procesal penal": { idNorma: "176595", titulo: "Código Procesal Penal" },
-  "codigo organico de tribunales": { idNorma: "25563", titulo: "Código Orgánico de Tribunales" },
-  "codigo de comercio": { idNorma: "1974", titulo: "Código de Comercio" },
-  "codigo tributario": { idNorma: "6374", titulo: "Código Tributario" },
-  "constitucion politica de la republica": { idNorma: "242302", titulo: "Constitución Política de la República" },
+  "codigo civil": { idNorma: 172986, tipo: "dfl", numero: "1", titulo: "Código Civil" },
+  "codigo de procedimiento civil": { idNorma: 22740, tipo: "ley", numero: "1552", titulo: "Código de Procedimiento Civil" },
+  "codigo del trabajo": { idNorma: 207436, tipo: "dfl", numero: "1", titulo: "Código del Trabajo" },
+  "codigo penal": { idNorma: 1984, tipo: "cod", numero: "PENAL", titulo: "Código Penal" },
+  "codigo procesal penal": { idNorma: 176595, tipo: "ley", numero: "19696", titulo: "Código Procesal Penal" },
+  "codigo de comercio": { idNorma: 1974, tipo: "cod", numero: "DE COMERCIO", titulo: "Código de Comercio" },
+  "codigo tributario": { idNorma: 6374, tipo: "dl", numero: "830", titulo: "Código Tributario" },
+  "constitucion politica de la republica": { idNorma: 242302, tipo: "dto", numero: "100", titulo: "Constitución Política de la República" },
 };
+// El servidor exige tipo y número para cada consulta: se registran los códigos.
+Object.values(CODIGOS).forEach((c) => mcp.registrarNorma(c));
 
 // idNorma de una norma nombrada ("Código de Procedimiento Civil"), según el
 // primer resultado de search_laws. Se cachea: el nombre no cambia de norma.
@@ -187,18 +188,20 @@ function resolverNorma(nombre) {
   const conocido = CODIGOS[claveDeTexto(nombre).replace(/^(el|la)\s+/, "").replace(/\s+de chile$/, "")];
   if (conocido) return Promise.resolve(conocido);
   return cacheNormasNombradas.recordar(claveDeTexto(nombre), async () => {
-    const leyes = normalizarLeyes(await mcp.buscarLeyes(nombre));
-    // "Ley 18.101": se prefiere la norma cuyo número o título es exactamente
-    // esa ley, y no una ley posterior que la modifica y la menciona.
+    // "Ley 18.101 sobre arrendamiento": el buscador exige todas las palabras,
+    // así que para una ley con número se busca solo "Ley 18.101" y se toma
+    // exactamente esa ley (no una posterior que la modifica y la menciona).
     const numero = (String(nombre).match(/ley\s*(?:n[°º.]?\s*)?(\d{1,2}\.?\d{3})/i) || [])[1];
     if (numero) {
       const limpio = numero.replace(/\./g, "");
-      const exacta = leyes.find((l) => String(l.numero || "").replace(/\D/g, "") === limpio) ||
-        leyes.find((l) => new RegExp(`^(ley|dfl|decreto)?\\s*(n[°º.]?\\s*)?${limpio}\\b`, "i").test(String(l.titulo).replace(/(\d)\.(\d)/g, "$1$2")));
-      // Pedida por número y no encontrada: mejor nada que una ley equivocada.
-      return exacta || null;
+      const leyes = normalizarLeyes(await mcp.buscarLeyes(`Ley ${Number(limpio).toLocaleString("es-CL")}`));
+      return leyes.find((l) => l.tipo === "ley" && String(l.numero).replace(/\D/g, "") === limpio) || null;
     }
-    return leyes[0] || null;
+    // Por nombre: solo si el título coincide; el buscador libre devuelve a
+    // menudo normas sin relación (autos acordados, circulares).
+    const leyes = normalizarLeyes(await mcp.buscarLeyes(nombre));
+    const buscado = claveDeTexto(nombre);
+    return leyes.find((l) => claveDeTexto(l.titulo).includes(buscado)) || null;
   }, { guardarSi: (ley) => Boolean(ley) });
 }
 

@@ -6,7 +6,6 @@
 
 const fs = require("fs");
 const mcp = require("../mcpLeyChile");
-const { normalizarArticulos } = require("../normalizadorMcp");
 const { resolverNorma } = require("../busquedaHibrida");
 const { MAPA } = require("../articulosClave");
 const { claveDeTexto } = require("../cache");
@@ -24,7 +23,7 @@ async function main() {
             try {
               const ley = await resolverNorma(norma);
               if (!ley) return { ok: false, detalle: "norma no encontrada" };
-              const [art] = normalizarArticulos(await mcp.obtenerArticulo(ley.idNorma, numero));
+              const art = await mcp.obtenerArticulo(ley.idNorma, numero);
               const texto = claveDeTexto(art?.texto || "");
               if (!texto) return { ok: false, detalle: `artículo vacío (idNorma ${ley.idNorma}, ${ley.titulo})` };
               const faltan = palabras.filter((p) => !texto.includes(p));

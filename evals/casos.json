@@ -41,7 +41,7 @@
     { "id": "g07-posesion-efectiva", "pestana": "procedimiento", "pregunta": "Posesión efectiva de una herencia intestada",
       "articulos_esperados": [{ "norma": "Ley 19.903", "articulo": "1" }], "materias_prohibidas": ["laboral", "penal", "comercial"] },
     { "id": "g08-jpl-consumidor", "pestana": "procedimiento", "pregunta": "Demanda ante el Juzgado de Policía Local por infracción a la Ley del Consumidor",
-      "articulos_esperados": [{ "norma": "Ley 19.496", "articulo": "50 A" }], "materias_prohibidas": ["laboral", "familia", "penal"] },
+      "articulos_esperados": [{ "norma": "Ley 19.496", "articulo": "50" }], "materias_prohibidas": ["laboral", "familia", "penal"] },
     { "id": "g09-tutela", "pestana": "procedimiento", "pregunta": "Denuncia de tutela laboral por vulneración de derechos fundamentales",
       "articulos_esperados": [{ "norma": "Código del Trabajo", "articulo": "485" }], "materias_prohibidas": ["comercial", "familia", "penal"] },
     { "id": "g10-estafa", "pestana": "procedimiento", "pregunta": "Querella por el delito de estafa",

@@ -80,7 +80,7 @@ const MAPA = [
   {
     id: "consumidor_jpl",
     patron: /policia local|sernac|ley del consumidor|derechos del consumidor|proteccion al consumidor/,
-    normas: [{ norma: "Ley 19.496", articulos: { 26: ["prescrib"], 50: ["consumidores"], "50 A": ["policia local"] } }],
+    normas: [{ norma: "Ley 19.496", articulos: { 3: ["derechos"], 26: ["prescrib"], 50: ["consumidores"] } }],
   },
   {
     id: "clausulas_abusivas",
