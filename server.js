@@ -389,7 +389,7 @@ app.post("/api/consultar", limitadorIA, cuentasRutas.exigirPlan, async (req, res
           modo,
         }),
         // Una guía de tramitación completa es bastante más larga que un informe.
-        maxTokens: modo === "procedimiento" ? Number(process.env.MAX_TOKENS_PROCEDIMIENTO || 8000) : undefined,
+        maxTokens: modo === "procedimiento" ? Number(process.env.MAX_TOKENS_PROCEDIMIENTO || 8000) : Number(process.env.MAX_TOKENS_CONSULTA || 6000),
         claveCache: r.remotoDisponible && historial.length === 0 ? `${proveedor}|${modo}|${claveDeTexto(pregunta)}` : null,
       };
     },
@@ -437,20 +437,22 @@ app.post("/api/documento", limitadorIA, cuentasRutas.exigirPlan, subida.single("
     proveedor,
     mensajeBuscando: `Leyendo ${req.file.originalname} y buscando las normas aplicables…`,
     preparar: async () => {
-      // 2. Buscar normas pertinentes. Se combina la pregunta con el inicio
-      //    del documento, porque la pregunta sola ("¿qué riesgos tiene?") no
-      //    dice nada sobre la materia; el documento sí.
-      let normas = [];
-      let remotoDisponible = false;
-      let remotoError = null;
+      // 2. Investigar como en una consulta: la pregunta sola ("¿qué riesgos
+      //    tiene?") no dice la materia, así que se le suma el inicio del
+      //    documento. Trae artículos clave, normas, jurisprudencia y doctrina.
+      let r = { documentos: [], jurisprudencia: [], doctrina: [], avisos: [], remotoDisponible: false, remotoError: null };
       try {
-        ({ documentos: normas, remotoDisponible, remotoError } = await buscarContexto(
-          `${pregunta} ${textoDocumento.slice(0, 1200)}`,
-          10
-        ));
+        r = await investigar({
+          pregunta,
+          consultaBusqueda: `${pregunta}\n\nDocumento (${req.file.originalname}), inicio:\n${textoDocumento.slice(0, 1200)}`,
+          proveedor,
+          limiteLegislacion: 10,
+        });
       } catch (err) {
-        console.error("Error buscando contexto para el documento:", err);
+        console.error("Error investigando para el documento:", err);
       }
+      const normas = r.documentos;
+      const { remotoDisponible, remotoError } = r;
       return {
         meta: {
           archivo: req.file.originalname,
@@ -462,6 +464,9 @@ app.post("/api/documento", limitadorIA, cuentasRutas.exigirPlan, subida.single("
             fragmentos_totales: seleccion.totalFragmentos,
           },
           normas_usadas: normas,
+          jurisprudencia: r.jurisprudencia,
+          doctrina: r.doctrina,
+          avisos_fuentes: r.avisos,
           corpus_completo_disponible: USAR_CORPUS_REMOTO && remotoDisponible,
           aviso_corpus_completo: !remotoDisponible ? remotoError : null,
         },
@@ -471,7 +476,10 @@ app.post("/api/documento", limitadorIA, cuentasRutas.exigirPlan, subida.single("
           normas,
           nombreArchivo: req.file.originalname,
           seleccion,
+          jurisprudencia: r.jurisprudencia,
+          doctrina: r.doctrina,
         }),
+        maxTokens: Number(process.env.MAX_TOKENS_CONSULTA || 6000),
         // Los documentos de clientes nunca se cachean.
         claveCache: null,
       };
