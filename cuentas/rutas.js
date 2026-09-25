@@ -20,6 +20,21 @@ const COBRO_ACTIVO =
 
 const CONTACTO = process.env.CONTACTO_EMAIL || "";
 
+// Contra la creación masiva de cuentas para usar la prueba gratis:
+//   - la consulta de prueba es solo para cuentas verificadas con Google
+//     (una cuenta de correo y contraseña puede suscribirse, pero sin prueba);
+//   - como máximo PRUEBAS_POR_IP_DIA consultas de prueba al día por conexión.
+const PRUEBA_SOLO_GOOGLE = process.env.PRUEBA_SOLO_GOOGLE !== "false" && google.CONFIGURADO;
+const PRUEBAS_POR_IP_DIA = Number(process.env.PRUEBAS_POR_IP_DIA ?? 3);
+
+function ofertaPro(usuario) {
+  const pro = planes.PLANES.pro;
+  const clp = (n) => `$${Number(n).toLocaleString("es-CL")}`;
+  return planes.tieneDescuento(usuario)
+    ? `El primer mes del plan ${pro.nombre} cuesta ${clp(pro.precioPrimerMes)} (${pro.descuentoPrimerMes}% de descuento) y luego ${clp(pro.precio)} al mes.`
+    : `El plan ${pro.nombre} cuesta ${clp(pro.precio)} al mes.`;
+}
+
 function urlBase(req) {
   if (process.env.APP_URL) return process.env.APP_URL.replace(/\/+$/, "");
   const proto = req.headers["x-forwarded-proto"] || req.protocol || "https";
@@ -282,13 +297,15 @@ async function exigirPlan(req, res, next) {
     if (!usuario) {
       return res.status(401).json({ error: "Crea una cuenta gratis o inicia sesión para consultar.", codigo: "REQUIERE_CUENTA" });
     }
+    if (PRUEBA_SOLO_GOOGLE && planes.planDe(usuario).periodo === "prueba" && !usuario.google) {
+      return res.status(402).json({
+        error: `La consulta de prueba gratis es para cuentas que ingresan con Google. Cierra sesión y entra con «Continuar con Google» usando tu correo de Gmail, o suscríbete: ${ofertaPro(usuario)}`,
+        codigo: "LIMITE_PLAN",
+      });
+    }
     const r = await planes.consumirConsulta(usuario);
     if (!r.permitido) {
-      const pro = planes.PLANES.pro;
-      const clp = (n) => `$${Number(n).toLocaleString("es-CL")}`;
-      const oferta = planes.tieneDescuento(usuario)
-        ? `El primer mes del plan ${pro.nombre} cuesta ${clp(pro.precioPrimerMes)} (${pro.descuentoPrimerMes}% de descuento) y luego ${clp(pro.precio)} al mes.`
-        : `El plan ${pro.nombre} cuesta ${clp(pro.precio)} al mes.`;
+      const oferta = ofertaPro(usuario);
       return res.status(402).json({
         error: r.plan.periodo === "prueba"
           ? `Ya usaste tu consulta de prueba. Suscríbete para seguir consultando sin límite: ${oferta}`
@@ -296,6 +313,17 @@ async function exigirPlan(req, res, next) {
         codigo: "LIMITE_PLAN",
         uso: { usadas: r.usadas, limite: r.limite },
       });
+    }
+    if (r.plan.periodo === "prueba" && PRUEBAS_POR_IP_DIA > 0) {
+      const hoy = new Date().toISOString().slice(0, 10);
+      const n = await almacen.incrementar(`prueba-ip:${req.ip}:${hoy}`, 86400);
+      if (n > PRUEBAS_POR_IP_DIA) {
+        await planes.devolverConsulta(usuario);
+        return res.status(429).json({
+          error: `Se alcanzó el máximo de consultas de prueba desde esta conexión por hoy. Intenta mañana o suscríbete: ${ofertaPro(usuario)}`,
+          codigo: "LIMITE_PLAN",
+        });
+      }
     }
     req.usuario = usuario;
     // Si la consulta termina en error (validación, fuente o IA), no cuenta.

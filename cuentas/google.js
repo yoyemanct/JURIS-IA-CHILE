@@ -83,7 +83,15 @@ async function completar(req, base) {
   const id = await almacen.obtener(`correo:${correo}`);
   if (id) {
     const existente = await almacen.obtener(`usuario:${id}`);
-    if (existente) return existente;
+    if (existente) {
+      // Una cuenta creada con correo y contraseña queda verificada al entrar
+      // con Google con el mismo correo (y accede a la prueba gratis).
+      if (!existente.google) {
+        existente.google = datos.sub;
+        await almacen.guardar(`usuario:${id}`, existente);
+      }
+      return existente;
+    }
   }
   const usuario = {
     id: crypto.randomUUID(),
