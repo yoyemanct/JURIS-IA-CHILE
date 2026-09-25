@@ -39,38 +39,39 @@ function enlaceOficial(idNorma) {
   });
 }
 
+// Documento de contexto a partir de un artículo completo de LeyChile.
+function documentoDeArticulo(ley, art, fuenteUrl) {
+  return {
+    cuerpo_legal: ley.titulo,
+    articulo: art.numero ? `Artículo ${art.numero}` : "(artículo no identificado)",
+    tema: ley.titulo,
+    texto: art.texto,
+    completo: true, // texto íntegro del artículo desde el corpus completo
+    nota: null,
+    fuente_url: art.url || fuenteUrl,
+    vigencia: art.vigencia || null,
+    origen: "remoto",
+    idNorma: ley.idNorma,
+    numero: art.numero || null,
+  };
+}
+
 async function documentosDeNorma(ley, pregunta, maxArticulos = MAX_ARTICULOS_POR_NORMA) {
-  const [articulosCrudo, fuenteUrl] = await Promise.all([
+  const [encontrados, fuenteUrl] = await Promise.all([
     mcp.buscarArticulos(ley.idNorma, pregunta),
     enlaceOficial(ley.idNorma).catch(() => `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}`),
   ]);
-  const articulos = normalizarArticulos(articulosCrudo).slice(0, maxArticulos);
-
+  // search_articles entrega solo fragmentos: se pide el texto íntegro de cada
+  // artículo, porque un fragmento no sirve para citar ni para razonar.
   const completos = await Promise.all(
-    articulos.map(async (art) => {
-      let texto = art.texto;
-      // Si search_articles solo entrega un fragmento corto o nada, pedimos el artículo completo.
-      if ((!texto || texto.length < 60) && art.numero) {
-        try {
-          const completo = normalizarArticulos(await mcp.obtenerArticulo(ley.idNorma, art.numero));
-          if (completo[0]?.texto) texto = completo[0].texto;
-        } catch {
-          // Si falla, nos quedamos con lo que ya teníamos (puede ser vacío).
-        }
+    encontrados.filter((a) => a.numero).slice(0, maxArticulos).map(async (a) => {
+      try {
+        const art = await mcp.obtenerArticulo(ley.idNorma, a.numero);
+        return art ? documentoDeArticulo(ley, art, fuenteUrl) : null;
+      } catch (err) {
+        console.warn(`No se pudo traer ${ley.titulo}, artículo ${a.numero}:`, err.message);
+        return null;
       }
-      if (!texto) return null;
-      return {
-        cuerpo_legal: ley.titulo,
-        articulo: art.numero ? `Artículo ${art.numero}` : "(artículo no identificado)",
-        tema: ley.titulo,
-        texto,
-        completo: true, // viene del corpus reconstruido completo, no de un extracto manual
-        nota: null,
-        fuente_url: fuenteUrl,
-        origen: "remoto",
-        idNorma: ley.idNorma,
-        numero: art.numero || null,
-      };
     })
   );
   return completos.filter(Boolean);
@@ -245,21 +246,10 @@ async function buscarArticulosExactos(pedidos, maxTotal = 8) {
       cacheBusquedas.recordar(`exacto|${claveDeTexto(norma)}|${numero}`, async () => {
         const ley = await resolverNorma(norma);
         if (!ley) return null;
-        const [art] = normalizarArticulos(await mcp.obtenerArticulo(ley.idNorma, numero));
+        const art = await mcp.obtenerArticulo(ley.idNorma, numero);
         if (!art?.texto || art.texto.length < 20) return null;
-        const fuenteUrl = await enlaceOficial(ley.idNorma).catch(() => `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}`);
-        return {
-          cuerpo_legal: ley.titulo,
-          articulo: `Artículo ${art.numero || numero}`,
-          tema: ley.titulo,
-          texto: art.texto,
-          completo: true,
-          nota: null,
-          fuente_url: fuenteUrl,
-          origen: "remoto",
-          idNorma: ley.idNorma,
-          numero: String(art.numero || numero),
-        };
+        const fuenteUrl = art.url || await enlaceOficial(ley.idNorma).catch(() => `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}`);
+        return documentoDeArticulo(ley, { ...art, numero: art.numero || numero }, fuenteUrl);
       }, { guardarSi: Boolean }).catch((err) => {
         console.warn(`No se pudo traer ${norma}, artículo ${numero}:`, err.message);
         return null;
