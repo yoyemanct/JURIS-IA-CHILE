@@ -1,4 +1,7 @@
-require("dotenv").config();
+// Lee la configuración de .env y también de .env.local, que es donde la CLI
+// de Vercel deja las credenciales ("vercel env pull", "vercel ai-gateway
+// setup"). Si una variable está en ambos, gana .env.local.
+require("dotenv").config({ path: [".env.local", ".env"], quiet: true });
 
 const path = require("path");
 const express = require("express");

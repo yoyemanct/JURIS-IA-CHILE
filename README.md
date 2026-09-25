@@ -30,8 +30,14 @@ económico); `google/gemini-2.5-flash` rinde más consultas con el mismo crédit
 `anthropic/claude-sonnet-4.5` da el análisis más fino a un costo unas tres veces mayor.
 Revisa los precios vigentes en vercel.com/ai-gateway/models.
 
-Para usarla en tu computador con la misma clave, ponla en tu archivo `.env` y ejecuta
-`npm start`.
+Para usarla en tu computador hay dos caminos:
+
+- **Con la CLI de Vercel:** en la carpeta del proyecto ejecuta `npx vercel ai-gateway setup`
+  (o `npx vercel link` y luego `npx vercel env pull`). Las credenciales quedan en
+  `.env.local`, que la app lee automáticamente.
+- **A mano:** pon `AI_GATEWAY_API_KEY=tu-clave` en tu archivo `.env`.
+
+Luego ejecuta `npm start`. Ni `.env` ni `.env.local` se suben a GitHub.
 
 Límites a tener en cuenta en Vercel: el archivo subido en "Analizar documento" no puede
 superar ~4,5 MB (límite de la plataforma), y Qwen local no está disponible allí.
