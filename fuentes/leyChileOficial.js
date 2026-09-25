@@ -132,8 +132,22 @@ function limpiar(valor) {
 // artículos precedentes". Se quitan esas líneas y se vuelven a unir las
 // oraciones cortadas, para que el texto se pueda leer y citar.
 const NOTA_MARGEN = /^\s*(?:L\.|LEY|Ley|D\.?\s?L\.?|DL|D\.?F\.?L\.?|DFL|DTO\.?|D\.?S\.?|Art(?:s|ículo)?\.?|ART\.?|N[°º]|D\.?O\.?|NOTA|Nota|INC\.?|Inc\.?|Inciso|INCISO|Letra|LETRA|Ley N[°º])\s*[\w.°º\-/]*(?:\s+[\w.°º\-/]+){0,3}\s*$/;
+// Nota de margen en medio de una línea: "tres años para L. 16.952 las
+// acciones". Solo las formas abreviadas en mayúsculas que usa la BCN para
+// esas notas ("L.", "LEY", "D.L.", "DFL"), seguidas de texto en minúscula;
+// una cita legítima se escribe "la ley N° 16.952".
+const NOTA_EN_LINEA = /\s(?:L\.|LEY|D\.\s?L\.|DL|D\.F\.L\.|DFL)\s?(?:N[°º]\s?)?\d{1,2}\.?\d{3}(?:\s*,?\s*(?:Art|ART)s?\.?\s*\d+[°º]?(?:\s*[a-z]\))?)?(?:\s*D\.O\.\s*\d{2}\.\d{2}\.\d{4})?(?=\s+[a-záéíóúñ(])/g;
+
+// La columna de notas viene separada del texto por una tira de espacios:
+// "tres años para         L. 16.952 las acciones ...             Art. 1º".
+const NOTA_EN_COLUMNA = /[ \t\u00a0]{3,}(?:(?:L\.|LEY|Ley|D\.\s?L\.|DL|D\.F\.L\.|DFL|DTO\.?)\s?(?:N[°º]\s?)?[\d.]+|(?:Art|ART)s?\.?\s*\d+[°º]?(?:\s*[a-z]\))?|D\.O\.\s*[\d.]+|NOTA\s*\d*)(?=[ \t\u00a0]|$|\n)/gm;
+
 function limpiarNotasMargen(textoArticulo) {
-  const lineas = String(textoArticulo || "").split("\n");
+  const lineas = String(textoArticulo || "")
+    .replace(NOTA_EN_COLUMNA, " ")
+    .replace(NOTA_EN_LINEA, "")
+    .replace(/[ \t\u00a0]{2,}(?=\S)/g, (m, i, t) => (i === 0 || t[i - 1] === "\n" ? m : " "))
+    .split("\n");
   const quedan = lineas.filter((l) => !(l.trim().length <= 30 && /\d/.test(l) && NOTA_MARGEN.test(l)));
   const unidas = [];
   for (const linea of quedan) {

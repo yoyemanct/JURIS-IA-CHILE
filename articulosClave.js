@@ -134,7 +134,7 @@ const MAPA = [
     id: "juicio_ejecutivo",
     patron: /juicio ejecutivo|pagare|letra de cambio|cheque|titulo ejecutivo|mandamiento de ejecucion|cobro ejecutivo/,
     normas: [
-      { norma: CPC, articulos: { 434: ["juicio ejecutivo"], 441: ["mandamiento"], 443: ["requerimiento"], 459: ["cuatro dias"], 464: ["excepciones"], 470: ["excepciones"] } },
+      { norma: CPC, articulos: { 434: ["juicio ejecutivo"], 441: ["mandamiento"], 443: ["requerimiento"], 459: ["ocho dias"], 464: ["excepciones"], 470: ["sentencia definitiva"] } },
       { norma: "Ley 18.092", articulos: { 102: ["pagare"], 107: ["pagare"] } },
     ],
   },
@@ -147,7 +147,7 @@ const MAPA = [
     id: "querella_estafa",
     patron: /estafa|defraudaci|engano/,
     normas: [
-      { norma: "Código Penal", articulos: { 467: ["engano"], 468: ["pena"], 473: ["pena"] } },
+      { norma: "Código Penal", articulos: { 467: ["engano"], 468: ["pena"], 473: ["defraudare"] } },
       { norma: "Código Procesal Penal", articulos: { 111: ["querella"], 113: ["querella"] } },
     ],
   },
@@ -155,7 +155,7 @@ const MAPA = [
     id: "juicio_ordinario_perjuicios",
     patron: /juicio ordinario|indemnizacion de perjuicios|responsabilidad civil|danos y perjuicios/,
     normas: [
-      { norma: CPC, articulos: { 253: ["demanda"], 254: ["demanda"], 258: ["quince dias"], 303: ["excepciones dilatorias"], 309: ["contestacion"] } },
+      { norma: CPC, articulos: { 253: ["demanda"], 254: ["demanda"], 258: ["dieciocho dias"], 303: ["excepciones dilatorias"], 309: ["contestacion"] } },
       { norma: CC, articulos: { 1556: ["indemnizacion de perjuicios"], 2314: ["delito o cuasidelito"], 2332: ["cuatro anos"] } },
     ],
   },

@@ -46,7 +46,7 @@ function documentoDeArticulo(ley, art, fuenteUrl) {
     cuerpo_legal: ley.titulo,
     articulo: art.numero ? `Artículo ${art.numero}` : "(artículo no identificado)",
     tema: ley.titulo,
-    texto: art.texto,
+    texto: leyChileOficial.limpiarNotasMargen(art.texto),
     completo: true, // texto íntegro del artículo desde el corpus completo
     nota: null,
     fuente_url: art.url || fuenteUrl,
@@ -222,7 +222,10 @@ async function buscarEnNormasNombradas(nombres, consulta, maxArticulos = 8) {
 }
 
 const TIMEOUT_OFICIAL_MS = Number(process.env.TIMEOUT_OFICIAL_MS || 10000);
-const claveArticulo = (n) => String(n || "").toLowerCase().replace(/art[íi]culo/g, "").replace(/[°º.\-]/g, " ").replace(/\s+/g, " ").trim();
+// "700", "Artículo 700", "700 (DEL ART. 2)" → "700". En el DFL 1 que contiene
+// el Código Civil, la BCN numera sus artículos "700 (DEL ART. 2)".
+const DENTRO_DE_ART = /\(\s*del\s+art[íi]?c?u?l?o?\.?\s*\d+\s*\)/i;
+const claveArticulo = (n) => String(n || "").toLowerCase().replace(DENTRO_DE_ART, "").replace(/art[íi]culo/g, "").replace(/[°º.\-]/g, " ").replace(/\s+/g, " ").trim();
 
 // Copia local del texto oficial de los códigos grandes (data/codigos), que
 // actualiza cada semana scripts/actualizar-codigos.js: su XML en la BCN es
@@ -267,14 +270,22 @@ async function normaOficial(idNorma) {
  */
 async function traerArticulos(ley, articulos) {
   const oficial = await normaOficial(ley.idNorma);
-  const indice = new Map((oficial?.articulos || []).filter((a) => !a.transitorio).map((a) => [claveArticulo(a.numero), a]));
+  // Si dos artículos comparten número (los del DFL y los del Código que
+  // contiene), manda el del Código: "700 (DEL ART. 2)".
+  const indice = new Map();
+  for (const a of (oficial?.articulos || []).filter((x) => !x.transitorio)) {
+    const clave = claveArticulo(a.numero);
+    const actual = indice.get(clave);
+    // Manda el primer artículo "de dentro" (el Código viene primero en el DFL).
+    if (!actual || (DENTRO_DE_ART.test(a.numero) && !DENTRO_DE_ART.test(actual.numero))) indice.set(clave, a);
+  }
   const docs = await Promise.all(articulos.map(async (numero) => {
     const art = indice.get(claveArticulo(numero));
     if (art?.texto && art.texto.length >= 20) {
       return {
         ...documentoDeArticulo(ley, {
-          numero: art.numero || numero,
-          texto: art.texto,
+          numero: claveArticulo(art.numero) || numero,
+          texto: leyChileOficial.limpiarNotasMargen(art.texto),
           vigencia: art.fechaVersion || oficial.fechaVersion,
           url: `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}${art.idParte ? `&idParte=${art.idParte}` : ""}`,
         }),

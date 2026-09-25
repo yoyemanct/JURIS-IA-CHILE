@@ -1,6 +1,7 @@
 // Copia local del texto OFICIAL vigente de los códigos cuyo XML en la BCN es
 // demasiado grande para descargarlo en cada consulta (el del Código de
-// Procedimiento Civil pesa 54 MB). Corre cada semana en GitHub Actions
+// Procedimiento Civil pesa 54 MB) y, por rapidez, de todas las normas del
+// mapa de artículos clave. Corre cada semana en GitHub Actions
 // (actualizar-indices.yml) y guarda data/codigos/<idNorma>.json con solo lo
 // necesario: número, texto vigente, fecha de versión y derogación de cada
 // artículo.
@@ -16,10 +17,21 @@ const { obtenerNorma } = require("../fuentes/leyChileOficial");
 
 const CODIGOS = [
   { idNorma: 172986, nombre: "Código Civil", control: ["700", "La posesión es la tenencia"] },
-  { idNorma: 22740, nombre: "Código de Procedimiento Civil", control: ["459", "cuatro días"] },
+  { idNorma: 22740, nombre: "Código de Procedimiento Civil", control: ["459", "días útiles para oponerse"] },
   { idNorma: 25563, nombre: "Código Orgánico de Tribunales", control: ["1", "facultad de conocer"] },
   { idNorma: 1974, nombre: "Código de Comercio", control: ["1", "comercio"] },
-  { idNorma: 6374, nombre: "Código Tributario", control: ["1", "tributari"] },
+  { idNorma: 6374, nombre: "Código Tributario", control: ["1", "Código Tributario"] },
+  { idNorma: 207436, nombre: "Código del Trabajo", control: ["67", "feriado"] },
+  { idNorma: 1984, nombre: "Código Penal", control: ["10", "defensa"] },
+  { idNorma: 176595, nombre: "Código Procesal Penal", control: ["113", "querella"] },
+  { idNorma: 242302, nombre: "Constitución Política de la República", control: ["20", "privación"] },
+  { idNorma: 29526, nombre: "Ley 18.101 (arrendamiento de predios urbanos)", control: ["1", "bienes raíces urbanos"] },
+  { idNorma: 61438, nombre: "Ley 19.496 (protección de los consumidores)", control: ["20", "reparación"] },
+  { idNorma: 27977, nombre: "Ley 14.908 (pensiones alimenticias)", control: ["3", "alimentante"] },
+  { idNorma: 229557, nombre: "Ley 19.968 (Tribunales de Familia)", control: ["106", "mediación"] },
+  { idNorma: 225128, nombre: "Ley 19.947 (Matrimonio Civil)", control: ["55", "cese"] },
+  { idNorma: 215613, nombre: "Ley 19.903 (posesión efectiva)", control: ["1", "posesión efectiva"] },
+  { idNorma: 29517, nombre: "Ley 18.092 (letra de cambio y pagaré)", control: ["102", "pagaré"] },
 ];
 
 const DIRECTORIO = path.join(__dirname, "..", "data", "codigos");
@@ -40,7 +52,7 @@ async function main() {
         texto: a.derogado ? "" : a.texto,
       }));
       const [num, frase] = c.control;
-      const art = articulos.find((a) => !a.transitorio && String(a.numero).replace(/[°º.\s]/g, "") === num);
+      const art = articulos.find((a) => !a.transitorio && String(a.numero).replace(/\(\s*del\s+art\S*\s*\d+\s*\)/i, "").replace(/[°º.\s]/g, "") === num);
       const controlOk = Boolean(art && art.texto.toLowerCase().includes(frase.toLowerCase()));
       const salida = {
         idNorma: c.idNorma,

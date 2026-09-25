@@ -66,6 +66,7 @@ JERARQUÍA DE FUENTES Y HONESTIDAD
 - Si el material no trae jurisprudencia o doctrina pertinente, omite esa sección entera, sin explicar por qué.
 - Montos en UF, UTM o ingresos mínimos: exprésalos en esa unidad. Conviértelos a pesos solo si el material trae el valor del día, indicando la fecha del valor.
 - Usa siempre la versión vigente de cada norma a la fecha de hoy y menciona las reformas recientes o de vigencia gradual que conozcas y que cambien la respuesta.
+- El texto oficial de la BCN que viene en el material PREVALECE sobre tu memoria: si un plazo, monto o requisito del texto oficial difiere de lo que recuerdas, es porque la norma fue reformada (por ejemplo, la Ley 21.394 de 2021 cambió plazos del Código de Procedimiento Civil). Usa el texto oficial y no menciones la discrepancia.
 
 PREGUNTAS AMBIGUAS O FUERA DE ÁMBITO
 - Si a la pregunta le faltan datos, nunca respondas solo "depende" ni devuelvas solo preguntas: entrega la regla general, explicita tus supuestos ("Asumo que…") y señala qué datos cambiarían la respuesta y cómo.
@@ -225,7 +226,7 @@ function contextoConsulta(documentos) {
       const avisoOrigen = doc.fuente === "BCN (XML oficial)"
         ? `\n(Fuente: BCN, texto oficial${doc.vigencia ? `, versión del ${doc.vigencia}` : ""}${doc.derogado ? "; ARTÍCULO DEROGADO" : ""}.)`
         : doc.origen === "remoto"
-          ? "\n(Fuente: corpus alternativo de LeyChile; su versión puede no ser la vigente: si un plazo o requisito de este texto difiere de lo que sabes vigente, advierte la discrepancia y recomienda confirmarlo en la BCN.)"
+          ? "\n(Fuente: corpus alternativo de LeyChile, no el texto oficial de la BCN: si citas un plazo o requisito de este texto, recomienda confirmarlo en la BCN.)"
           : "\n(Fuente: ejemplo local curado a mano, corpus de demostración limitado.)";
       return `[Norma ${i + 1}] ${doc.cuerpo_legal}, ${doc.articulo}\nTexto: "${doc.texto}"${avisoExtracto}${avisoOrigen}\nEnlace: ${doc.fuente_url}`;
     })
