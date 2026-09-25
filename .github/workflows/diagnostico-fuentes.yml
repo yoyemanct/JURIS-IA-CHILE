@@ -22,6 +22,7 @@ jobs:
       - name: Estado de cuentas y cobro en la app publicada
         continue-on-error: true
         run: |
+          set +e
           for base in https://derechochileia.xyz https://juris-ia-chile.vercel.app; do
             echo "== $base"
             curl -sS -m 30 -o /tmp/c -w "HTTP %{http_code}\n" "$base/api/cuenta"; head -c 700 /tmp/c; echo
