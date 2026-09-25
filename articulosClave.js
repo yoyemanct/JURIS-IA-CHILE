@@ -34,6 +34,11 @@ const MAPA = [
     normas: [{ norma: CT, articulos: { 496: ["ingresos minimos"], 497: ["inspeccion del trabajo"], 500: ["juez"] } }],
   },
   {
+    id: "tutela_laboral",
+    patron: /tutela laboral|tutela de derechos|vulneracion de derechos fundamentales|derechos fundamentales del trabajador/,
+    normas: [{ norma: CT, articulos: { 485: ["derechos fundamentales"], 486: ["denuncia"], 489: ["sesenta dias"], 493: ["indicios"] } }],
+  },
+  {
     id: "contrato_trabajo",
     patron: /contrato de trabajo|contrato laboral|contrato individual de trabajo/,
     normas: [{ norma: CT, articulos: { 5: ["irrenunciables"], 7: ["contrato individual de trabajo"], 9: ["escrito"], 10: ["estipulaciones"], 22: ["jornada"] } }],
@@ -53,7 +58,7 @@ const MAPA = [
   },
   {
     id: "garantia_arriendo",
-    patron: /garantia (de|del) arriendo|mes de garantia|garantia del arrendamiento|devolucion de la garantia/,
+    patron: /garantia (de|del) arriendo|mes de garantia|garantia del arrendamiento|devolucion de la garantia|devolver la garantia|restituir la garantia/,
     normas: [
       { norma: CC, articulos: { 1915: ["arrendamiento"], 1947: ["restituir"] } },
       { norma: "Ley 18.101", articulos: { 1: ["bienes raices urbanos"] } },
@@ -61,7 +66,7 @@ const MAPA = [
   },
   {
     id: "contrato_arriendo",
-    patron: /contrato de arriendo|contrato de arrendamiento|arrendamiento/,
+    patron: /contrato de arriendo|contrato de arrendamiento|arrendamiento|arrendador|arrendatario/,
     normas: [
       { norma: CC, articulos: { 1915: ["arrendamiento"], 1924: ["entregar"], 1947: ["restituir"], 1977: ["mora"] } },
       { norma: "Ley 18.101", articulos: { 1: ["bienes raices urbanos"], 3: ["desahucio"] } },
@@ -137,6 +142,22 @@ const MAPA = [
     id: "recurso_proteccion",
     patron: /recurso de proteccion|accion de proteccion/,
     normas: [{ norma: "Constitución Política de la República", articulos: { 20: ["privacion"], 19: ["asegura"] } }],
+  },
+  {
+    id: "querella_estafa",
+    patron: /estafa|defraudaci|engano/,
+    normas: [
+      { norma: "Código Penal", articulos: { 467: ["defraudare"], 468: ["defraudare"], 473: ["defraudare"] } },
+      { norma: "Código Procesal Penal", articulos: { 111: ["querella"], 113: ["querella"] } },
+    ],
+  },
+  {
+    id: "juicio_ordinario_perjuicios",
+    patron: /juicio ordinario|indemnizacion de perjuicios|responsabilidad civil|danos y perjuicios/,
+    normas: [
+      { norma: CPC, articulos: { 253: ["demanda"], 254: ["demanda"], 258: ["quince dias"], 303: ["excepciones dilatorias"], 309: ["contestacion"] } },
+      { norma: CC, articulos: { 1556: ["indemnizacion de perjuicios"], 2314: ["delito o cuasidelito"], 2332: ["cuatro anos"] } },
+    ],
   },
   {
     id: "legitima_defensa",

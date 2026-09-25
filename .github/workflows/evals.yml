@@ -1,0 +1,97 @@
+name: Evaluación de respuestas
+
+# Corre el set de evals/casos.json contra LeyChile y los buscadores reales,
+# para la versión de main ("antes") y la de esta rama ("después"), y guarda
+# evals/reporte.md y evals/articulos-clave.md en la rama.
+#
+# - En cada push que toque la búsqueda: solo búsqueda (sin costo de IA).
+# - Manualmente (Actions → Evaluación de respuestas → Run workflow): con
+#   respuestas del modelo. Requiere el secreto AI_GATEWAY_API_KEY en
+#   Settings → Secrets and variables → Actions. Cuesta unos US$ 3 por corrida
+#   completa con Claude Sonnet (25 casos × 2 versiones).
+
+on:
+  workflow_dispatch:
+    inputs:
+      generar:
+        description: "Generar respuestas con IA (usa créditos de AI Gateway)"
+        type: boolean
+        default: true
+      modelo:
+        description: "Modelo que redacta las respuestas"
+        default: "anthropic/claude-sonnet-4.5"
+      casos:
+        description: "Casos a correr, separados por coma (vacío = todos)"
+        default: ""
+      comparar_con_main:
+        description: "Evaluar también la versión de main"
+        type: boolean
+        default: true
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "articulosClave.js"
+      - "materias.js"
+      - "investigacion.js"
+      - "busquedaHibrida.js"
+      - "evals/casos.json"
+      - "scripts/eval.js"
+      - "scripts/verificar-articulos-clave.js"
+      - ".github/workflows/evals.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evaluar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+      EVAL_MODELO: ${{ inputs.modelo || 'anthropic/claude-sonnet-4.5' }}
+      FLAGS: ${{ (github.event_name == 'workflow_dispatch' && inputs.generar) && '--generar' || '--solo-busqueda' }}
+      CASOS: ${{ inputs.casos }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Verificar el mapa de artículos clave contra LeyChile
+        run: node scripts/verificar-articulos-clave.js --salida evals/articulos-clave.md
+
+      - name: Preparar la versión de main
+        if: github.event_name != 'workflow_dispatch' || inputs.comparar_con_main
+        run: |
+          git worktree add ../base origin/main
+          cd ../base && npm ci
+
+      - name: Evaluar la versión de main (antes)
+        if: github.event_name != 'workflow_dispatch' || inputs.comparar_con_main
+        run: node scripts/eval.js --raiz ../base --etiqueta antes --salida /tmp/antes.json $FLAGS ${CASOS:+--casos "$CASOS"}
+
+      - name: Evaluar esta rama (después)
+        run: node scripts/eval.js --etiqueta despues --salida /tmp/despues.json $FLAGS ${CASOS:+--casos "$CASOS"}
+
+      - name: Reporte
+        run: |
+          node scripts/eval.js --reporte evals/reporte.md --antes /tmp/antes.json --despues /tmp/despues.json
+          head -c 60000 evals/reporte.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar el reporte en la rama
+        if: startsWith(github.ref_name, 'claude/')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evals/reporte.md evals/articulos-clave.md
+          git diff --cached --quiet && exit 0
+          git commit -m "Reporte de evaluación ($(date -u +%Y-%m-%d))"
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
