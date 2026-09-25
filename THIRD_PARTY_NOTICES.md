@@ -10,6 +10,8 @@ licencia MIT:
 - `fuentes/jurisprudencia/pjud.js`: Buscador Unificado de Sentencias del Poder Judicial.
 - `fuentes/jurisprudencia/tconstitucional.js`: buscador del Tribunal Constitucional.
 - `fuentes/jurisprudencia/contraloria.js`: dictámenes de la Contraloría General de la República.
+- `fuentes/jurisprudencia/direcciontrabajo.js`: dictámenes de la Dirección del Trabajo.
+- `fuentes/jurisprudencia/tdlc.js`: sentencias del Tribunal de Defensa de la Libre Competencia.
 - `fuentes/doctrina.js`: doctrina de acceso abierto (Crossref + OpenAlex) y lista de revistas.
 
 El texto de la licencia original se reproduce a continuación, como exige la propia licencia.

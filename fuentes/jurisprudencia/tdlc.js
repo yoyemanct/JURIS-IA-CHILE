@@ -61,7 +61,7 @@ function catalogo(clave) {
       if (!Array.isArray(j)) throw new Error("El TDLC devolvió algo que no es una lista: su API cambió.");
       items.push(...j.map((x) => {
         const titulo = aTextoPlano((x.title && x.title.rendered) || "").trim();
-        const m = titulo.match(/^((?:Sentencia|Resoluci[óo]n)\s*N[°º]?\s*[\d./-]+)\s*:?\s*(.*)$/i);
+        const m = titulo.match(/^((?:Sentencia|Resoluci[óo]n)\s*(?:N[°º]?\.?\s*)?[\d./-]+)\s*:?\s*(.*)$/i);
         const nombres = (ids, dic) => (Array.isArray(ids) ? ids : []).map((id) => dic.get(id)).filter(Boolean);
         return {
           identificador: m ? m[1].replace(/\s+/g, " ") : `${col.nombre} TDLC`,
