@@ -57,4 +57,9 @@ async function consumirConsulta(usuario) {
   return { permitido: true, usadas: n, limite: plan.consultasMes, plan };
 }
 
-module.exports = { PLANES, planDe, usoDelMes, consumirConsulta };
+/** Devuelve una consulta que no se pudo responder. */
+async function devolverConsulta(usuario) {
+  await almacen.decrementar(claveUso(usuario.id));
+}
+
+module.exports = { PLANES, planDe, usoDelMes, consumirConsulta, devolverConsulta };

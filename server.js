@@ -309,6 +309,7 @@ async function generar(req, res, { proveedor, preparar, mensajeBuscando }) {
     canal.enviar("fin", final);
     canal.cerrar();
   } catch (err) {
+    res.locals.consultaFallida = true;
     console.error("Error generando la respuesta:", err);
     const error = {
       error: err?.message || "Ocurrió un error al generar la respuesta. Revisa la consola del servidor.",

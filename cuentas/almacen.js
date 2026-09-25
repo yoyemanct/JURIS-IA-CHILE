@@ -75,9 +75,19 @@ async function incrementar(clave, segundos) {
   return n;
 }
 
+/** Resta 1 a un contador sin bajar de cero. */
+async function decrementar(clave) {
+  if (!PERSISTENTE) {
+    memoria.set(clave, Math.max(0, (memoria.get(clave) || 0) - 1));
+    return;
+  }
+  const n = await redis(["DECR", clave]);
+  if (n < 0) await redis(["SET", clave, "0", "KEEPTTL"]);
+}
+
 async function contador(clave) {
   if (!PERSISTENTE) return memoria.get(clave) || 0;
   return Number((await redis(["GET", clave])) || 0);
 }
 
-module.exports = { obtener, guardar, crearSiNoExiste, borrar, incrementar, contador, PERSISTENTE };
+module.exports = { obtener, guardar, crearSiNoExiste, borrar, incrementar, decrementar, contador, PERSISTENTE };
