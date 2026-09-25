@@ -1,12 +1,12 @@
 # Evaluación de respuestas — Derecho Chile IA
 
-Fecha: 2026-09-25T04:42:34.370Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
+Fecha: 2026-09-25T04:48:21.129Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
 
 ## Resumen
 
 | Indicador | Antes (main) | Después |
 |---|---|---|
-| Casos con todos los artículos clave en el material | 52 % | 100 % |
+| Casos con todos los artículos clave en el material | 48 % | 100 % |
 | Casos sin normas de una materia prohibida | 68 % | 100 % |
 | Respuestas que citan todos los artículos clave | — | — |
 | Respuestas sin frases prohibidas (lo que escribió el modelo) | — | — |
@@ -42,7 +42,7 @@ Fecha: 2026-09-25T04:42:34.370Z. Fuentes reales (LeyChile y buscadores oficiales
 | g07-posesion-efectiva | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | g08-jpl-consumidor | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | g09-tutela | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
-| g10-estafa | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
+| g10-estafa | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | d01-contrato-trabajo | 0/2 → 2/2 | 0 → 0 | — | — | — | — |
 | d02-contrato-arriendo | 0/1 → 1/1 | 5 → 0 | — | — | — | — |
 | d03-finiquito | 1/2 → 2/2 | 0 → 0 | — | — | — | — |
@@ -342,7 +342,7 @@ Versión anterior (main):
 - ~~Decreto 1.019, modifica arancel aduanero nacional, Artículo 4~~ (sin relación léxica (0 términos en común))
 - ~~Decreto 1.519, modifica arancel aduanero nacional de la republica de chile, Artículo 4~~ (sin relación léxica (0 términos en común))
 - ~~Decreto 1.148, modifica arancel aduanero nacional de la república de chile, Artículo 5~~ (sin relación léxica (0 términos en común))
-- ~~DFL 2, aprueba y tengase como oficial de la republica de chile el arancel aduanero que indica, Artículo Tercero~~ (sin relación léxica (0 términos en común))
+- ~~DFL 2, aprueba y tengase como oficial de la republica de chile el arancel aduanero que indica, Artículo TERCERO~~ (sin relación léxica (0 términos en común))
 
 Versión anterior (main):
 - Código Civil, Artículo 2514
@@ -380,9 +380,9 @@ Versión anterior (main):
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 4
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 5
 - Ley N° 18.101 sobre Arrendamiento de Predios Urbanos, Artículo 3
+- Doctrina: López Díaz, Patricia, "TERMINACIÓN DEL CONTRATO DE ARRENDAMIENTO POR NO PAGO DE RENTAS. INCUMPLIMIENTO DE LA OBLIGACIÓN DE HABILITAR EL INMUEBLE ARRENDADO COMO LOCAL COMERCIAL. RECURSO A LOS ARTS. 1563, 1564 Y 1566 DEL CÓDIGO CIVIL. PROCEDENCIA DE UN EVENTUAL CONCURSO DE TUTELAS Y DE LA OPCIÓN DEL ACREEDOR. CORTE SUPREMA, 20 DE FEBRERO DE 2019, ROL 31.512-2018. CITA EN LÍNEA LEGALPUBLISHING CL/JUR/907/2019.", Revista Chilena de Derecho Privado, N° 32, (2019), DOI: 10.32995/s0718-80722019419.
 - Doctrina: Vidal Olivares, Álvaro; Peña Calderón, Natanael, "La protección del arrendatario ante el incumplimiento del arrendador en el contrato celebrado mediante una plataforma digital:  El caso de Airbnb", Revista Chilena de Derecho y Tecnología, vol. 12, (2023), DOI: 10.5354/0719-2584.2023.70963.
 - Doctrina: Vidal Olivares, Álvaro, "EL INCUMPLIMIENTO Y LOS REMEDIOS DEL ACREEDOR EN LA PROPUESTA DE MODERNIZACIÓN DEL DERECHO DE LAS OBLIGACIONES Y CONTRATOS ESPAÑOL", Revista Chilena de Derecho Privado, N° 16, (2019), DOI: 10.32995/s0718-80722011234.
-- Doctrina: De la Maza Gazmuri, Iñigo, "CONTRATO DE ARRENDAMIENTO, NULIDAD, VICIOS REDHIBITORIOS E INCUMPLIMIENTO. CORTE DE APELACIONES DE SANTIAGO, 10 DE ENERO DE 2008. NÚMERO IDENTIFICADO LEXISNEXIS: 38166.", Revista Chilena de Derecho Privado, N° 10, (2019), DOI: 10.32995/s0718-80722008336.
 
 Versión anterior (main):
 - Código de Procedimiento Civil, Artículo 680
@@ -571,8 +571,8 @@ Versión anterior (main):
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. N°884, 2021-03-10
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. N°834, 2021-03-05
 - Doctrina: Palavecino Cáceres, Claudio; Ramírez Soto, Cristián Pablo, "Examen crítico de la sentencia anticipada en el Procedimiento Monitorio Laboral", Revista Chilena de Derecho del Trabajo y de la Seguridad Social, vol. 1, N° 2, (2016), DOI: 10.5354/0719-7551.2010.43052.
-- Doctrina: Delgado Castro, Jordi; Palomo Vélez, Diego, "El rol del juez laboral en la admisibilidad del procedimiento monitorio", Revista de derecho (Valdivia), vol. 32, N° 1, (2019), pp. 237-254, DOI: 10.4067/s0718-09502019000100237.
 - Doctrina: Delgado Castro, Jordi; Palomo Vélez, Diego; Acevedo Sazo, René, "La motivación de la sentencia en el procedimiento monitorio laboral: ¿una concesión graciosa del órgano jurisdiccional?", Revista chilena de derecho, vol. 46, N° 3, (2019), pp. 717-739, DOI: 10.4067/s0718-34372019000300717.
+- Doctrina: Delgado Castro, Jordi; Palomo Vélez, Diego, "El rol del juez laboral en la admisibilidad del procedimiento monitorio", Revista de derecho (Valdivia), vol. 32, N° 1, (2019), pp. 237-254, DOI: 10.4067/s0718-09502019000100237.
 
 Versión anterior (main):
 - Código del Trabajo, Artículo 460
@@ -593,7 +593,7 @@ Versión anterior (main):
 
 ### g04-alimentos — procedimiento: Demanda de alimentos para un hijo menor de edad, con mediación previa
 
-<details><summary>Material enviado al modelo (12 normas, 0 fallos o dictámenes, 1 artículos de doctrina; 3 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (12 normas, 0 fallos o dictámenes, 1 artículos de doctrina; 4 normas descartadas por materia)</summary>
 
 - Ley 14.908, fija el texto definitivo y refundido de la ley numero 5.750, con las modificaciones introducidas por la ley numero 14.550, Artículo 3
 - Ley 14.908, fija el texto definitivo y refundido de la ley numero 5.750, con las modificaciones introducidas por la ley numero 14.550, Artículo 7
@@ -608,7 +608,8 @@ Versión anterior (main):
 - Ley 19.968, crea los tribunales de familia, Artículo 16
 - Ley 19.968, crea los tribunales de familia, Artículo 17
 - Doctrina: Palomo Vélez, Diego; Valenzuela Villalobos, Williams, "DESCARTE DE LA INCONSTITUCIONALIDAD DE LA OBLIGATORIEDAD DE LA MEDIACIÓN PREJUDICIAL QUE ESTABLECE LEY N19.966: LECTURA CRÍTICA DE LA SENTENCIA DEL TRIBUNAL CONSTITUCIONAL", Ius et Praxis, vol. 18, N° 2, (2012), pp. 387-426, DOI: 10.4067/s0718-00122012000200014.
-- ~~Resolución 3953 EXENTA, ordena publicación en el diario oficial de anexo de decreto supremo n° 239, de 2004, del ministerio de educación, que establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación, Artículo 2~~ (sin relación léxica (1 términos en común))
+- ~~Resolución 3953 EXENTA, ordena publicación en el diario oficial de anexo de decreto supremo n° 239, de 2004, del ministerio de educación, que establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación, Artículo 2~~ (sin relación léxica (0 términos en común))
+- ~~Decreto 182, establece plan nacional de evaluaciones nacionales e internacionales para el período 2016 – 2020, Artículo único~~ (sin relación léxica (1 términos en común))
 - ~~Decreto 257, establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación y deroga decreto supremo nº 239, de 2004, del ministerio de educación y sus modificaciones en la forma que señala, Artículo 10~~ (sin relación léxica (0 términos en común))
 - ~~Decreto 481, aprueba bases curriculares de la educación parvularia y deja sin efecto decreto que indica, Artículo 28~~ (sin relación léxica (0 términos en común))
 
@@ -638,9 +639,9 @@ Versión anterior (main):
 - Código Civil, Artículo 1956
 - CIR Filiales 37, sociedades filiales. modifica normas generales., Artículo 19
 - CIR Bancos 2409, recopilacion actualizada de normas, Artículo 102
+- Doctrina: López Díaz, Patricia, "TERMINACIÓN DEL CONTRATO DE ARRENDAMIENTO POR NO PAGO DE RENTAS. INCUMPLIMIENTO DE LA OBLIGACIÓN DE HABILITAR EL INMUEBLE ARRENDADO COMO LOCAL COMERCIAL. RECURSO A LOS ARTS. 1563, 1564 Y 1566 DEL CÓDIGO CIVIL. PROCEDENCIA DE UN EVENTUAL CONCURSO DE TUTELAS Y DE LA OPCIÓN DEL ACREEDOR. CORTE SUPREMA, 20 DE FEBRERO DE 2019, ROL 31.512-2018. CITA EN LÍNEA LEGALPUBLISHING CL/JUR/907/2019.", Revista Chilena de Derecho Privado, N° 32, (2019), DOI: 10.32995/s0718-80722019419.
 - Doctrina: Erbetta Mattig, Andrés, "Carga de la prueba, rebeldía del demandado e Incumplimiento parcial de la obligación de pagar las rentas de arrendamiento: ¿cómo se debe aplicar la regla del art. 1698 inciso primero del Código Civil? Reflexiones a partir de la sentencia de la Corte Supre", Revista Chilena de Derecho y Ciencia Política, vol. 13, N° 2, (2022), pp. 229-241, DOI: 10.7770/rchdcp-v13n2-art2709.
 - Doctrina: De la Maza Gazmuri, Iñigo, "COMENTARIO. TERMINACIÓN DE CONTRATO DE ARRENDAMIENTO POR MAL ESTADO O CALIDAD DE LA COSA. CORTE DE APELACIONES DE SANTIAGO, Nº LEGAL PUBLISHING 43257.", Revista Chilena de Derecho Privado, N° 15, (2019), DOI: 10.32995/s0718-80722010305.
-- Doctrina: Bofill Geenzch, Jorge, "Alcance de la obligación del fiscal de registrar sus actuaciones durante la investigación. Consecuencias de su incumplimiento en las diversas etapas del procedimiento", Revista de Estudios de la Justicia, vol. 0, N° 6, (2011), DOI: 10.5354/0718-4735.2005.15063.
 - ~~CIR Bancos 3521, recopilación actualizada de normas. capítulos 1-1, 2-1, 2-11, 3-1, 5-2, 7-1, 8-8, 8-37, 10-1, 11-7, 12-3, 18-11 y 19-2. actualiza instrucciones, Artículo 61~~ (sin relación léxica (0 términos en común))
 - ~~CIR Bancos 3444, recopilación actualizada de normas. capítulos 1-1, 1-7,1-8, 7-1, 7-3, 7-4, 7-7, 7-10, 8-3, 8-26, 8-29, 8-37, 8-40, 9-1, 10-1, 10-2, 11-6, 11-7, 12-9, 16-4, 8-1, 18-6,18-13 y 20-3. modifica, complementa y suprime instrucciones, Artículo 137~~ (sin relación léxica (1 términos en común))
 
@@ -648,8 +649,8 @@ Versión anterior (main):
 - Código Civil, Artículo 1945
 - Código Civil, Artículo 1950
 - Código Civil, Artículo 1951
-- Código Civil, Artículo 1960
-- Código Civil, Artículo 1961
+- Código Civil, Artículo 1955
+- Código Civil, Artículo 1956
 - Código de Procedimiento Civil, Artículo 434
 - Código de Procedimiento Civil, Artículo 441
 - Código de Procedimiento Civil, Artículo 443
@@ -849,18 +850,7 @@ Versión anterior (main):
 - ~~DL 830, codigo tributario, Artículo 196~~ (materia tributario ajena a penal/procesal_penal)
 
 Versión anterior (main):
-- Código Penal, Artículo 468
-- Código Penal, Artículo 469
-- Código Penal, Artículo 470
-- Código Procesal Penal, Artículo 107
-- Código Procesal Penal, Artículo 108
-- Código Procesal Penal, Artículo 109
-- Código Procesal Penal, Artículo 110
-- Código Procesal Penal, Artículo 111
-- Código Procesal Penal, Artículo 112
-- Código Procesal Penal, Artículo 113
 - Código Procesal Penal, (artículo no identificado)
-- Código Penal, (artículo no identificado)
 
 </details>
 

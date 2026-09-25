@@ -1,6 +1,6 @@
 # Verificación del mapa de artículos clave contra LeyChile
 
-Fecha: 2026-09-25T04:40:39.355Z. Artículos revisados: 113. Correctos: 107. Con problemas: 6.
+Fecha: 2026-09-25T04:46:36.807Z. Artículos revisados: 113. Correctos: 107. Con problemas: 6.
 
 | Tema | Norma | Artículo | Resultado | Detalle |
 |---|---|---|---|---|
@@ -99,7 +99,7 @@ Fecha: 2026-09-25T04:40:39.355Z. Artículos revisados: 113. Correctos: 107. Con 
 | recurso_proteccion | Constitución Política de la República | 20 | ✅ | BCN (XML oficial) — vigente al 2011-07-11 |
 | querella_estafa | Código Penal | 467 | ✅ | BCN (XML oficial) — vigente al 2023-08-17 |
 | querella_estafa | Código Penal | 468 | ✅ | BCN (XML oficial) — vigente al 2023-08-17 |
-| querella_estafa | Código Penal | 473 | ❌ | BCN (XML oficial) — faltan: pena — texto: "art 473 el que defraudare o perjudicare a otro usando de cualquier engano que no se halle expresado en los articulos anteriores de este parrafo sera castigado c…" |
+| querella_estafa | Código Penal | 473 | ❌ | BCN (XML oficial) — faltan: pena — texto: "el que defraudare o perjudicare a otro usando de cualquier engano que no se halle expresado en los articulos anteriores de este parrafo sera castigado con presi…" |
 | querella_estafa | Código Procesal Penal | 111 | ✅ | BCN (XML oficial) — vigente al 2005-11-14 |
 | querella_estafa | Código Procesal Penal | 113 | ✅ | BCN (XML oficial) — vigente al 2024-09-04 |
 | juicio_ordinario_perjuicios | Código de Procedimiento Civil | 253 | ✅ | leyes.pisanvs.cl — vigente al 2022-06-30 |
