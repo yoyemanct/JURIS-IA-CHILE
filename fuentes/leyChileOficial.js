@@ -126,6 +126,29 @@ function limpiar(valor) {
   return texto(valor).replace(/\u00a0/g, " ").trim();
 }
 
+// La BCN intercala en el texto las notas de margen que indican qué ley
+// modificó cada pasaje ("L. 19.010", "Art. 3", "D.O. 01.01.2003"), cada una
+// en su propia línea y a veces en medio de una oración: "en los\nL. 19.010\n
+// artículos precedentes". Se quitan esas líneas y se vuelven a unir las
+// oraciones cortadas, para que el texto se pueda leer y citar.
+const NOTA_MARGEN = /^\s*(?:L\.|LEY|Ley|D\.?\s?L\.?|DL|D\.?F\.?L\.?|DFL|DTO\.?|D\.?S\.?|Art(?:s|ículo)?\.?|ART\.?|N[°º]|D\.?O\.?|NOTA|Nota|INC\.?|Inc\.?|Inciso|INCISO|Letra|LETRA|Ley N[°º])\s*[\w.°º\-/]*(?:\s+[\w.°º\-/]+){0,3}\s*$/;
+function limpiarNotasMargen(textoArticulo) {
+  const lineas = String(textoArticulo || "").split("\n");
+  const quedan = lineas.filter((l) => !(l.trim().length <= 30 && /\d/.test(l) && NOTA_MARGEN.test(l)));
+  const unidas = [];
+  for (const linea of quedan) {
+    const anterior = unidas[unidas.length - 1];
+    // Oración cortada por una nota: la línea anterior no termina en puntuación
+    // y la siguiente empieza en minúscula.
+    if (anterior !== undefined && anterior.trim() && !/[.:;]\s*$/.test(anterior) && /^\s*[a-záéíóúñ]/.test(linea)) {
+      unidas[unidas.length - 1] = `${anterior.trimEnd()} ${linea.trimStart()}`;
+    } else {
+      unidas.push(linea);
+    }
+  }
+  return unidas.join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 // Se reconoce el tipo de parte con expresiones tolerantes: el punto acepta
 // tanto la tilde correcta como un carácter roto, por si la codificación
 // falla en algún caso. Más vale reconocer un artículo de más que perder
@@ -170,7 +193,7 @@ function extraerArticulos(nodo, jerarquia, acumulador) {
         fechaVersion: parte["@fechaVersion"] || null,
         jerarquia: [...jerarquia],
         materias: comoArray(parte?.Metadatos?.Materias?.Materia).map(limpiar).filter(Boolean),
-        texto: texto(parte.Texto).replace(/\r/g, "").trim(),
+        texto: limpiarNotasMargen(texto(parte.Texto).replace(/\r/g, "")),
       });
     }
 
@@ -325,4 +348,5 @@ module.exports = {
   // Exportados para poder probar el parser sin red.
   interpretarNorma,
   construirUrl,
+  limpiarNotasMargen,
 };

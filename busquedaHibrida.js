@@ -165,6 +165,8 @@ const CODIGOS = {
   "codigo procesal penal": { idNorma: 176595, tipo: "ley", numero: "19696", titulo: "Código Procesal Penal" },
   "codigo de comercio": { idNorma: 1974, tipo: "cod", numero: "DE COMERCIO", titulo: "Código de Comercio" },
   "codigo tributario": { idNorma: 6374, tipo: "dl", numero: "830", titulo: "Código Tributario" },
+  // No está en el corpus alternativo: se usa solo la copia oficial local.
+  "codigo organico de tribunales": { idNorma: 25563, tipo: "ley", numero: "7421", titulo: "Código Orgánico de Tribunales" },
   "constitucion politica de la republica": { idNorma: 242302, tipo: "dto", numero: "100", titulo: "Constitución Política de la República" },
 };
 // El servidor exige tipo y número para cada consulta: se registran los códigos.
@@ -222,8 +224,28 @@ async function buscarEnNormasNombradas(nombres, consulta, maxArticulos = 8) {
 const TIMEOUT_OFICIAL_MS = Number(process.env.TIMEOUT_OFICIAL_MS || 10000);
 const claveArticulo = (n) => String(n || "").toLowerCase().replace(/art[íi]culo/g, "").replace(/[°º.\-]/g, " ").replace(/\s+/g, " ").trim();
 
-/** Norma completa desde el XML oficial de la BCN (con caché de 6 horas), o null si no responde a tiempo. */
+// Copia local del texto oficial de los códigos grandes (data/codigos), que
+// actualiza cada semana scripts/actualizar-codigos.js: su XML en la BCN es
+// demasiado pesado para descargarlo en una consulta (54 MB el del CPC).
+const copiasLocales = new Map();
+function copiaLocal(idNorma) {
+  if (!copiasLocales.has(idNorma)) {
+    const archivo = path.join(__dirname, "data", "codigos", `${idNorma}.json`);
+    let copia = null;
+    try {
+      if (fs.existsSync(archivo)) copia = JSON.parse(fs.readFileSync(archivo, "utf8"));
+    } catch (err) {
+      console.warn(`Copia local del idNorma ${idNorma} ilegible:`, err.message);
+    }
+    copiasLocales.set(idNorma, copia);
+  }
+  return copiasLocales.get(idNorma);
+}
+
+/** Norma completa desde el texto oficial de la BCN (copia local o XML con caché de 6 horas), o null. */
 async function normaOficial(idNorma) {
+  const local = copiaLocal(Number(idNorma));
+  if (local) return local;
   let temporizador;
   try {
     return await Promise.race([
