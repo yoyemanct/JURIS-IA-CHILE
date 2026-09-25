@@ -56,6 +56,47 @@ superar ~4,5 MB (límite de la plataforma), y Qwen local no está disponible all
 - **Respaldo entre modelos:** si el modelo principal falla o no responde, el gateway pasa
   solo al siguiente (`AI_GATEWAY_MODELOS_RESPALDO`).
 
+### Jurisprudencia y doctrina
+
+Cada consulta busca, en paralelo con la legislación:
+
+- **Jurisprudencia judicial:** Corte Suprema y, según la materia, Cortes de Apelaciones o
+  juzgados laborales, civiles, de familia, penales o de cobranza, en el Buscador Unificado de
+  Sentencias del Poder Judicial (`juris.pjud.cl`). Los fallos se ordenan por lo que aportan:
+  primero los que fijan doctrina o resuelven el fondo, al final las inadmisibilidades. Cada
+  fallo trae los pasajes pertinentes y las normas que aplica, con enlace a LeyChile.
+- **Tribunal Constitucional**, cuando hay un derecho fundamental en juego.
+- **Dictámenes de la Contraloría**, cuando interviene la Administración del Estado.
+- **Doctrina de acceso abierto:** artículos de 21 revistas jurídicas chilenas (Crossref), que
+  solo se entregan si tienen DOI, son de acceso abierto según OpenAlex y el enlace responde. No
+  se incluyen manuales ni tratados con derechos de autor.
+
+Un paso breve de IA decide antes qué buscar y en qué tribunales. Si una fuente no responde a
+tiempo, el informe se hace con las demás y la interfaz lo avisa.
+
+Búsqueda directa y diagnóstico:
+
+```
+/api/jurisprudencia?q=nulidad del despido&tribunal=corte_suprema
+/api/jurisprudencia?q=debido proceso&fuente=tc        (también: cgr, doctrina)
+/api/fuentes                                           (prueba cada fuente y dice cuál responde)
+```
+
+Estos conectores están adaptados de [Responsa](https://github.com/djlarrix/Responsa) (licencia
+MIT, ver `THIRD_PARTY_NOTICES.md`), que los verificó contra los servicios reales en agosto de
+2026. Los buscadores públicos pueden cambiar sin aviso: `/api/fuentes` es la forma rápida de
+saber si alguno dejó de responder.
+
+### Guía de procedimiento (para el abogado que litiga)
+
+La pestaña "Guía de procedimiento" entrega la tramitación de un procedimiento de inicio a fin:
+tribunal competente, requisitos previos, cada etapa con su plazo y artículo, escritos, recursos,
+tabla de plazos, errores frecuentes, jurisprudencia útil y lista de verificación. Busca
+directamente en los códigos procesales que rigen la materia (Código de Procedimiento Civil,
+Código del Trabajo, Código Procesal Penal, Ley 19.968, Ley 18.101, Ley 18.287, etc.). Los
+plazos y artículos solo pueden salir de las normas consultadas: si un plazo no está en ellas,
+la guía dice "verificar" en vez de suponerlo.
+
 ### Verificación de vigencia
 
 Cada artículo citado se contrasta, en paralelo al informe, con el XML oficial de LeyChile/BCN
