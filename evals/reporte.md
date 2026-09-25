@@ -1,6 +1,6 @@
 # Evaluación de respuestas — Derecho Chile IA
 
-Fecha: 2026-09-25T04:24:50.927Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
+Fecha: 2026-09-25T04:28:47.584Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
 
 ## Resumen
 
@@ -544,20 +544,20 @@ Versión anterior (main):
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. N°884, 2021-03-10
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. N°834, 2021-03-05
 - Doctrina: Palavecino Cáceres, Claudio; Ramírez Soto, Cristián Pablo, "Examen crítico de la sentencia anticipada en el Procedimiento Monitorio Laboral", Revista Chilena de Derecho del Trabajo y de la Seguridad Social, vol. 1, N° 2, (2016), DOI: 10.5354/0719-7551.2010.43052.
-- Doctrina: Delgado Castro, Jordi; Palomo Vélez, Diego; Acevedo Sazo, René, "La motivación de la sentencia en el procedimiento monitorio laboral: ¿una concesión graciosa del órgano jurisdiccional?", Revista chilena de derecho, vol. 46, N° 3, (2019), pp. 717-739, DOI: 10.4067/s0718-34372019000300717.
 - Doctrina: Delgado Castro, Jordi; Palomo Vélez, Diego, "El rol del juez laboral en la admisibilidad del procedimiento monitorio", Revista de derecho (Valdivia), vol. 32, N° 1, (2019), pp. 237-254, DOI: 10.4067/s0718-09502019000100237.
+- Doctrina: Delgado Castro, Jordi; Palomo Vélez, Diego; Acevedo Sazo, René, "La motivación de la sentencia en el procedimiento monitorio laboral: ¿una concesión graciosa del órgano jurisdiccional?", Revista chilena de derecho, vol. 46, N° 3, (2019), pp. 717-739, DOI: 10.4067/s0718-34372019000300717.
 
 Versión anterior (main):
-- Código del Trabajo, Artículo 460
-- Código del Trabajo, Artículo 461
-- Código del Trabajo, Artículo 462
-- Código del Trabajo, Artículo 463
-- Código del Trabajo, Artículo 464
-- Código del Trabajo, Artículo 465
-- Código del Trabajo, Artículo 466
-- Código del Trabajo, Artículo 467
-- Código de Procedimiento Civil, Artículo 3
-- Código de Procedimiento Civil, Artículo 4
+- Código del Trabajo, Artículo 445
+- Código del Trabajo, Artículo 446
+- Código del Trabajo, Artículo 447
+- Código del Trabajo, Artículo 448
+- Código del Trabajo, Artículo 449
+- Código del Trabajo, Artículo 450
+- Código del Trabajo, Artículo 451
+- Código del Trabajo, Artículo 452
+- Código de Procedimiento Civil, Artículo 409
+- Código de Procedimiento Civil, Artículo 410
 - Código del Trabajo, (artículo no identificado)
 
 </details>
@@ -608,8 +608,8 @@ Versión anterior (main):
 - Código Civil, Artículo 1945
 - Código Civil, Artículo 1950
 - Código Civil, Artículo 1951
-- Código Civil, Artículo 1955
-- Código Civil, Artículo 1956
+- Código Civil, Artículo 1960
+- Código Civil, Artículo 1961
 - Código de Procedimiento Civil, Artículo 434
 - Código de Procedimiento Civil, Artículo 441
 - Código de Procedimiento Civil, Artículo 443
@@ -746,8 +746,8 @@ Versión anterior (main):
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. Nº4910/65, 2009-12-03
 - Jurisprudencia: Dirección del Trabajo, Dictamen ORD. Nº1187/18, 2010-03-10
 - Doctrina: Ferrada Bórquez, Juan Carlos; Walter Díaz, Rodolfo, "La protección de los derechos fundamentales de los trabajadores en el nuevo procedimiento de tutela laboral", Revista de derecho (Valdivia), vol. 24, N° 2, (2011), pp. 91-111, DOI: 10.4067/s0718-09502011000200004.
+- Doctrina: Varas Marchant, Karla Cecilia, "LABORALIZACIÓN DE LA FUNCIÓN PÚBLICA  REFLEXIONES A PROPÓSITO DEL DEBATE SOBRE LA APLICACIÓN DE LA ACCIÓN DE TUTELA DE DERECHOS FUNDAMENTALES A LOS TRABAJADORES PÚBLICOS", Revista de derecho (Valparaíso), vol. 0, N° 56, (2021), DOI: 10.4151/s0718-685120210056-1291.
 - Doctrina: Palavecino Cáceres, Claudio, "El Procedimiento de Tutela de Derechos Fundamentales del trabajador en Chile", Revista Chilena de Derecho del Trabajo y de la Seguridad Social, vol. 5, N° 9, (2016), DOI: 10.5354/0719-7551.2014.42638.
-- Doctrina: Lanata Fuenzalida, Gabriela, "El despido indirecto y el nuevo procedimiento de Tutela de Derechos Fundamentales del  trabajador", Revista Chilena de Derecho del Trabajo y de la Seguridad Social, vol. 2, N° 3, (2016), DOI: 10.5354/0719-7551.2011.42926.
 - ~~Ley N° 19.496 sobre Protección de los Derechos de los Consumidores, Artículo 3 bis~~ (materia consumidor ajena a laboral/constitucional/administrativo/procesal_civil/civil/comercial/penal/procesal_penal)
 
 Versión anterior (main):
