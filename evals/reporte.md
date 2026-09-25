@@ -1,6 +1,6 @@
 # Evaluación de respuestas — Derecho Chile IA
 
-Fecha: 2026-09-25T04:36:42.561Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
+Fecha: 2026-09-25T04:42:34.370Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
 
 ## Resumen
 
@@ -285,10 +285,10 @@ Versión anterior (main):
 - Código Civil, Artículo 2492
 - Código Civil, Artículo 2498
 - Código Civil, Artículo 2508
+- Código Civil, Artículo 2511
 - Código Civil, Artículo 701
 - Código Civil, Artículo 703
 - Código Civil, Artículo 704
-- Código Civil, Artículo 705
 - DFL 2, estatutos del colegio de administradores publicos, Artículo 21
 - DFL 1, estatutos del colegio de kinesiologos, Artículo 21
 - DFL 1, fija dependencia, atribuciones y las plantas del personal de la direccion de asuntos indigenas, Artículo 6
@@ -367,7 +367,7 @@ Versión anterior (main):
 
 ### c09-echar-arrendatario — consulta: ¿Puedo echar a mi arrendatario?
 
-<details><summary>Material enviado al modelo (11 normas, 0 fallos o dictámenes, 2 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (11 normas, 0 fallos o dictámenes, 3 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 1
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 3
@@ -380,8 +380,9 @@ Versión anterior (main):
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 4
 - Ley 18.101, fija normas especiales sobre arrendamiento de predios urbanos, Artículo 5
 - Ley N° 18.101 sobre Arrendamiento de Predios Urbanos, Artículo 3
-- Doctrina: López Díaz, Patricia, "TERMINACIÓN DEL CONTRATO DE ARRENDAMIENTO POR NO PAGO DE RENTAS. INCUMPLIMIENTO DE LA OBLIGACIÓN DE HABILITAR EL INMUEBLE ARRENDADO COMO LOCAL COMERCIAL. RECURSO A LOS ARTS. 1563, 1564 Y 1566 DEL CÓDIGO CIVIL. PROCEDENCIA DE UN EVENTUAL CONCURSO DE TUTELAS Y DE LA OPCIÓN DEL ACREEDOR. CORTE SUPREMA, 20 DE FEBRERO DE 2019, ROL 31.512-2018. CITA EN LÍNEA LEGALPUBLISHING CL/JUR/907/2019.", Revista Chilena de Derecho Privado, N° 32, (2019), DOI: 10.32995/s0718-80722019419.
+- Doctrina: Vidal Olivares, Álvaro; Peña Calderón, Natanael, "La protección del arrendatario ante el incumplimiento del arrendador en el contrato celebrado mediante una plataforma digital:  El caso de Airbnb", Revista Chilena de Derecho y Tecnología, vol. 12, (2023), DOI: 10.5354/0719-2584.2023.70963.
 - Doctrina: Vidal Olivares, Álvaro, "EL INCUMPLIMIENTO Y LOS REMEDIOS DEL ACREEDOR EN LA PROPUESTA DE MODERNIZACIÓN DEL DERECHO DE LAS OBLIGACIONES Y CONTRATOS ESPAÑOL", Revista Chilena de Derecho Privado, N° 16, (2019), DOI: 10.32995/s0718-80722011234.
+- Doctrina: De la Maza Gazmuri, Iñigo, "CONTRATO DE ARRENDAMIENTO, NULIDAD, VICIOS REDHIBITORIOS E INCUMPLIMIENTO. CORTE DE APELACIONES DE SANTIAGO, 10 DE ENERO DE 2008. NÚMERO IDENTIFICADO LEXISNEXIS: 38166.", Revista Chilena de Derecho Privado, N° 10, (2019), DOI: 10.32995/s0718-80722008336.
 
 Versión anterior (main):
 - Código de Procedimiento Civil, Artículo 680
@@ -491,9 +492,9 @@ Versión anterior (main):
 - DFL 197, Artículo 24
 - DFL 1, fija texto refundido, coordinado y sistematizado del decreto ley n° 1.349, de 1976, que crea la comision chilena del cobre, Artículo 14
 - DFL 15, establece el estatuto del fondo de fomento y desarrollo creado por el articulo 38° del decreto ley 3529, de 1980, Artículo 11
-- DFL 15, modifica leyes de control aplicables por el ministerio de agricultura, establece normas sobre actividades apicolas y sanciona la explotacion ilegal de maderas, Artículo 6
+- DL 1.292, aprueba modificaciones al convenio constitutivo del banco interamericano de desarrollo, Artículo 1
 - Doctrina: Aguirrezabal Grünstein, Maite, "REVISIÓN DE ALGUNOS ASPECTOS PROCESALES EN TORNO A LA DEFENSA DEL EJECUTADO Y LA OPONIBILIDAD DE EXCEPCIONES EN EL PROCEDIMIENTO EJECUTIVO DE COBRO DE FACTURAS", Revista Chilena de Derecho Privado, N° 39, (2022), DOI: 10.32995/s0718-80722022680.
-- ~~DL 1.292, aprueba modificaciones al convenio constitutivo del banco interamericano de desarrollo, Artículo 1~~ (sin relación léxica (1 términos en común))
+- ~~DFL 15, modifica leyes de control aplicables por el ministerio de agricultura, establece normas sobre actividades apicolas y sanciona la explotacion ilegal de maderas, Artículo 6~~ (sin relación léxica (1 términos en común))
 
 Versión anterior (main):
 - Código de Procedimiento Civil, Artículo 434
@@ -608,7 +609,7 @@ Versión anterior (main):
 - Ley 19.968, crea los tribunales de familia, Artículo 17
 - Doctrina: Palomo Vélez, Diego; Valenzuela Villalobos, Williams, "DESCARTE DE LA INCONSTITUCIONALIDAD DE LA OBLIGATORIEDAD DE LA MEDIACIÓN PREJUDICIAL QUE ESTABLECE LEY N19.966: LECTURA CRÍTICA DE LA SENTENCIA DEL TRIBUNAL CONSTITUCIONAL", Ius et Praxis, vol. 18, N° 2, (2012), pp. 387-426, DOI: 10.4067/s0718-00122012000200014.
 - ~~Resolución 3953 EXENTA, ordena publicación en el diario oficial de anexo de decreto supremo n° 239, de 2004, del ministerio de educación, que establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación, Artículo 2~~ (sin relación léxica (1 términos en común))
-- ~~Decreto 257, establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación y deroga decreto supremo nº 239, de 2004, del ministerio de educación y sus modificaciones en la forma que señala, Artículo 10~~ (sin relación léxica (1 términos en común))
+- ~~Decreto 257, establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación y deroga decreto supremo nº 239, de 2004, del ministerio de educación y sus modificaciones en la forma que señala, Artículo 10~~ (sin relación léxica (0 términos en común))
 - ~~Decreto 481, aprueba bases curriculares de la educación parvularia y deja sin efecto decreto que indica, Artículo 28~~ (sin relación léxica (0 términos en común))
 
 Versión anterior (main):
@@ -637,7 +638,7 @@ Versión anterior (main):
 - Código Civil, Artículo 1956
 - CIR Filiales 37, sociedades filiales. modifica normas generales., Artículo 19
 - CIR Bancos 2409, recopilacion actualizada de normas, Artículo 102
-- Doctrina: López Díaz, Patricia, "TERMINACIÓN DEL CONTRATO DE ARRENDAMIENTO POR NO PAGO DE RENTAS. INCUMPLIMIENTO DE LA OBLIGACIÓN DE HABILITAR EL INMUEBLE ARRENDADO COMO LOCAL COMERCIAL. RECURSO A LOS ARTS. 1563, 1564 Y 1566 DEL CÓDIGO CIVIL. PROCEDENCIA DE UN EVENTUAL CONCURSO DE TUTELAS Y DE LA OPCIÓN DEL ACREEDOR. CORTE SUPREMA, 20 DE FEBRERO DE 2019, ROL 31.512-2018. CITA EN LÍNEA LEGALPUBLISHING CL/JUR/907/2019.", Revista Chilena de Derecho Privado, N° 32, (2019), DOI: 10.32995/s0718-80722019419.
+- Doctrina: Erbetta Mattig, Andrés, "Carga de la prueba, rebeldía del demandado e Incumplimiento parcial de la obligación de pagar las rentas de arrendamiento: ¿cómo se debe aplicar la regla del art. 1698 inciso primero del Código Civil? Reflexiones a partir de la sentencia de la Corte Supre", Revista Chilena de Derecho y Ciencia Política, vol. 13, N° 2, (2022), pp. 229-241, DOI: 10.7770/rchdcp-v13n2-art2709.
 - Doctrina: De la Maza Gazmuri, Iñigo, "COMENTARIO. TERMINACIÓN DE CONTRATO DE ARRENDAMIENTO POR MAL ESTADO O CALIDAD DE LA COSA. CORTE DE APELACIONES DE SANTIAGO, Nº LEGAL PUBLISHING 43257.", Revista Chilena de Derecho Privado, N° 15, (2019), DOI: 10.32995/s0718-80722010305.
 - Doctrina: Bofill Geenzch, Jorge, "Alcance de la obligación del fiscal de registrar sus actuaciones durante la investigación. Consecuencias de su incumplimiento en las diversas etapas del procedimiento", Revista de Estudios de la Justicia, vol. 0, N° 6, (2011), DOI: 10.5354/0718-4735.2005.15063.
 - ~~CIR Bancos 3521, recopilación actualizada de normas. capítulos 1-1, 2-1, 2-11, 3-1, 5-2, 7-1, 8-8, 8-37, 10-1, 11-7, 12-3, 18-11 y 19-2. actualiza instrucciones, Artículo 61~~ (sin relación léxica (0 términos en común))
@@ -647,8 +648,8 @@ Versión anterior (main):
 - Código Civil, Artículo 1945
 - Código Civil, Artículo 1950
 - Código Civil, Artículo 1951
-- Código Civil, Artículo 1955
-- Código Civil, Artículo 1956
+- Código Civil, Artículo 1960
+- Código Civil, Artículo 1961
 - Código de Procedimiento Civil, Artículo 434
 - Código de Procedimiento Civil, Artículo 441
 - Código de Procedimiento Civil, Artículo 443
@@ -769,8 +770,8 @@ Versión anterior (main):
 - Ley 21.081, modifica ley n° 19.496, sobre protección de los derechos de los consumidores, Artículo 57
 - Doctrina: Cortez Matcovich, Gonzalo, "Sobre la procedencia de la adhesión a la apelación en el procedimiento seguido ante los juzgados de policía local. Admisibilidad de un recurso de hecho respecto de resoluciones pronunciadas por una Corte de Apelaciones", Revista Chilena de Derecho Privado, N° 35, (2020), DOI: 10.32995/s0718-80722020519.
 - Doctrina: Barrientos Camus, Francisca, "COMENTARIO. ÁMBITO DE APLICACIÓN DE LA LEY Nº 19496 DE 1997. NEGATIVA INJUSTIFICADA DE LA VENTA. OFERTA PROMOCIONAL. FORMACIÓN DEL CONSENTIMIENTO. COMPUTADORES PORTÁTILES A BAJO PRECIO. BUENA FE DEL CONSUMIDOR. TERCERA SALA CORTE DE APELACIONES DE SANTIAGO, 12 DE MARZO DE 2012, ROL Nº 8470-2010 Y JUZGADO DE POLICÍA LOCAL DE VITACURA, 11 DE NOVIEMBRE DE 2009, ROL Nº 114.876.", Revista Chilena de Derecho Privado, N° 18, (2019), DOI: 10.32995/s0718-80722012214.
-- ~~Resolución 3953 EXENTA, ordena publicación en el diario oficial de anexo de decreto supremo n° 239, de 2004, del ministerio de educación, que establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación, Artículo 2~~ (sin relación léxica (1 términos en común))
-- ~~Decreto 257, establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación y deroga decreto supremo nº 239, de 2004, del ministerio de educación y sus modificaciones en la forma que señala, Artículo 10~~ (sin relación léxica (1 términos en común))
+- ~~Resolución 3953 EXENTA, ordena publicación en el diario oficial de anexo de decreto supremo n° 239, de 2004, del ministerio de educación, que establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación, Artículo 2~~ (sin relación léxica (0 términos en común))
+- ~~Decreto 257, establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación y deroga decreto supremo nº 239, de 2004, del ministerio de educación y sus modificaciones en la forma que señala, Artículo 10~~ (sin relación léxica (0 términos en común))
 
 Versión anterior (main):
 - Ley N° 19.496 sobre Protección de los Derechos de los Consumidores, Artículo 3 bis
@@ -784,7 +785,7 @@ Versión anterior (main):
 
 ### g09-tutela — procedimiento: Denuncia de tutela laboral por vulneración de derechos fundamentales
 
-<details><summary>Material enviado al modelo (16 normas, 4 fallos o dictámenes, 3 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (14 normas, 4 fallos o dictámenes, 3 artículos de doctrina; 2 normas descartadas por materia)</summary>
 
 - Código del Trabajo, Artículo 485
 - Código del Trabajo, Artículo 486
@@ -798,8 +799,6 @@ Versión anterior (main):
 - Código de Procedimiento Civil, Artículo 541
 - Código de Procedimiento Civil, Artículo 542
 - Resolución 31, otorga a la empresa nacional de electricidad s.a.,;endesa, concesion provisional para realizar los estudios;tendientes a evaluar el desarrollo de generacion;hidroelectrica en los rios baker, pascua y del salto, en;la xi region, aisen del general carlos ibañez del campo, Artículo 21
-- Resolución 3953 EXENTA, ordena publicación en el diario oficial de anexo de decreto supremo n° 239, de 2004, del ministerio de educación, que establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación, Artículo 2
-- Decreto 257, establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación y deroga decreto supremo nº 239, de 2004, del ministerio de educación y sus modificaciones en la forma que señala, Artículo 10
 - Ley 20.087, sustituye el procedimiento laboral contemplado en el libro v del codigo del trabajo, Artículo 486
 - Ley 20.087, sustituye el procedimiento laboral contemplado en el libro v del codigo del trabajo, Artículo 489
 - Jurisprudencia: Tribunal Constitucional, 5956
@@ -809,6 +808,8 @@ Versión anterior (main):
 - Doctrina: Ferrada Bórquez, Juan Carlos; Walter Díaz, Rodolfo, "La protección de los derechos fundamentales de los trabajadores en el nuevo procedimiento de tutela laboral", Revista de derecho (Valdivia), vol. 24, N° 2, (2011), pp. 91-111, DOI: 10.4067/s0718-09502011000200004.
 - Doctrina: Varas Marchant, Karla Cecilia, "LABORALIZACIÓN DE LA FUNCIÓN PÚBLICA  REFLEXIONES A PROPÓSITO DEL DEBATE SOBRE LA APLICACIÓN DE LA ACCIÓN DE TUTELA DE DERECHOS FUNDAMENTALES A LOS TRABAJADORES PÚBLICOS", Revista de derecho (Valparaíso), vol. 0, N° 56, (2021), DOI: 10.4151/s0718-685120210056-1291.
 - Doctrina: Palavecino Cáceres, Claudio, "El Procedimiento de Tutela de Derechos Fundamentales del trabajador en Chile", Revista Chilena de Derecho del Trabajo y de la Seguridad Social, vol. 5, N° 9, (2016), DOI: 10.5354/0719-7551.2014.42638.
+- ~~Resolución 3953 EXENTA, ordena publicación en el diario oficial de anexo de decreto supremo n° 239, de 2004, del ministerio de educación, que establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación, Artículo 2~~ (sin relación léxica (1 términos en común))
+- ~~Decreto 257, establece objetivos fundamentales y contenidos mínimos obligatorios para la educación de adultos y fija normas generales para su aplicación y deroga decreto supremo nº 239, de 2004, del ministerio de educación y sus modificaciones en la forma que señala, Artículo 10~~ (sin relación léxica (1 términos en común))
 
 Versión anterior (main):
 - Código del Trabajo, Artículo 485
