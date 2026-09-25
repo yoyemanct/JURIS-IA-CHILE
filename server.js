@@ -634,7 +634,7 @@ if (USAR_CORPUS_REMOTO) {
 // peticiones; en local (npm start) se levanta el servidor normalmente.
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Juris IA Chile escuchando en http://localhost:${PORT}`);
+    console.log(`Derecho Chile IA escuchando en http://localhost:${PORT}`);
     console.log(
       `Límites activos: ${LIMITE_CONSULTAS_IA} preguntas y ${LIMITE_BUSQUEDAS} búsquedas por IP cada ${VENTANA_MINUTOS} min.`
     );

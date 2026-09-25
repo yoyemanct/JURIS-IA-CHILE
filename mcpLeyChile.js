@@ -2,7 +2,7 @@
 // (proyecto open source "ley-chile", que reconstruye ~333.000 normas desde
 // la Biblioteca del Congreso Nacional, con historial de versiones).
 //
-// Esto es lo que le da a Juris IA Chile cobertura amplia: en vez de mantener
+// Esto es lo que le da a Derecho Chile IA cobertura amplia: en vez de mantener
 // nosotros un corpus manual, consultamos en vivo un servidor MCP público,
 // gratuito y de solo lectura, que cubre prácticamente toda la legislación
 // chilena.
@@ -38,7 +38,7 @@ let clientPromise = null;
 function conectar() {
   if (!clientPromise) {
     clientPromise = (async () => {
-      const client = new Client({ name: "juris-ia-chile", version: "0.1.0" });
+      const client = new Client({ name: "derecho-chile-ia", version: "0.1.0" });
       const transport = new StreamableHTTPClientTransport(new URL(MCP_URL));
       await client.connect(transport);
       return client;

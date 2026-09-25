@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Juris IA Chile — Asistente de legislación chilena</title>
+<title>Derecho Chile IA — Asistente de legislación chilena</title>
 <meta name="description" content="Consulta la legislación chilena con inteligencia artificial. Informes jurídicos con citas exactas a la ley y verificación de vigencia en la BCN." />
 <meta name="theme-color" content="#0f2238" />
 <meta name="author" content="Jorge Muñoz Yeber, Abogado" />
-<meta property="og:title" content="Juris IA Chile — por Jorge Muñoz Yeber, Abogado" />
+<meta property="og:title" content="Derecho Chile IA — por Jorge Muñoz Yeber, Abogado" />
 <meta property="og:description" content="Asistente de IA para la legislación chilena, con citas exactas a la ley y verificación de vigencia en la BCN." />
 <link rel="icon" href="/juris.ico" type="image/x-icon" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -395,11 +395,11 @@
 <body>
   <header class="barra">
     <div class="barra-in">
-      <a class="logo" href="/" aria-label="Juris IA Chile, inicio">
+      <a class="logo" href="/" aria-label="Derecho Chile IA, inicio">
         <span class="logo-marca" aria-hidden="true">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 21h10"/><path d="M5 7h14"/><path d="M12 5l-7 2"/><path d="M12 5l7 2"/><path d="M5 7l-3 7a3.5 3.5 0 0 0 6 0z"/><path d="M19 7l-3 7a3.5 3.5 0 0 0 6 0z"/></svg>
         </span>
-        <span class="logo-texto">Juris <span>IA</span> Chile</span>
+        <span class="logo-texto">Derecho Chile <span>IA</span></span>
       </a>
       <div class="barra-der">
         <label class="selector oculto" id="selector-proveedor" title="Motor de IA que redacta el informe">
@@ -415,7 +415,7 @@
   </header>
 
   <main>
-    <div class="solo-impresion">Juris IA Chile — creado por Jorge Muñoz Yeber, Abogado</div>
+    <div class="solo-impresion">Derecho Chile IA — creado por Jorge Muñoz Yeber, Abogado</div>
     <!-- Vista inicial -->
     <section id="vista-inicio">
       <div class="hero">
@@ -515,7 +515,7 @@
 
       <div class="catalogo" id="catalogo">
         <div class="catalogo-cab">
-          <h2>Fuentes a las que accede Juris IA Chile</h2>
+          <h2>Fuentes a las que accede Derecho Chile IA</h2>
           <span class="estado-global" id="estado-global"><span class="led verificando"></span>Verificando conexión…</span>
         </div>
         <p class="catalogo-sub">Cada consulta busca en vivo en estas fuentes oficiales y académicas, y el informe cita solo lo que encontró en ellas.</p>
@@ -537,6 +537,7 @@
               <li><span class="led verificando" data-fuente="pjud"></span><div>Juzgados de Familia</div></li>
               <li><span class="led verificando" data-fuente="pjud"></span><div>Tribunales con competencia penal<small>Juzgados de Garantía y Tribunales Orales</small></div></li>
             </ul>
+            <p class="revistas">Si el Poder Judicial no permite la consulta automática, puedes buscar directamente en su <a href="https://juris.pjud.cl" target="_blank" rel="noopener">buscador oficial de jurisprudencia ↗</a>.</p>
           </div>
           <div class="grupo">
             <h3>Constitucional y administrativa</h3>
@@ -566,8 +567,8 @@
   </main>
 
   <footer>
-    <p class="credito">Juris IA Chile · Creado por <b>Jorge Muñoz Yeber</b>, Abogado · © <span id="anio">2026</span></p>
-    <p><b>Juris IA Chile</b> entrega información general y no constituye asesoría legal. No reemplaza a un abogado o abogada.</p>
+    <p class="credito">Derecho Chile IA · Creado por <b>Jorge Muñoz Yeber</b>, Abogado · © <span id="anio">2026</span></p>
+    <p><b>Derecho Chile IA</b> entrega información general y no constituye asesoría legal. No reemplaza a un abogado o abogada.</p>
     <p>Fuentes: <a href="https://leyes.pisanvs.cl" target="_blank" rel="noopener">leyes.pisanvs.cl</a> (proyecto ley-chile), <a href="https://www.bcn.cl/leychile" target="_blank" rel="noopener">LeyChile — BCN</a>, <a href="https://juris.pjud.cl" target="_blank" rel="noopener">Buscador de jurisprudencia del Poder Judicial</a>, <a href="https://buscador.tcchile.cl" target="_blank" rel="noopener">Tribunal Constitucional</a>, <a href="https://www.contraloria.cl/web/cgr/buscar-jurisprudencia" target="_blank" rel="noopener">Contraloría General de la República</a> y revistas jurídicas chilenas de acceso abierto (Crossref y OpenAlex).</p>
     <p>Conectores de jurisprudencia y doctrina adaptados de <a href="https://github.com/djlarrix/Responsa" target="_blank" rel="noopener">Responsa</a> (Joaquín Larraín Guimoye, licencia MIT).</p>
   </footer>
@@ -1160,7 +1161,7 @@
         const completo = `# Consulta: ${turno.pregunta}\n\n${turno.texto}\n\n---\n\n## Normas consultadas\n\n${fuentes}\n\n` +
           (fallos ? `## Jurisprudencia consultada\n\n${fallos}\n\n` : "") +
           (doct ? `## Doctrina consultada\n\n${doct}\n\n` : "") +
-          `_Generado con Juris IA Chile (creado por Jorge Muñoz Yeber, Abogado) el ${new Date().toLocaleString("es-CL")}. Información general; no constituye asesoría legal._\n`;
+          `_Generado con Derecho Chile IA (creado por Jorge Muñoz Yeber, Abogado) el ${new Date().toLocaleString("es-CL")}. Información general; no constituye asesoría legal._\n`;
         if (accion === "copiar") {
           try { await navigator.clipboard.writeText(completo); toast("Informe copiado"); }
           catch { toast("No se pudo copiar"); }

@@ -1,7 +1,7 @@
 {
-  "name": "juris-ia-chile",
+  "name": "derecho-chile-ia",
   "version": "0.2.0",
-  "description": "Juris IA Chile: asistente de IA (Vercel AI Gateway, Claude o Qwen local) para legislación chilena, con citas a la fuente y verificación de vigencia.",
+  "description": "Derecho Chile IA: asistente de IA (Vercel AI Gateway, Claude o Qwen local) para legislación chilena, con citas a la fuente y verificación de vigencia.",
   "main": "server.js",
   "type": "commonjs",
   "engines": {

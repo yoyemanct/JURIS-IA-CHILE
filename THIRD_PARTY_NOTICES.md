@@ -2,7 +2,7 @@
 
 ## Responsa
 
-Los conectores de jurisprudencia y doctrina de Juris IA Chile están adaptados del proyecto
+Los conectores de jurisprudencia y doctrina de Derecho Chile IA están adaptados del proyecto
 [Responsa](https://github.com/djlarrix/Responsa), de Joaquín Larraín Guimoye, publicado con
 licencia MIT:
 

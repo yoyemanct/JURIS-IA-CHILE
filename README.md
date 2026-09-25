@@ -1,10 +1,10 @@
-# Juris IA Chile
+# Derecho Chile IA
 
 > Open-source AI toolkit for searching, structuring and citing Chilean legislation and legal sources.
 
 Creado por **Jorge Muñoz Yeber, Abogado** · En línea: [juris-ia-chile.vercel.app](https://juris-ia-chile.vercel.app/)
 
-**Juris IA Chile**: un buscador + asistente de IA que responde preguntas sobre legislación chilena
+**Derecho Chile IA**: un buscador + asistente de IA que responde preguntas sobre legislación chilena
 citando siempre la ley y el artículo exacto — pensado tanto para abogados como para personas sin
 formación legal. Puedes usar **Claude** (de Anthropic, de pago pero muy preciso) o **Qwen
 corriendo localmente vía Ollama** (gratis, en tu propio computador) como motor de IA — ver la
@@ -119,7 +119,7 @@ Cada artículo citado se contrasta, en paralelo al informe, con el XML oficial d
    - **Corpus jurídico completo** (remoto): se consulta en vivo el servidor MCP público de
      [leyes.pisanvs.cl](https://leyes.pisanvs.cl) — un proyecto open source que reconstruyó
      ~333.000 normas chilenas (con historial de versiones) desde la Biblioteca del Congreso
-     Nacional. Esta es la fuente que le da a Juris IA Chile cobertura amplia de la legislación real,
+     Nacional. Esta es la fuente que le da a Derecho Chile IA cobertura amplia de la legislación real,
      sin que tengamos que cargar cada ley a mano.
    - **Corpus local de ejemplo** (`data/corpus.json`): 11 artículos cargados a mano como
      respaldo, para cuando el servicio remoto no responda, y como ejemplos ya verificados.
@@ -231,15 +231,15 @@ Es importante que sepas exactamente qué estás usando:
   por ejemplo, LeyChile/BCN directamente.
 - **Es gratuito, público y de solo lectura** — no requiere autenticación, pero tampoco hay
   garantía de disponibilidad. Si en algún momento ese servicio deja de funcionar o cambia,
-  Juris IA Chile debería seguir funcionando igual con el corpus local (aunque mucho más limitado).
-- **Licencia:** el código de ese proyecto es AGPLv3. Juris IA Chile **no copia ni incorpora su
+  Derecho Chile IA debería seguir funcionando igual con el corpus local (aunque mucho más limitado).
+- **Licencia:** el código de ese proyecto es AGPLv3. Derecho Chile IA **no copia ni incorpora su
   código**, solo lo consume como una API externa (igual que llamarías a cualquier otra API
-  pública) — por eso esto no impone condiciones de licencia sobre el código de Juris IA Chile. Si en
+  pública) — por eso esto no impone condiciones de licencia sobre el código de Derecho Chile IA. Si en
   el futuro quieres clonar o modificar el código de ese proyecto directamente (no solo
   consumir su API), ahí sí aplicarían las condiciones de AGPLv3 (básicamente: cualquier
   versión modificada que ofrezcas por red también debe ser de código abierto).
 - Dale crédito visible en tu app y tu README a `leyes.pisanvs.cl` / `pisanvs/ley-chile` como
-  fuente de datos — es lo correcto y además le da más credibilidad a Juris IA Chile frente a
+  fuente de datos — es lo correcto y además le da más credibilidad a Derecho Chile IA frente a
   abogados que quieran verificar de dónde sale la información.
 
 ## Extractos vs. texto completo
@@ -253,7 +253,7 @@ qué estás leyendo, y Claude también recibe esa distinción para advertirla cu
 
 ## Elegir el proveedor de IA: Claude, Qwen local, o ambos
 
-Juris IA Chile puede responder con dos motores de IA distintos. No son excluyentes: puedes
+Derecho Chile IA puede responder con dos motores de IA distintos. No son excluyentes: puedes
 configurar los dos a la vez y elegir cuál usar desde un menú en la propia página.
 
 | | **Claude** (nube) | **Qwen local** (Ollama) |
@@ -352,7 +352,7 @@ $lnk = $ws.CreateShortcut("$env:USERPROFILE\Desktop\JURIS IA CHILE.lnk")
 $lnk.TargetPath = "$carpeta\JURIS-IA-CHILE.bat"
 $lnk.WorkingDirectory = $carpeta
 $lnk.IconLocation = "$carpeta\public\juris.ico"
-$lnk.Description = "Abre Juris IA Chile"
+$lnk.Description = "Abre Derecho Chile IA"
 $lnk.WindowStyle = 7
 $lnk.Save()
 ```
