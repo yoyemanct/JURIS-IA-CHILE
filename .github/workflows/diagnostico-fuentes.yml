@@ -1,0 +1,25 @@
+name: Diagnóstico de fuentes
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["fuentes/**", "scripts/probar-fuentes.js", ".github/workflows/diagnostico-fuentes.yml"]
+  workflow_dispatch:
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Estado de la app publicada
+        continue-on-error: true
+        run: curl -sS -m 90 https://juris-ia-chile.vercel.app/api/fuentes | head -c 6000; echo
+      - name: Peticiones crudas a cada sitio
+        continue-on-error: true
+        run: |
+          for u in "https://juris.pjud.cl/busqueda?Corte_Suprema" "https://buscador-backend.tcchile.cl/api/extended/sentencias?page=1&filter=%7B%22search%22%3A%22debido%20proceso%22%2C%22state%22%3Anull%2C%22dateRange%22%3Anull%7D" "https://www.contraloria.cl/appinf/LegisJuri/DictamenesGeneralesMunicipales.nsf/FormConsultaWeb2k?OpenForm&TextoLibre=feriado&Materia=Cualquiera&desde=1&porPagina=2&Orden=1&hpbb=SI" "https://api.crossref.org/works?query=despido&rows=1"; do
+            echo "== $u"; curl -sS -m 40 -o /tmp/r -w "HTTP %{http_code} en %{time_total}s\n" -A "Mozilla/5.0" "$u"; head -c 400 /tmp/r; echo; done
+      - name: Conectores de la app
+        run: node scripts/probar-fuentes.js
