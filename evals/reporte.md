@@ -1,12 +1,12 @@
 # Evaluación de respuestas — Derecho Chile IA
 
-Fecha: 2026-09-25T04:48:21.129Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
+Fecha: 2026-09-25T04:54:49.316Z. Fuentes reales (LeyChile y buscadores oficiales). Solo búsqueda: esta corrida no generó respuestas con IA.
 
 ## Resumen
 
 | Indicador | Antes (main) | Después |
 |---|---|---|
-| Casos con todos los artículos clave en el material | 48 % | 100 % |
+| Casos con todos los artículos clave en el material | 52 % | 100 % |
 | Casos sin normas de una materia prohibida | 68 % | 100 % |
 | Respuestas que citan todos los artículos clave | — | — |
 | Respuestas sin frases prohibidas (lo que escribió el modelo) | — | — |
@@ -42,7 +42,7 @@ Fecha: 2026-09-25T04:48:21.129Z. Fuentes reales (LeyChile y buscadores oficiales
 | g07-posesion-efectiva | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | g08-jpl-consumidor | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
 | g09-tutela | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
-| g10-estafa | 0/1 → 1/1 | 0 → 0 | — | — | — | — |
+| g10-estafa | 1/1 → 1/1 | 0 → 0 | — | — | — | — |
 | d01-contrato-trabajo | 0/2 → 2/2 | 0 → 0 | — | — | — | — |
 | d02-contrato-arriendo | 0/1 → 1/1 | 5 → 0 | — | — | — | — |
 | d03-finiquito | 1/2 → 2/2 | 0 → 0 | — | — | — | — |
@@ -204,7 +204,7 @@ Versión anterior (main):
 
 ### c05-alimentos — consulta: ¿Cómo se calcula la pensión de alimentos para un hijo?
 
-<details><summary>Material enviado al modelo (11 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (12 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
 - Ley 14.908, fija el texto definitivo y refundido de la ley numero 5.750, con las modificaciones introducidas por la ley numero 14.550, Artículo 3
 - Ley 14.908, fija el texto definitivo y refundido de la ley numero 5.750, con las modificaciones introducidas por la ley numero 14.550, Artículo 7
@@ -213,6 +213,7 @@ Versión anterior (main):
 - Código Civil, Artículo 332
 - Código Civil, Artículo 322
 - Código Civil, Artículo 324
+- Código Civil, Artículo 325
 - Código Civil, Artículo 330
 - Ley 19.968, crea los tribunales de familia, Artículo 106
 - Ley 19.968, crea los tribunales de familia, Artículo 3
@@ -342,7 +343,7 @@ Versión anterior (main):
 - ~~Decreto 1.019, modifica arancel aduanero nacional, Artículo 4~~ (sin relación léxica (0 términos en común))
 - ~~Decreto 1.519, modifica arancel aduanero nacional de la republica de chile, Artículo 4~~ (sin relación léxica (0 términos en común))
 - ~~Decreto 1.148, modifica arancel aduanero nacional de la república de chile, Artículo 5~~ (sin relación léxica (0 términos en común))
-- ~~DFL 2, aprueba y tengase como oficial de la republica de chile el arancel aduanero que indica, Artículo TERCERO~~ (sin relación léxica (0 términos en común))
+- ~~DFL 2, aprueba y tengase como oficial de la republica de chile el arancel aduanero que indica, Artículo tercero~~ (sin relación léxica (0 términos en común))
 
 Versión anterior (main):
 - Código Civil, Artículo 2514
@@ -649,8 +650,8 @@ Versión anterior (main):
 - Código Civil, Artículo 1945
 - Código Civil, Artículo 1950
 - Código Civil, Artículo 1951
-- Código Civil, Artículo 1955
-- Código Civil, Artículo 1956
+- Código Civil, Artículo 1960
+- Código Civil, Artículo 1961
 - Código de Procedimiento Civil, Artículo 434
 - Código de Procedimiento Civil, Artículo 441
 - Código de Procedimiento Civil, Artículo 443
@@ -667,11 +668,11 @@ Versión anterior (main):
 
 ### g06-proteccion — procedimiento: Recurso de protección ante la Corte de Apelaciones
 
-<details><summary>Material enviado al modelo (18 normas, 2 fallos o dictámenes, 3 artículos de doctrina; 2 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (19 normas, 2 fallos o dictámenes, 3 artículos de doctrina; 2 normas descartadas por materia)</summary>
 
 - Constitución Política de la República, Artículo 19
 - Constitución Política de la República, Artículo 20
-- Código de Procedimiento Civil, Artículo 10
+- Código de Procedimiento Civil, Artículo 1
 - Código de Procedimiento Civil, Artículo 2
 - Código de Procedimiento Civil, Artículo 3
 - Código de Procedimiento Civil, Artículo 4
@@ -680,6 +681,7 @@ Versión anterior (main):
 - Código de Procedimiento Civil, Artículo 7
 - Código de Procedimiento Civil, Artículo 8
 - Código de Procedimiento Civil, Artículo 9
+- Código de Procedimiento Civil, Artículo 10
 - Constitución Política de la República, Artículo 32
 - Constitución Política de la República, Artículo 161
 - Código de Procedimiento Civil, Artículo 189
@@ -716,7 +718,7 @@ Versión anterior (main):
 
 ### g07-posesion-efectiva — procedimiento: Posesión efectiva de una herencia intestada
 
-<details><summary>Material enviado al modelo (11 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 0 normas descartadas por materia)</summary>
+<details><summary>Material enviado al modelo (12 normas, 0 fallos o dictámenes, 0 artículos de doctrina; 0 normas descartadas por materia)</summary>
 
 - Ley 19.903, sobre procedimiento para el otorgamiento de la posesion efectiva de la herencia y adecuaciones de la normativa procesal, civil y tributaria sobre la materia, Artículo 1
 - Ley 19.903, sobre procedimiento para el otorgamiento de la posesion efectiva de la herencia y adecuaciones de la normativa procesal, civil y tributaria sobre la materia, Artículo 2
@@ -726,6 +728,7 @@ Versión anterior (main):
 - Código Civil, Artículo 988
 - Código Civil, Artículo 989
 - Código Civil, Artículo 990
+- Código Civil, Artículo 991
 - Código Civil, Artículo 1263
 - Código Civil, Artículo 1264
 - Código Civil, Artículo 1265
@@ -850,7 +853,18 @@ Versión anterior (main):
 - ~~DL 830, codigo tributario, Artículo 196~~ (materia tributario ajena a penal/procesal_penal)
 
 Versión anterior (main):
+- Código Penal, Artículo 468
+- Código Penal, Artículo 469
+- Código Penal, Artículo 470
+- Código Procesal Penal, Artículo 107
+- Código Procesal Penal, Artículo 108
+- Código Procesal Penal, Artículo 109
+- Código Procesal Penal, Artículo 110
+- Código Procesal Penal, Artículo 111
+- Código Procesal Penal, Artículo 112
+- Código Procesal Penal, Artículo 113
 - Código Procesal Penal, (artículo no identificado)
+- Código Penal, (artículo no identificado)
 
 </details>
 
