@@ -60,7 +60,7 @@ const PROMPT_PLAN = `Eres un investigador jurídico chileno. Recibes una consult
   "normas_procesales": ["nombres oficiales de hasta 3 cuerpos legales que regulan el procedimiento o la materia, ej: 'Código de Procedimiento Civil', 'Código del Trabajo', 'Código Procesal Penal', 'Ley 19.968 crea los Tribunales de Familia'"],
   "articulos_clave": [{"norma": "nombre oficial del cuerpo legal", "articulos": ["números de artículo"]}]
 }
-En "articulos_clave" pon los artículos que un abogado chileno abriría primero para responder: la definición legal del concepto preguntado, la regla central, los plazos y requisitos. Ej.: posesión → {"norma": "Código Civil", "articulos": ["700", "701", "702", "724", "730"]}; despido injustificado → {"norma": "Código del Trabajo", "articulos": ["160", "161", "162", "163", "168"]}. Hasta 8 artículos en total, solo los que conozcas con certeza.`;
+En "articulos_clave" pon los artículos que un abogado chileno abriría primero para responder: la definición legal del concepto preguntado, la regla central, los plazos y requisitos. Ej.: posesión → {"norma": "Código Civil", "articulos": ["700", "701", "702", "724", "730"]}; despido injustificado → {"norma": "Código del Trabajo", "articulos": ["160", "161", "162", "163", "168"]}; juicio ejecutivo por pagaré → [{"norma": "Código de Procedimiento Civil", "articulos": ["434", "441", "443", "459", "464", "470"]}, {"norma": "Ley 18.092", "articulos": ["102", "107"]}]. En guías de procedimiento incluye los artículos de cada etapa y sus plazos. Hasta 10 artículos en total, solo los que conozcas con certeza.`;
 
 const cachePlanes = new CacheTTL({ maximo: 300, ttlMs: 24 * 60 * 60 * 1000 });
 
@@ -121,13 +121,15 @@ const CONCEPTOS = [
   [/contrato/, "Código Civil", ["1438", "1445", "1545", "1546"]],
   [/nulidad/, "Código Civil", ["1681", "1682", "1683", "1684"]],
   [/despido injustificado|indemnizacion por anos/, "Código del Trabajo", ["160", "161", "162", "163", "168"]],
+  [/juicio ejecutivo|pagare|cheque|letra de cambio|titulo ejecutivo/, "Código de Procedimiento Civil", ["434", "441", "443", "459", "462", "464", "470"]],
+  [/pagare|letra de cambio/, "Ley 18.092", ["102", "107"]],
 ];
 function articulosPorConcepto(t) {
   const pedidos = [];
   for (const [patron, norma, articulos] of CONCEPTOS) {
     if (patron.test(t)) pedidos.push({ norma, articulos });
   }
-  return pedidos.slice(0, 2);
+  return pedidos.slice(0, 3);
 }
 
 function sanearArticulosClave(bruto) {
@@ -140,7 +142,7 @@ function sanearArticulosClave(bruto) {
       const articulos = p.articulos
         .map((a) => String(a).trim().replace(/^art(?:[íi]culo|\.)?\s*/i, ""))
         .filter((a) => /^\d{1,4}(?:\s*(?:bis|ter|quater|[a-z]))?$/i.test(a))
-        .slice(0, Math.max(0, 8 - total));
+        .slice(0, Math.max(0, 10 - total));
       total += articulos.length;
       return { norma: p.norma.trim().slice(0, 120), articulos };
     })
@@ -296,7 +298,7 @@ async function investigar({ pregunta, consultaBusqueda, proveedor, modo = "consu
   const procesalesP = modo === "procedimiento" || plan.materia !== "otra"
     ? conTiempo(buscarEnNormasNombradas(plan.normas_procesales, consulta, modo === "procedimiento" ? 10 : 4), 15000, "Normas procesales")
     : Promise.resolve({ valor: [] });
-  const exactosP = conTiempo(buscarArticulosExactos(plan.articulos_clave), 12000, "Artículos clave");
+  const exactosP = conTiempo(buscarArticulosExactos(plan.articulos_clave, 10), 12000, "Artículos clave");
   const jurisprudenciaP = USAR_JURISPRUDENCIA
     ? buscarJurisprudencia(plan)
     : Promise.resolve({ fallos: [], avisos: [] });
