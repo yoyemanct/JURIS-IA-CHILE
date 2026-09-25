@@ -1575,6 +1575,7 @@
       $("campo-nombre").classList.toggle("oculto", !registro);
       $("btn-google").classList.toggle("oculto", !cuenta.google_activo);
       $("separador-google").classList.toggle("oculto", !cuenta.google_activo);
+      $("separador-google").textContent = registro ? "o con tu correo (sin consulta de prueba gratis)" : "o con tu correo";
       $("acceso-clave").autocomplete = registro ? "new-password" : "current-password";
       $("acceso-enviar").textContent = registro ? "Crear cuenta" : "Ingresar";
       $("acceso-cambiar").innerHTML = registro
