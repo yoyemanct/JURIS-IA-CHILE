@@ -187,6 +187,15 @@ function resolverNorma(nombre) {
   if (conocido) return Promise.resolve(conocido);
   return cacheNormasNombradas.recordar(claveDeTexto(nombre), async () => {
     const leyes = normalizarLeyes(await mcp.buscarLeyes(nombre));
+    // "Ley 18.101": se prefiere la norma cuyo número o título es exactamente
+    // esa ley, y no una ley posterior que la modifica y la menciona.
+    const numero = (String(nombre).match(/ley\s*(?:n[°º.]?\s*)?(\d{1,2}\.?\d{3})/i) || [])[1];
+    if (numero) {
+      const limpio = numero.replace(/\./g, "");
+      const exacta = leyes.find((l) => String(l.numero || "").replace(/\D/g, "") === limpio) ||
+        leyes.find((l) => new RegExp(`^(ley|dfl|decreto)?\\s*(n[°º.]?\\s*)?${limpio}\\b`, "i").test(String(l.titulo).replace(/(\d)\.(\d)/g, "$1$2")));
+      if (exacta) return exacta;
+    }
     return leyes[0] || null;
   }, { guardarSi: (ley) => Boolean(ley) });
 }
@@ -259,4 +268,4 @@ async function buscarArticulosExactos(pedidos, maxTotal = 8) {
   return docs.filter(Boolean);
 }
 
-module.exports = { buscarContexto, buscarEnNormasNombradas, buscarArticulosExactos };
+module.exports = { buscarContexto, buscarEnNormasNombradas, buscarArticulosExactos, resolverNorma };

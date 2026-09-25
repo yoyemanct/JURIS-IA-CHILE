@@ -21,6 +21,8 @@ const { buscarTDLC } = require("./fuentes/jurisprudencia/tdlc");
 const { buscarOficiosSII } = require("./fuentes/jurisprudencia/sii");
 const { tokenizar } = require("./search");
 const { CacheTTL, claveDeTexto } = require("./cache");
+const { MATERIAS, materiasDePregunta, filtrarPorMateria } = require("./materias");
+const { articulosClaveDe, unirPedidos, MAX_ARTICULOS } = require("./articulosClave");
 
 const USAR_JURISPRUDENCIA = process.env.USAR_JURISPRUDENCIA !== "false";
 const USAR_DOCTRINA = process.env.USAR_DOCTRINA !== "false";
@@ -56,6 +58,7 @@ const PROMPT_PLAN = `Eres un investigador jurídico chileno. Recibes una consult
   "sii": true si es una materia tributaria (impuestos, IVA, renta, obligaciones con el SII); si no, false,
   "libre_competencia": true solo si trata de colusión, abuso de posición dominante, operaciones de concentración u otra materia de libre competencia; si no, false,
   "doctrina": "consulta breve con los conceptos doctrinales centrales, o cadena vacía",
+  "materias": lista de 1 a 3 materias de la consulta, de: "laboral", "civil", "familia", "consumidor", "arrendamiento", "comercial", "procesal_civil", "penal", "procesal_penal", "tributario", "administrativo", "constitucional" (ej.: cobro de un pagaré → ["comercial", "procesal_civil"]),
   "materia": una de "civil", "laboral", "familia", "alimentos", "penal", "arriendo", "policia_local", "constitucional", "tributario", "otra",
   "normas_procesales": ["nombres oficiales de hasta 3 cuerpos legales que regulan el procedimiento o la materia, ej: 'Código de Procedimiento Civil', 'Código del Trabajo', 'Código Procesal Penal', 'Ley 19.968 crea los Tribunales de Familia'"],
   "articulos_clave": [{"norma": "nombre oficial del cuerpo legal", "articulos": ["números de artículo"]}]
@@ -101,35 +104,15 @@ function planHeuristico(pregunta) {
     sedes: ["corte_suprema"],
     constitucional: materia === "constitucional",
     contraloria: /municipal|funcionari|estatuto administrativo|servicio publico|contrata|sumario administrativo/.test(t),
-    direccion_trabajo: materia === "laboral",
+    direccion_trabajo: materia === "laboral" || materiasDePregunta(pregunta).includes("laboral"),
     libre_competencia: /colusi|libre competencia|monopoli|posicion dominante|cartel|concentracion economica/.test(t),
     sii: materia === "tributario" || /\biva\b|impuesto|renta|tributari|boleta|factura/.test(t),
     doctrina: terminos.join(" "),
     materia,
     normas_procesales: NORMAS_PROCESALES[materia] || [],
-    articulos_clave: articulosPorConcepto(t),
+    articulos_clave: articulosClaveDe(pregunta),
+    materias: materiasDePregunta(pregunta),
   };
-}
-
-// Respaldo sin IA: definiciones legales de las instituciones más consultadas.
-const CONCEPTOS = [
-  [/posesion|poseedor/, "Código Civil", ["700", "701", "702", "724", "730"]],
-  [/dominio|propiedad/, "Código Civil", ["582", "583"]],
-  [/tradicion/, "Código Civil", ["670", "675", "686"]],
-  [/prescripcion adquisitiva|usucapion/, "Código Civil", ["2492", "2498", "2506", "2507", "2508", "2510"]],
-  [/prescripcion extintiva/, "Código Civil", ["2492", "2514", "2515", "2518"]],
-  [/contrato/, "Código Civil", ["1438", "1445", "1545", "1546"]],
-  [/nulidad/, "Código Civil", ["1681", "1682", "1683", "1684"]],
-  [/despido injustificado|indemnizacion por anos/, "Código del Trabajo", ["160", "161", "162", "163", "168"]],
-  [/juicio ejecutivo|pagare|cheque|letra de cambio|titulo ejecutivo/, "Código de Procedimiento Civil", ["434", "441", "443", "459", "462", "464", "470"]],
-  [/pagare|letra de cambio/, "Ley 18.092", ["102", "107"]],
-];
-function articulosPorConcepto(t) {
-  const pedidos = [];
-  for (const [patron, norma, articulos] of CONCEPTOS) {
-    if (patron.test(t)) pedidos.push({ norma, articulos });
-  }
-  return pedidos.slice(0, 3);
 }
 
 function sanearArticulosClave(bruto) {
@@ -142,7 +125,7 @@ function sanearArticulosClave(bruto) {
       const articulos = p.articulos
         .map((a) => String(a).trim().replace(/^art(?:[íi]culo|\.)?\s*/i, ""))
         .filter((a) => /^\d{1,4}(?:\s*(?:bis|ter|quater|[a-z]))?$/i.test(a))
-        .slice(0, Math.max(0, 10 - total));
+        .slice(0, Math.max(0, MAX_ARTICULOS - total));
       total += articulos.length;
       return { norma: p.norma.trim().slice(0, 120), articulos };
     })
@@ -157,6 +140,8 @@ function sanearPlan(bruto, respaldo) {
     .slice(0, 2);
   if (!sedes.includes("corte_suprema")) sedes.unshift("corte_suprema");
   const materia = typeof bruto.materia === "string" && (NORMAS_PROCESALES[bruto.materia] || bruto.materia === "otra") ? bruto.materia : respaldo.materia;
+  const materiasIA = (Array.isArray(bruto.materias) ? bruto.materias : []).filter((m) => MATERIAS.includes(m)).slice(0, 3);
+  const materias = [...new Set([...materiasIA, ...respaldo.materias])];
   const normas = (Array.isArray(bruto.normas_procesales) ? bruto.normas_procesales : [])
     .filter((n) => typeof n === "string" && n.trim())
     .map((n) => n.trim().slice(0, 120))
@@ -166,18 +151,20 @@ function sanearPlan(bruto, respaldo) {
     jurisprudencia_todas: texto(bruto.jurisprudencia_todas) || respaldo.jurisprudencia_todas,
     jurisprudencia_frase: texto(bruto.jurisprudencia_frase),
     sedes: sedes.slice(0, 2),
-    constitucional: bruto.constitucional === true,
-    contraloria: bruto.contraloria === true,
-    direccion_trabajo: bruto.direccion_trabajo === true || (bruto.direccion_trabajo === undefined && respaldo.direccion_trabajo),
+    // Cada buscador especializado solo se consulta si su materia está en la
+    // pregunta: dictámenes de la DT en laboral, oficios del SII en
+    // tributario, Contraloría en administrativo, TC en constitucional.
+    constitucional: bruto.constitucional === true || materias.includes("constitucional"),
+    contraloria: (bruto.contraloria === true || respaldo.contraloria) && (materias.includes("administrativo") || !materias.length),
+    direccion_trabajo: materias.includes("laboral") && bruto.direccion_trabajo !== false,
     libre_competencia: bruto.libre_competencia === true,
-    sii: bruto.sii === true || (bruto.sii === undefined && respaldo.sii),
+    sii: materias.includes("tributario") && bruto.sii !== false,
     doctrina: texto(bruto.doctrina) || respaldo.doctrina,
     materia,
     normas_procesales: normas.length ? normas : NORMAS_PROCESALES[materia] || [],
-    articulos_clave: (() => {
-      const a = sanearArticulosClave(bruto.articulos_clave);
-      return a.length ? a : respaldo.articulos_clave;
-    })(),
+    // El mapa verificado va primero; lo que sugiere la IA completa.
+    articulos_clave: unirPedidos(respaldo.articulos_clave, sanearArticulosClave(bruto.articulos_clave)),
+    materias,
   };
 }
 
@@ -298,7 +285,7 @@ async function investigar({ pregunta, consultaBusqueda, proveedor, modo = "consu
   const procesalesP = modo === "procedimiento" || plan.materia !== "otra"
     ? conTiempo(buscarEnNormasNombradas(plan.normas_procesales, consulta, modo === "procedimiento" ? 10 : 4), 15000, "Normas procesales")
     : Promise.resolve({ valor: [] });
-  const exactosP = conTiempo(buscarArticulosExactos(plan.articulos_clave, 10), 12000, "Artículos clave");
+  const exactosP = conTiempo(buscarArticulosExactos(plan.articulos_clave, MAX_ARTICULOS), 12000, "Artículos clave");
   const jurisprudenciaP = USAR_JURISPRUDENCIA
     ? buscarJurisprudencia(plan)
     : Promise.resolve({ fallos: [], avisos: [] });
@@ -326,11 +313,23 @@ async function investigar({ pregunta, consultaBusqueda, proveedor, modo = "consu
     documentos.push(d);
   };
   const tope = modo === "procedimiento" ? 24 : 20;
+  // Lo recuperado por búsqueda libre se filtra por materia: una norma de otra
+  // materia confunde más de lo que aporta. Los artículos clave no se filtran.
+  const filtroLegislacion = filtrarPorMateria(legislacion.documentos, { materias: plan.materias, pregunta: consulta });
+  const filtroProcesales = filtrarPorMateria(procesales.valor || [], { materias: plan.materias, pregunta: consulta });
+  const descartadas = [...filtroLegislacion.descartadas, ...filtroProcesales.descartadas];
+  if (descartadas.length) {
+    console.log(JSON.stringify({
+      evento: "fuentes_descartadas",
+      materias: plan.materias,
+      descartadas: descartadas.map((d) => ({ norma: d.doc.cuerpo_legal, articulo: d.doc.articulo, motivo: d.motivo })),
+    }));
+  }
   // Los artículos clave (definición legal, regla central) van siempre primero.
   (exactos.valor || []).forEach(agregar);
-  if (modo === "procedimiento") (procesales.valor || []).forEach(agregar);
-  legislacion.documentos.forEach(agregar);
-  if (modo !== "procedimiento") (procesales.valor || []).forEach(agregar);
+  if (modo === "procedimiento") filtroProcesales.aceptadas.forEach(agregar);
+  filtroLegislacion.aceptadas.forEach(agregar);
+  if (modo !== "procedimiento") filtroProcesales.aceptadas.forEach(agregar);
 
   const avisos = [...jurisprudencia.avisos];
   if (procesales.error) avisos.push(procesales.error);
@@ -339,6 +338,7 @@ async function investigar({ pregunta, consultaBusqueda, proveedor, modo = "consu
   return {
     plan,
     documentos: documentos.slice(0, tope),
+    descartadas: descartadas.map((d) => ({ norma: d.doc.cuerpo_legal, articulo: d.doc.articulo, motivo: d.motivo })),
     remotoDisponible: legislacion.remotoDisponible,
     remotoError: legislacion.remotoError,
     jurisprudencia: jurisprudencia.fallos,
