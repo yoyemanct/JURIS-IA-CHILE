@@ -16,11 +16,15 @@ async function probar(nombre, args) {
 (async () => {
   const { tools } = await mcp.listarHerramientas();
   for (const t of tools) console.log(`- ${t.name}: ${JSON.stringify(t.inputSchema)}`);
-  await probar("search_laws", { query: "Ley 18.101" });
-  await probar("search_laws", { query: "Ley 19496 protección de los derechos de los consumidores" });
-  await probar("get_article", { idNorma: 172986, articulo: "700" });
-  await probar("get_article", { tipo: "ley", numero: "18101", articulo: "1" });
-  await probar("get_article", { tipo: "Ley", numero: "18101", articulo: "1" });
-  await probar("get_article", { tipo: "codigo", numero: "civil", articulo: "700" });
+  for (const q of ["Código Civil", "Código del Trabajo", "Código de Procedimiento Civil", "Código Penal", "Código Procesal Penal",
+    "Código Orgánico de Tribunales", "Código de Comercio", "Código Tributario", "Constitución Política de la República",
+    "Ley 19.496", "Ley 14.908", "Ley 19.968", "Ley 19.947", "Ley 19.903", "Ley 18.092", "feriado anual vacaciones"]) {
+    await probar("search_laws", { query: q });
+  }
+  await probar("search_articles", { tipo: "ley", numero: "18101", idNorma: 29526, query: "restitución del inmueble" });
+  await probar("get_article", { tipo: "ley", numero: "18101", idNorma: 29526, articulo: "18 A" });
+  await probar("get_article", { tipo: "ley", numero: "18101", idNorma: 29526, articulo: "Artículo 18-A" });
+  await probar("get_article", { tipo: "ley", numero: "18101", idNorma: 29526, articulo: "99999" });
+  await probar("get_raw_link", { tipo: "ley", numero: "18101", idNorma: 29526 });
   process.exit(0);
 })().catch((e) => { console.error(e); process.exit(1); });
