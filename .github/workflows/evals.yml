@@ -37,6 +37,8 @@ on:
       - "evals/casos.json"
       - "scripts/eval.js"
       - "scripts/verificar-articulos-clave.js"
+      - "scripts/inspeccionar-mcp.js"
+      - "mcpLeyChile.js"
       - ".github/workflows/evals.yml"
 
 permissions:
@@ -64,6 +66,9 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+
+      - name: Inspeccionar el servidor de leyes (esquemas y ejemplos)
+        run: node scripts/inspeccionar-mcp.js
 
       - name: Verificar el mapa de artículos clave contra LeyChile
         run: node scripts/verificar-articulos-clave.js --salida evals/articulos-clave.md
