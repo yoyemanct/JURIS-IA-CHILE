@@ -2,6 +2,8 @@
 
 > Open-source AI toolkit for searching, structuring and citing Chilean legislation and legal sources.
 
+Creado por **Jorge Muñoz Yeber, Abogado** · En línea: [juris-ia-chile.vercel.app](https://juris-ia-chile.vercel.app/)
+
 **Juris IA Chile**: un buscador + asistente de IA que responde preguntas sobre legislación chilena
 citando siempre la ley y el artículo exacto — pensado tanto para abogados como para personas sin
 formación legal. Puedes usar **Claude** (de Anthropic, de pago pero muy preciso) o **Qwen
