@@ -10,7 +10,7 @@
 //      se consultan a la vez, cada una con su propio tiempo máximo. Si una
 //      fuente falla o tarda, se sigue con las demás y se deja constancia.
 
-const { buscarContexto, buscarEnNormasNombradas } = require("./busquedaHibrida");
+const { buscarContexto, buscarEnNormasNombradas, buscarArticulosExactos } = require("./busquedaHibrida");
 const proveedorIA = require("./proveedorIA");
 const pjud = require("./fuentes/jurisprudencia/pjud");
 const { buscarSentenciasTC } = require("./fuentes/jurisprudencia/tconstitucional");
@@ -57,8 +57,10 @@ const PROMPT_PLAN = `Eres un investigador jurídico chileno. Recibes una consult
   "libre_competencia": true solo si trata de colusión, abuso de posición dominante, operaciones de concentración u otra materia de libre competencia; si no, false,
   "doctrina": "consulta breve con los conceptos doctrinales centrales, o cadena vacía",
   "materia": una de "civil", "laboral", "familia", "alimentos", "penal", "arriendo", "policia_local", "constitucional", "tributario", "otra",
-  "normas_procesales": ["nombres oficiales de hasta 3 cuerpos legales que regulan el procedimiento o la materia, ej: 'Código de Procedimiento Civil', 'Código del Trabajo', 'Código Procesal Penal', 'Ley 19.968 crea los Tribunales de Familia'"]
-}`;
+  "normas_procesales": ["nombres oficiales de hasta 3 cuerpos legales que regulan el procedimiento o la materia, ej: 'Código de Procedimiento Civil', 'Código del Trabajo', 'Código Procesal Penal', 'Ley 19.968 crea los Tribunales de Familia'"],
+  "articulos_clave": [{"norma": "nombre oficial del cuerpo legal", "articulos": ["números de artículo"]}]
+}
+En "articulos_clave" pon los artículos que un abogado chileno abriría primero para responder: la definición legal del concepto preguntado, la regla central, los plazos y requisitos. Ej.: posesión → {"norma": "Código Civil", "articulos": ["700", "701", "702", "724", "730"]}; despido injustificado → {"norma": "Código del Trabajo", "articulos": ["160", "161", "162", "163", "168"]}. Hasta 8 artículos en total, solo los que conozcas con certeza.`;
 
 const cachePlanes = new CacheTTL({ maximo: 300, ttlMs: 24 * 60 * 60 * 1000 });
 
@@ -105,7 +107,44 @@ function planHeuristico(pregunta) {
     doctrina: terminos.join(" "),
     materia,
     normas_procesales: NORMAS_PROCESALES[materia] || [],
+    articulos_clave: articulosPorConcepto(t),
   };
+}
+
+// Respaldo sin IA: definiciones legales de las instituciones más consultadas.
+const CONCEPTOS = [
+  [/posesion|poseedor/, "Código Civil", ["700", "701", "702", "724", "730"]],
+  [/dominio|propiedad/, "Código Civil", ["582", "583"]],
+  [/tradicion/, "Código Civil", ["670", "675", "686"]],
+  [/prescripcion adquisitiva|usucapion/, "Código Civil", ["2492", "2498", "2506", "2507", "2508", "2510"]],
+  [/prescripcion extintiva/, "Código Civil", ["2492", "2514", "2515", "2518"]],
+  [/contrato/, "Código Civil", ["1438", "1445", "1545", "1546"]],
+  [/nulidad/, "Código Civil", ["1681", "1682", "1683", "1684"]],
+  [/despido injustificado|indemnizacion por anos/, "Código del Trabajo", ["160", "161", "162", "163", "168"]],
+];
+function articulosPorConcepto(t) {
+  const pedidos = [];
+  for (const [patron, norma, articulos] of CONCEPTOS) {
+    if (patron.test(t)) pedidos.push({ norma, articulos });
+  }
+  return pedidos.slice(0, 2);
+}
+
+function sanearArticulosClave(bruto) {
+  if (!Array.isArray(bruto)) return [];
+  let total = 0;
+  return bruto
+    .filter((p) => p && typeof p.norma === "string" && p.norma.trim() && Array.isArray(p.articulos))
+    .slice(0, 3)
+    .map((p) => {
+      const articulos = p.articulos
+        .map((a) => String(a).trim().replace(/^art(?:[íi]culo|\.)?\s*/i, ""))
+        .filter((a) => /^\d{1,4}(?:\s*(?:bis|ter|quater|[a-z]))?$/i.test(a))
+        .slice(0, Math.max(0, 8 - total));
+      total += articulos.length;
+      return { norma: p.norma.trim().slice(0, 120), articulos };
+    })
+    .filter((p) => p.articulos.length);
 }
 
 function sanearPlan(bruto, respaldo) {
@@ -133,6 +172,10 @@ function sanearPlan(bruto, respaldo) {
     doctrina: texto(bruto.doctrina) || respaldo.doctrina,
     materia,
     normas_procesales: normas.length ? normas : NORMAS_PROCESALES[materia] || [],
+    articulos_clave: (() => {
+      const a = sanearArticulosClave(bruto.articulos_clave);
+      return a.length ? a : respaldo.articulos_clave;
+    })(),
   };
 }
 
@@ -148,6 +191,7 @@ async function planificar({ pregunta, proveedor, modo }) {
         proveedor,
         systemPrompt: PROMPT_PLAN,
         userMessage: `${modo === "procedimiento" ? "Consulta sobre cómo tramitar un procedimiento judicial: " : "Consulta: "}${pregunta}`,
+        maxTokens: 600,
       }),
       new Promise((resolve) => { temporizador = setTimeout(() => resolve(null), TIMEOUT_PLAN_MS); }),
     ]).finally(() => clearTimeout(temporizador));
@@ -252,6 +296,7 @@ async function investigar({ pregunta, consultaBusqueda, proveedor, modo = "consu
   const procesalesP = modo === "procedimiento" || plan.materia !== "otra"
     ? conTiempo(buscarEnNormasNombradas(plan.normas_procesales, consulta, modo === "procedimiento" ? 10 : 4), 15000, "Normas procesales")
     : Promise.resolve({ valor: [] });
+  const exactosP = conTiempo(buscarArticulosExactos(plan.articulos_clave), 12000, "Artículos clave");
   const jurisprudenciaP = USAR_JURISPRUDENCIA
     ? buscarJurisprudencia(plan)
     : Promise.resolve({ fallos: [], avisos: [] });
@@ -259,8 +304,9 @@ async function investigar({ pregunta, consultaBusqueda, proveedor, modo = "consu
     ? conTiempo(buscarDoctrina({ consulta: plan.doctrina, limite: 3 }), TIMEOUT_DOCTRINA_MS, "Doctrina")
     : Promise.resolve({ valor: { resultados: [] } });
 
-  const [legislacion, procesales, jurisprudencia, doctrina] = await Promise.all([
+  const [legislacion, exactos, procesales, jurisprudencia, doctrina] = await Promise.all([
     legislacionP,
+    exactosP,
     procesalesP,
     jurisprudenciaP,
     doctrinaP,
@@ -277,7 +323,9 @@ async function investigar({ pregunta, consultaBusqueda, proveedor, modo = "consu
     vistos.add(k);
     documentos.push(d);
   };
-  const tope = modo === "procedimiento" ? 22 : 16;
+  const tope = modo === "procedimiento" ? 24 : 20;
+  // Los artículos clave (definición legal, regla central) van siempre primero.
+  (exactos.valor || []).forEach(agregar);
   if (modo === "procedimiento") (procesales.valor || []).forEach(agregar);
   legislacion.documentos.forEach(agregar);
   if (modo !== "procedimiento") (procesales.valor || []).forEach(agregar);

@@ -162,10 +162,26 @@ async function buscarContexto(pregunta, limite = 6) {
   return { ...resultado, documentos: resultado.documentos.map((d) => ({ ...d })) };
 }
 
+// Códigos principales, con su idNorma de LeyChile: el buscador por nombre a
+// veces devuelve primero una ley modificatoria en vez del código mismo.
+const CODIGOS = {
+  "codigo civil": { idNorma: "172986", titulo: "Código Civil" },
+  "codigo de procedimiento civil": { idNorma: "22740", titulo: "Código de Procedimiento Civil" },
+  "codigo del trabajo": { idNorma: "207436", titulo: "Código del Trabajo" },
+  "codigo penal": { idNorma: "1984", titulo: "Código Penal" },
+  "codigo procesal penal": { idNorma: "176595", titulo: "Código Procesal Penal" },
+  "codigo organico de tribunales": { idNorma: "25563", titulo: "Código Orgánico de Tribunales" },
+  "codigo de comercio": { idNorma: "1974", titulo: "Código de Comercio" },
+  "codigo tributario": { idNorma: "6374", titulo: "Código Tributario" },
+  "constitucion politica de la republica": { idNorma: "242302", titulo: "Constitución Política de la República" },
+};
+
 // idNorma de una norma nombrada ("Código de Procedimiento Civil"), según el
 // primer resultado de search_laws. Se cachea: el nombre no cambia de norma.
 const cacheNormasNombradas = new CacheTTL({ maximo: 200, ttlMs: 7 * 24 * 60 * 60 * 1000 });
 function resolverNorma(nombre) {
+  const conocido = CODIGOS[claveDeTexto(nombre).replace(/^(el|la)\s+/, "").replace(/\s+de chile$/, "")];
+  if (conocido) return Promise.resolve(conocido);
   return cacheNormasNombradas.recordar(claveDeTexto(nombre), async () => {
     const leyes = normalizarLeyes(await mcp.buscarLeyes(nombre));
     return leyes[0] || null;
@@ -197,4 +213,47 @@ async function buscarEnNormasNombradas(nombres, consulta, maxArticulos = 8) {
   }, { guardarSi: (docs) => docs.length > 0 });
 }
 
-module.exports = { buscarContexto, buscarEnNormasNombradas };
+/**
+ * Trae artículos exactos que el plan identificó como centrales para la
+ * pregunta (por ejemplo, la definición legal de un concepto: "Código Civil,
+ * artículo 700" para la posesión). El texto viene de la fuente oficial, así
+ * que la respuesta puede citarlo; si el artículo no existe, simplemente no
+ * se agrega nada.
+ * @param {{norma: string, articulos: string[]}[]} pedidos
+ */
+async function buscarArticulosExactos(pedidos, maxTotal = 8) {
+  if (process.env.USAR_CORPUS_REMOTO === "false" || !pedidos?.length) return [];
+  const tareas = [];
+  for (const { norma, articulos } of pedidos) {
+    for (const numero of articulos) tareas.push({ norma, numero });
+  }
+  const docs = await Promise.all(
+    tareas.slice(0, maxTotal).map(({ norma, numero }) =>
+      cacheBusquedas.recordar(`exacto|${claveDeTexto(norma)}|${numero}`, async () => {
+        const ley = await resolverNorma(norma);
+        if (!ley) return null;
+        const [art] = normalizarArticulos(await mcp.obtenerArticulo(ley.idNorma, numero));
+        if (!art?.texto || art.texto.length < 20) return null;
+        const fuenteUrl = await enlaceOficial(ley.idNorma).catch(() => `https://www.bcn.cl/leychile/navegar?idNorma=${ley.idNorma}`);
+        return {
+          cuerpo_legal: ley.titulo,
+          articulo: `Artículo ${art.numero || numero}`,
+          tema: ley.titulo,
+          texto: art.texto,
+          completo: true,
+          nota: null,
+          fuente_url: fuenteUrl,
+          origen: "remoto",
+          idNorma: ley.idNorma,
+          numero: String(art.numero || numero),
+        };
+      }, { guardarSi: Boolean }).catch((err) => {
+        console.warn(`No se pudo traer ${norma}, artículo ${numero}:`, err.message);
+        return null;
+      })
+    )
+  );
+  return docs.filter(Boolean);
+}
+
+module.exports = { buscarContexto, buscarEnNormasNombradas, buscarArticulosExactos };
